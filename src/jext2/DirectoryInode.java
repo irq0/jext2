@@ -1,0 +1,124 @@
+package jext2;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Iterator;
+
+
+/** Extends Inode with directory access methods */
+public class DirectoryInode extends Inode implements Iterable<DirectoryEntry> {
+	private static BlockAccess blocks = BlockAccess.getInstance();
+	private static Superblock superblock = Superblock.getInstance();
+
+
+	public DirectoryIterator iterator() {
+		return new DirectoryIterator(this);
+	}
+
+	
+	class DirectoryIterator implements Iterator<DirectoryEntry> {
+		private DirectoryInode inode;
+		private int fileBlockNr = 0;
+		private ByteBuffer block;
+		private DirectoryEntry entry;
+		private int offset = 0;
+		
+		DirectoryIterator(DirectoryInode inode) {
+			this.inode = inode;
+
+			try {
+				int blockNr = DataBlock.getBlockNumber(inode, fileBlockNr);
+				block = blocks.getAtOffset(blockNr);
+			} catch (IOException e) {
+				entry = null;
+			}
+				
+			fetchNextEntry();
+		}
+
+		public boolean hasNext() {
+			return (entry != null);
+		}
+
+		private void fetchNextEntry() {
+			try {
+				System.out.println(entry);
+				if (entry != null) {
+					offset += entry.getRecLen();
+				} 	
+
+				// entry was last in this block
+				if (offset == superblock.getBlocksize()) {
+					fileBlockNr += 1;
+					int blockNr = DataBlock.getBlockNumber(inode, fileBlockNr);
+					System.out.println("NEXT BLOCK" + fileBlockNr + " " + blockNr);
+					
+					if (blockNr == 0) { // entry was last
+						block = null;
+					} else { // start with new block
+						block = blocks.getAtOffset(blockNr);
+					}
+					
+					offset = 0;
+				}
+				
+				// fetch next entry from block
+				if (block != null) {
+					entry = DirectoryEntry.fromByteBuffer(block, offset);
+				} else {
+					entry = null;
+				}
+			} catch (IOException e) {
+				entry = null;
+			}
+		}
+		
+		public DirectoryEntry next() {
+			DirectoryEntry result = this.entry;
+			fetchNextEntry();
+			return result;
+		}
+
+		public void remove() {
+		}
+	}
+
+	public DirectoryEntry lookup(String name) {
+		for (DirectoryEntry dir : this) {
+			if (name.equals(dir.getName())) {
+				return dir;
+			}
+		}
+		return null;
+	}
+
+	public String toString() {
+		StringBuffer sb = new StringBuffer(super.toString());
+
+		sb.append(" DIRECTORY={");
+		
+		for (DirectoryEntry dir : this) {
+			sb.append("   ");
+			sb.append(dir.getName());
+			sb.append(",");
+			sb.append("\n");
+		}
+
+		sb.append("}");
+
+		return sb.toString();
+	}
+
+	
+	
+	protected DirectoryInode(ByteBuffer buf, int offset) throws IOException {
+		super(buf, offset);
+	}
+
+	public static DirectoryInode fromByteBuffer(ByteBuffer buf, int offset) throws IOException {
+		DirectoryInode inode = new DirectoryInode(buf, offset);
+		return inode;
+	}
+
+	
+}
