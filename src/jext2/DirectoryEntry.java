@@ -37,7 +37,7 @@ public class DirectoryEntry extends Block {
 		return this.name;
 	}
 
-	private void read(ByteBuffer buf) throws IOException {
+	protected void read(ByteBuffer buf) throws IOException {
 		this.ino = Ext2fsDataTypes.getLE32(buf, 0 + offset);
 		this.recLen = Ext2fsDataTypes.getLE16(buf, 4 + offset);
 		this.nameLen = Ext2fsDataTypes.getLE8(buf, 6 + offset);
@@ -50,9 +50,13 @@ public class DirectoryEntry extends Block {
 		                                          ToStringStyle.MULTI_LINE_STYLE);
 	}
 
+	protected DirectoryEntry(int blockNr, int offset) {
+		super(blockNr, offset);
+	}
+	
 	public static DirectoryEntry fromByteBuffer(ByteBuffer buf, int offset) {
 				
-		DirectoryEntry dir = new DirectoryEntry();
+		DirectoryEntry dir = new DirectoryEntry(-1, offset);
 		try {
 			dir.offset = offset;
 			dir.read(buf);

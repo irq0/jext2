@@ -167,76 +167,72 @@ public class Superblock extends Block {
 		return (1024 << this.logBlockSize) * 8;
 	}
 	
-	private Superblock() {
-		
-	}
+	protected void read(ByteBuffer buf) throws IOException{		
+		this.inodesCount = Ext2fsDataTypes.getLE32(buf, 0);
+		this.blocksCount = Ext2fsDataTypes.getLE32(buf, 4);
+		this.resevedBlocksCount = Ext2fsDataTypes.getLE32(buf, 8);
+		this.freeBlocksCount = Ext2fsDataTypes.getLE32(buf, 12);
+		this.freeInodesCount = Ext2fsDataTypes.getLE32(buf, 16);
+		this.firstDataBlock = Ext2fsDataTypes.getLE32(buf, 20);
+		this.logBlockSize = Ext2fsDataTypes.getLE32(buf, 24);
+		this.logFragSize = Ext2fsDataTypes.getLE32(buf, 28);
+		this.blocksPerGroup = Ext2fsDataTypes.getLE32(buf, 32);
+		this.fragsPerGroup = Ext2fsDataTypes.getLE32(buf, 36);
+		this.inodesPerGroup = Ext2fsDataTypes.getLE32(buf, 40);
+		this.lastMount = Ext2fsDataTypes.getDate(buf, 44);
+		this.lastWrite = Ext2fsDataTypes.getDate(buf, 48);
+		this.mountCount = Ext2fsDataTypes.getLE16(buf, 52);
+		this.maxMountCount = Ext2fsDataTypes.getLE16(buf, 54);
+		this.magic = Ext2fsDataTypes.getLE16(buf, 56);
+		this.state = Ext2fsDataTypes.getLE16(buf, 58);
+		this.errors = Ext2fsDataTypes.getLE16(buf, 60);
+		this.minorRevLevel = Ext2fsDataTypes.getLE16(buf, 62);
+		this.lastCheck = Ext2fsDataTypes.getDate(buf, 64);
+		this.checkInterval = Ext2fsDataTypes.getLE32(buf, 68);
+		this.creatorOs = Ext2fsDataTypes.getLE32(buf, 72);
+		this.revLevel = Ext2fsDataTypes.getLE32(buf, 76);
+		this.defaultResuid = Ext2fsDataTypes.getLE16(buf, 80);
+		this.defaultResgid = Ext2fsDataTypes.getLE16(buf, 82);
 
-	private void readSuperblock() throws IOException{		
-		this.inodesCount = getLE32(0);
-		this.blocksCount = getLE32(4);
-		this.resevedBlocksCount = getLE32(8);
-		this.freeBlocksCount = getLE32(12);
-		this.freeInodesCount = getLE32(16);
-		this.firstDataBlock = getLE32(20);
-		this.logBlockSize = getLE32(24);
-		this.logFragSize = getLE32(28);
-		this.blocksPerGroup = getLE32(32);
-		this.fragsPerGroup = getLE32(36);
-		this.inodesPerGroup = getLE32(40);
-		this.lastMount = getDate(44);
-		this.lastWrite = getDate(48);
-		this.mountCount = getLE16(52);
-		this.maxMountCount = getLE16(54);
-		this.magic = getLE16(56);
-		this.state = getLE16(58);
-		this.errors = getLE16(60);
-		this.minorRevLevel = getLE16(62);
-		this.lastCheck = getDate(64);
-		this.checkInterval = getLE32(68);
-		this.creatorOs = getLE32(72);
-		this.revLevel = getLE32(76);
-		this.defaultResuid = getLE16(80);
-		this.defaultResgid = getLE16(82);
-
-		this.firstIno = getLE32(84);
-		this.inodeSize = getLE16(88);
-		this.blockGroupNr = getLE16(90);
-		this.featuresCompat = getLE32(92);
-		this.featuresIncompat = getLE32(96);
-		this.featuresRoCompat = getLE32(100);
-		this.uuid = getUUID(104);
-		this.volumeName = getString(120, 16);
-		this.lastMounted = getString(136, 64);	   		
+		this.firstIno = Ext2fsDataTypes.getLE32(buf, 84);
+		this.inodeSize = Ext2fsDataTypes.getLE16(buf, 88);
+		this.blockGroupNr = Ext2fsDataTypes.getLE16(buf, 90);
+		this.featuresCompat = Ext2fsDataTypes.getLE32(buf, 92);
+		this.featuresIncompat = Ext2fsDataTypes.getLE32(buf, 96);
+		this.featuresRoCompat = Ext2fsDataTypes.getLE32(buf, 100);
+		this.uuid = Ext2fsDataTypes.getUUID(buf, 104);
+		this.volumeName = Ext2fsDataTypes.getString(buf, 120, 16);
+		this.lastMounted = Ext2fsDataTypes.getString(buf, 136, 64);	   		
 	}
 
 
 	public static Superblock getInstance() {
 		return Superblock.instance;
+
+	}
+	
+	protected Superblock(int blockNr, int offset) {
+		super(blockNr, offset);
 	}
 	
 	public static Superblock fromBlockAccess(BlockAccess blocks) throws IOException {
-		Superblock sb = new Superblock();
-		ByteBuffer rawBlock = blocks.getAtOffset(1);
-		sb.buffer = rawBlock;
-		sb.readSuperblock();
+		Superblock sb = new Superblock(-1, -1);
+		ByteBuffer buf = blocks.getAtOffset(1);
+		sb.read(buf);
 
-		Superblock.instance = sb;
-		
+		Superblock.instance = sb;		
 		return sb;
 	}		
 	
 	public static Superblock fromFileChannel(FileChannel chan) throws IOException {
 		
-		Superblock sb = new Superblock();
+		Superblock sb = new Superblock(-1, -1);
 		ByteBuffer buf = ByteBuffer.allocate(Constants.EXT2_MIN_BLOCK_SIZE);
 		chan.position(1024);
 		chan.read(buf);
-
-		sb.buffer = buf;
-		sb.readSuperblock();
-
-	    Superblock.instance = sb;
+		sb.read(buf);
 		
+	    Superblock.instance = sb;		
 		return sb;
 	}
 

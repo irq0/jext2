@@ -1,11 +1,10 @@
 /**
- * Abstract Block
- *
- * @author Marcel Lauhoff <ml@irq0.org>
+ * Base for parsed on disk blocks like Inodes and BlockGroupDescriptors. 
  */
 
 package jext2;
 
+import java.io.IOException;
 import java.nio.*;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -18,24 +17,19 @@ public abstract class Block {
 	protected int offset;
 	
 	/** read data structure from a ByteBuffer representing a block */
-	protected abstract void read(ByteBuffer buf);
+	protected abstract void read(ByteBuffer buf) throws IOException;
 	
 	/** write data structure back to disk */
 	protected void write(ByteBuffer buf) {
 	}
 	
-	private Block(ByteBuffer buffer) {
-	
+	protected Block(int blockNr, int offset) {
+		this.blockNr = blockNr;
+		this.offset = offset;
 	}
 	
 	public String toString() {
 		return ToStringBuilder.reflectionToString(this,
 		                                          ToStringStyle.MULTI_LINE_STYLE);
-	}
-
-	public static Block fromByteBuffer(ByteBuffer buffer) {
-		Block b = new Block();
-		b.buffer = buffer;
-		return b;
 	}
 }

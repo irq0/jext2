@@ -34,20 +34,23 @@ public class BlockGroupDescriptor extends Block {
 	}
 
 	
-	private void readBlockGroupDescriptor() throws IOException {
-		this.blockBitmap = getLE32(0);
-		this.inodeBitmap = getLE32(4);
-		this.inodeTable = getLE32(8);
-		this.freeBlocksCount = getLE16(12);
-		this.freeInodesCount = getLE16(14);
-		this.usedDirsCount = getLE16(16);
+	protected void read(ByteBuffer buf) throws IOException {
+		this.blockBitmap = Ext2fsDataTypes.getLE32(buf, 0);
+		this.inodeBitmap = Ext2fsDataTypes.getLE32(buf, 4);
+		this.inodeTable = Ext2fsDataTypes.getLE32(buf, 8);
+		this.freeBlocksCount = Ext2fsDataTypes.getLE16(buf, 12);
+		this.freeInodesCount = Ext2fsDataTypes.getLE16(buf, 14);
+		this.usedDirsCount = Ext2fsDataTypes.getLE16(buf, 16);
 	}
 
+	protected BlockGroupDescriptor(int blockNr, int offset) {
+		super(blockNr, offset);
+	}
+	
 	public static BlockGroupDescriptor fromByteBuffer(ByteBuffer buf) {
-		BlockGroupDescriptor b = new BlockGroupDescriptor();
+		BlockGroupDescriptor b = new BlockGroupDescriptor(-1, -1);
 		try {
-			b.buffer = buf;
-			b.readBlockGroupDescriptor();
+			b.read(buf);
 			return b;
 		} catch (IOException e) {
 			// XXX dont irgnore

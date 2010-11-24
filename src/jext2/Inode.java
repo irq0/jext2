@@ -5,11 +5,8 @@ import org.apache.commons.lang.builder.ToStringStyle;
 import java.util.Date;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 public class Inode extends Block {
-	protected int offset = 0;
-	
 	private short mode;
 	private short gidLow;
 	private short uidLow;
@@ -98,7 +95,7 @@ public class Inode extends Block {
 		return this.uidLow + (16 << this.uidHigh);
 	}
 	
-	private void read(ByteBuffer buf) throws IOException {
+	protected void read(ByteBuffer buf) throws IOException {
 		this.mode = Ext2fsDataTypes.getLE16(buf, 0 + offset);
 		this.uidLow = Ext2fsDataTypes.getLE16(buf, 2 + offset);
 		this.size = Ext2fsDataTypes.getLE32(buf, 4 + offset);
@@ -132,16 +129,14 @@ public class Inode extends Block {
 		return ToStringBuilder.reflectionToString(this,
 		                                          ToStringStyle.MULTI_LINE_STYLE);
 	}
-
-
-	protected Inode(ByteBuffer buf, int offset) throws IOException {
-		this.offset = offset;
-		this.read(buf);
-	}	
-
-	public static Inode fromByteBuffer(ByteBuffer buf, int offset) throws IOException{		
-		Inode inode = new Inode(buf, offset);
-		return inode;
+	
+	protected Inode(int blockNr, int offset) {
+		super(blockNr, offset);
 	}
 
+	public static Inode fromByteBuffer(ByteBuffer buf, int offset) throws IOException {		
+		Inode inode = new Inode(-1, offset);
+		inode.read(buf);
+		return inode;
+	}
 }

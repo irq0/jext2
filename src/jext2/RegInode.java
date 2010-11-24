@@ -34,12 +34,13 @@ public class RegInode extends Inode {
 		return result;
 	}
 
-	protected RegInode(ByteBuffer buf, int offset) throws IOException {
-		super(buf, offset);
+	protected RegInode(int blockNr, int offset) throws IOException {
+		super(blockNr, offset);
 	}
 	
 	public static RegInode fromByteBuffer(ByteBuffer buf, int offset) throws IOException {
-		RegInode inode = new RegInode(buf, offset);
+		RegInode inode = new RegInode(-1, offset);
+		inode.read(buf);
 		return inode;
 	}
 }	

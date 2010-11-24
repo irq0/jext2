@@ -6,6 +6,10 @@ import java.nio.ByteOrder;
 import java.util.Date;
 import java.util.UUID;
 
+/**
+ * Datatypes used by ext2fs in its on disk format
+ */
+
 public class Ext2fsDataTypes {
 
 	public static Date getDate(ByteBuffer buffer, int offset) throws IOException {
@@ -13,7 +17,7 @@ public class Ext2fsDataTypes {
 		long unixTime = buffer.getInt(offset);
 		return new Date(unixTime * 1000);
 	}
-
+	
 	public static short getLE16(ByteBuffer buffer, int offset) throws IOException {
 		buffer.order(ByteOrder.LITTLE_ENDIAN);				
 		return buffer.getShort(offset);
