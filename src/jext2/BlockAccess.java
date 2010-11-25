@@ -5,6 +5,10 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 
+/**
+ * access to filesystem blocks - smallest access unit is a block which depends on 
+ * filesystem.
+ */
 public class BlockAccess {
 	private int blocksize = Constants.EXT2_MIN_BLOCK_SIZE;
 	private FileChannel blockdev;
@@ -19,11 +23,12 @@ public class BlockAccess {
 		BlockAccess.instance = this;
 	}
 
-	public ByteBuffer getAtOffset(long offset) throws IOException {
+	/** Read a block of size specified by setBlocksize() at logical address nr */
+	public ByteBuffer read(int nr) throws IOException {
 		ByteBuffer buf = ByteBuffer.allocate(blocksize);		
 		buf.order(ByteOrder.BIG_ENDIAN);
 		
-		blockdev.position(offset * blocksize);
+		blockdev.position(nr * blocksize);
 		blockdev.read(buf);
 
 		return buf; 

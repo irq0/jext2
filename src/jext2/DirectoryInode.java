@@ -25,8 +25,8 @@ public class DirectoryInode extends Inode implements Iterable<DirectoryEntry> {
 			this.inode = inode;
 
 			try {
-				int blockNr = DataBlock.getBlockNumber(inode, fileBlockNr);
-				block = blocks.getAtOffset(blockNr);
+				int blockNr = DataBlockAccess.getDataBlockNr(inode, fileBlockNr);
+				block = blocks.read(blockNr);
 			} catch (IOException e) {
 				entry = null;
 			}
@@ -48,13 +48,13 @@ public class DirectoryInode extends Inode implements Iterable<DirectoryEntry> {
 				// entry was last in this block
 				if (offset == superblock.getBlocksize()) {
 					fileBlockNr += 1;
-					int blockNr = DataBlock.getBlockNumber(inode, fileBlockNr);
+					int blockNr = DataBlockAccess.getDataBlockNr(inode, fileBlockNr);
 					System.out.println("NEXT BLOCK" + fileBlockNr + " " + blockNr);
 					
 					if (blockNr == 0) { // entry was last
 						block = null;
 					} else { // start with new block
-						block = blocks.getAtOffset(blockNr);
+						block = blocks.read(blockNr);
 					}
 					
 					offset = 0;

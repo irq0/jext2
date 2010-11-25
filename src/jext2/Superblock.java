@@ -217,7 +217,7 @@ public class Superblock extends Block {
 	
 	public static Superblock fromBlockAccess(BlockAccess blocks) throws IOException {
 		Superblock sb = new Superblock(-1, -1);
-		ByteBuffer buf = blocks.getAtOffset(1);
+		ByteBuffer buf = blocks.read(1);
 		sb.read(buf);
 
 		Superblock.instance = sb;		

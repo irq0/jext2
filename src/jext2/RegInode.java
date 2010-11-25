@@ -14,11 +14,11 @@ public class RegInode extends Inode {
 		int startFileBlock = offset / superblock.getBlocksize();
 		offset = offset % superblock.getBlocksize();
 		
-		Iterator<Integer> i = DataBlock.iterateDataBlocks(this, startFileBlock);
+		Iterator<Integer> i = DataBlockAccess.iterateDataBlockNrStartingAt(this, startFileBlock);
 		
 		while (i.hasNext()) {
 			int blockNr = i.next();
-			ByteBuffer block = blocks.getAtOffset(blockNr);
+			ByteBuffer block = blocks.read(blockNr);
 
 			block.position(offset);
 

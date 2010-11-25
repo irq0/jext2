@@ -6,33 +6,33 @@ import java.nio.ByteOrder;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class DataBlock {
+public class DataBlockAccess {
 	protected static Superblock superblock = Superblock.getInstance();
 	protected static BlockAccess blocks = BlockAccess.getInstance();
 
-	private static int getBlockNumberFromDataBlock(int dataBlock, int index) throws IOException{
-		ByteBuffer buffer = blocks.getAtOffset(dataBlock);
+	private static int readBlockNumberFromBlock(int dataBlock, int index) throws IOException{
+		ByteBuffer buffer = blocks.read(dataBlock);
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
 		int nr = buffer.getInt(index*4);
 		return nr;
 	}
 	
-	public static int getIndirect(int ind, int nr) throws IOException {
-		int block = getBlockNumberFromDataBlock(ind, nr);
+	private static int readIndirect(int ind, int nr) throws IOException {
+		int block = readBlockNumberFromBlock(ind, nr);
 		return block;
 	}
 
-	public static int getDoubleIndirect(int dint, int nr) throws IOException {
+	private static int readDoubleIndirect(int dint, int nr) throws IOException {
 		int addrPerBlock = superblock.getBlocksize()/4;
-		int ind = getIndirect(dint, nr / addrPerBlock);
-		int block = getIndirect(ind, nr % addrPerBlock);
+		int ind = readIndirect(dint, nr / addrPerBlock);
+		int block = readIndirect(ind, nr % addrPerBlock);
 		return block;
 	}
 
-	public static int getTripleIndirect(int tind, int nr) throws IOException{
+	private static int readTripleIndirect(int tind, int nr) throws IOException{
 		int addrPerBlock = superblock.getBlocksize()/4;
-		int dind = getDoubleIndirect(tind, nr / addrPerBlock);
-		int block = getIndirect(dind, nr % addrPerBlock);
+		int dind = readDoubleIndirect(tind, nr / addrPerBlock);
+		int block = readIndirect(dind, nr % addrPerBlock);
 		return block;
 	}
 
@@ -52,7 +52,7 @@ public class DataBlock {
 
 		public boolean hasNext() {
 			try {
-				return (getBlockNumber(this.inode, current + 1) != 0);
+				return (getDataBlockNr(this.inode, current + 1) != 0);
 			} catch (IOException e) {
 				return false;
 			}
@@ -61,7 +61,7 @@ public class DataBlock {
 		public Integer next() {
 			current += 1;
 			try {
-				return getBlockNumber(this.inode, current);
+				return getDataBlockNr(this.inode, current);
 			} catch (IOException e) {
 				return null;
 			}
@@ -71,17 +71,16 @@ public class DataBlock {
 		}
 	}
 
-	public static DataBlockIterator iterateDataBlocks(Inode inode) {
+	public static DataBlockIterator iterateDataBlockNr(Inode inode) {
 		return new DataBlockIterator(inode);
 	}
 
-	public static DataBlockIterator iterateDataBlocks(Inode inode, int offset) {
+	public static DataBlockIterator iterateDataBlockNrStartingAt(Inode inode, int offset) {
 		return new DataBlockIterator(inode, offset);
 	}
-		
 	
 	/** get the logical block number of file block */
-	public static int getBlockNumber(Inode inode, int fileBlockNumber) throws IOException{
+	public static int getDataBlockNr(Inode inode, int fileBlockNumber) throws IOException {
 		int[] directBlocks = inode.getBlock();
 		int addrPerBlock = superblock.getBlocksize()/4;
 			
@@ -93,20 +92,24 @@ public class DataBlock {
 		// indirect
 		fileBlockNumber -= Constants.EXT2_NDIR_BLOCKS;
 		if (fileBlockNumber < addrPerBlock) {
-			return getIndirect(directBlocks[Constants.EXT2_IND_BLOCK],
+			return readIndirect(directBlocks[Constants.EXT2_IND_BLOCK],
 			                   fileBlockNumber);
 		}
 		
 		// double indirect
 		fileBlockNumber -= addrPerBlock;
 		if (fileBlockNumber < addrPerBlock*addrPerBlock) {
-			return getDoubleIndirect(directBlocks[Constants.EXT2_DIND_BLOCK],
+			return readDoubleIndirect(directBlocks[Constants.EXT2_DIND_BLOCK],
 			                         fileBlockNumber);
 		}
 		
 		// triple indirect
 		fileBlockNumber -= addrPerBlock*addrPerBlock;
-		return getTripleIndirect(directBlocks[Constants.EXT2_TIND_BLOCK],
+		return readTripleIndirect(directBlocks[Constants.EXT2_TIND_BLOCK],
 		                         fileBlockNumber);
+	}
+	
+	public static ByteBuffer readDataBlock(Inode inode, int fileBlockNumber) throws IOException {
+		return blocks.read(getDataBlockNr(inode, fileBlockNumber));
 	}
 }
