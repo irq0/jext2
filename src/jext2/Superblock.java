@@ -7,10 +7,7 @@
 package jext2;
 
 import java.io.IOException;
-import java.nio.ByteOrder;
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.channels.Channel;
 import java.nio.channels.FileChannel;
 import java.util.UUID;
 import java.util.Date;
@@ -179,7 +176,7 @@ public class Superblock extends Block {
 		return this.groupsCount;
 	}
 	
-	protected void read(ByteBuffer buf) throws IOException{		
+	protected void read(ByteBuffer buf) throws IOException {		
 		this.inodesCount = Ext2fsDataTypes.getLE32(buf, 0);
 		this.blocksCount = Ext2fsDataTypes.getLE32(buf, 4);
 		this.resevedBlocksCount = Ext2fsDataTypes.getLE32(buf, 8);

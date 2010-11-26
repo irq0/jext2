@@ -10,8 +10,6 @@ class InodeAccess {
 		Inode inode = Inode.fromByteBuffer(buf, offset);
 		int mode = inode.getMode();
 
-		System.out.println("MODE" + mode);
-		
 		if ((mode & Constants.LINUX_S_IFMT) == Constants.LINUX_S_IFDIR) {
 			DirectoryInode newInode = DirectoryInode.fromByteBuffer(buf, offset);
 			return newInode;
@@ -40,8 +38,6 @@ class InodeAccess {
 		ByteBuffer table = blocks.read(absBlock);
 		Inode inode = InodeAccess.readFromByteBuffer(table, relOffset);
 		
-		System.out.println(inode);
-	
 		return inode;
 		
 	}

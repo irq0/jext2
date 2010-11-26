@@ -40,7 +40,6 @@ public class DirectoryInode extends Inode implements Iterable<DirectoryEntry> {
 
 		private void fetchNextEntry() {
 			try {
-				System.out.println(entry);
 				if (entry != null) {
 					offset += entry.getRecLen();
 				} 	
@@ -49,8 +48,7 @@ public class DirectoryInode extends Inode implements Iterable<DirectoryEntry> {
 				if (offset == superblock.getBlocksize()) {
 					fileBlockNr += 1;
 					int blockNr = DataBlockAccess.getDataBlockNr(inode, fileBlockNr);
-					System.out.println("NEXT BLOCK" + fileBlockNr + " " + blockNr);
-					
+				
 					if (blockNr == 0) { // entry was last
 						block = null;
 					} else { // start with new block

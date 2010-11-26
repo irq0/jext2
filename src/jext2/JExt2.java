@@ -30,9 +30,11 @@ class JExt2 {
 			blockGroups.readDescriptors();
 			
 		} catch (java.io.FileNotFoundException e) {
-			
+			System.out.println("Cannot open block device.. exiting");
+			System.exit(23);
 		} catch (java.io.IOException e) {
-			
+			System.out.println("Unrecoverable IO error occured.. dying");
+			e.printStackTrace();			
 		}
 	}
 
@@ -48,6 +50,11 @@ class JExt2 {
 		
 		System.out.println(Feature.supportedFeatures());
 		
+		System.out.println("Root Inode: ");
+		try {
+			System.out.println(InodeAccess.readByIno(Constants.EXT2_ROOT_INO));
+		} catch (java.io.IOException e) {
+		}
 	}
 	
 	private void checkFeatures() {
@@ -61,8 +68,7 @@ class JExt2 {
 		JExt2 fs = new JExt2();		
 		fs.initializeFilesystem(args[0]);
 		fs.checkFeatures();
-		fs.printMeta();
-		
+		fs.printMeta();		
 	}
 
 	public void dumpByteBuffer(ByteBuffer buf, int offset) {
