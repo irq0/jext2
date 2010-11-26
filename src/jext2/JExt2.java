@@ -17,7 +17,7 @@ class JExt2 {
 	private Superblock superblock;
 	private BlockGroupAccess blockGroups;
 	
-	void initializeFilesystem(String filename) {
+	private void initializeFilesystem(String filename) {
 		try {
 			blockDevFilename = filename;
 			blockDevFile = new RandomAccessFile(filename, "rw");
@@ -36,13 +36,13 @@ class JExt2 {
 		}
 	}
 
-	void printMeta() {
+	private void printMeta() {
 		System.out.println("JExt2 - Java EXT2 Filesystem Implementation");
 		System.out.println(" blockdev=" + blockDevFilename);
 		System.out.println(superblock);
 		
-		System.out.println(Calculations.groupCount() + " Block groups on filesystem:");
-		for (BlockGroupDescriptor d : blockGroups.iterateBlockGroups()) {
+		System.out.println(superblock.getGroupsCount() + " Block groups on filesystem:");
+		for (BlockGroup d : blockGroups.iterateBlockGroups()) {
 			System.out.println(d);
 		}
 		
@@ -50,10 +50,17 @@ class JExt2 {
 		
 	}
 	
+	private void checkFeatures() {
+		if (Feature.incompatUnsupported() || Feature.roCompatUnsupported()) {
+			System.out.println("Featureset incompatible with JExt2 :(");
+			System.exit(23);
+		}		
+	}
 	
 	public static void main(String[] args) throws IOException {	   
 		JExt2 fs = new JExt2();		
 		fs.initializeFilesystem(args[0]);
+		fs.checkFeatures();
 		fs.printMeta();
 		
 	}

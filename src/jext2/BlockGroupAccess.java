@@ -7,51 +7,57 @@ import java.util.Iterator;
 /** provide access to block group descriptors */
 public class BlockGroupAccess {
 	private static BlockAccess blocks = BlockAccess.getInstance();
+	private static Superblock superblock = Superblock.getInstance();
 	
-	private BlockGroupDescriptor[] descriptors;
-	private BlockGroupAccess instance;
+	private BlockGroup[] descriptors;
+	private static BlockGroupAccess instance = null;
 	
 	public BlockGroupAccess() {
-		if (this.instance != null) {
+		if (instance != null) {
 			throw new RuntimeException("singleton!");
 		} 
 		instance = this;	
 	}
-	
-	private BlockGroupDescriptor readDescriptorByGroupNr(int nr) throws IOException {
-		int blockNr = Calculations.groupFirstBlock(nr);
-		ByteBuffer block = blocks.read(blockNr);
 		
-		return BlockGroupDescriptor.fromByteBuffer(block);
-	}
-	
 	public void readDescriptors() throws IOException {
-		int groupCount = Calculations.groupCount();
-		descriptors = new BlockGroupDescriptor[groupCount];
+		int blockCount = (superblock.getGroupsCount() + 
+						  superblock.getGroupDescrPerBlock() - 1) /
+						  superblock.getGroupDescrPerBlock();
+		int groupCount = superblock.getGroupsCount();
+		int start = BlockGroup.descriptorLocation(0);
+		int groupsPerBlock = superblock.getGroupDescrPerBlock();
+		int group = 0;
+		descriptors = new BlockGroup[superblock.getGroupsCount()];
 		
-		for (int i=0; i<groupCount; i++) {
-			descriptors[i] = readDescriptorByGroupNr(i);
+		for (int nr=start; nr<blockCount+start; nr++) {			
+			ByteBuffer buf = blocks.read(nr);
+			
+			for (int i=0; i<Math.min(groupCount, groupsPerBlock); i++) {				
+				descriptors[group++] = BlockGroup.fromByteBuffer(buf, nr, i*32);
+			}
+			
+			groupCount -= groupsPerBlock;
 		}
 	}
 	
-	public BlockGroupDescriptor getGroupDescriptor(int group) {
+	public BlockGroup getGroupDescriptor(int group) {
 		return descriptors[group];
 	}
 	
-	public BlockGroupAccess getInstance() {
-		return this.instance;
+	public static BlockGroupAccess getInstance() {
+		return instance;
 	}
 	
 	
 	private class BlockGroupDescriptorIterator 
-	implements Iterator<BlockGroupDescriptor>, Iterable<BlockGroupDescriptor> {
+	implements Iterator<BlockGroup>, Iterable<BlockGroup> {
 		private int current = 0;
 		
 		public boolean hasNext() {
-			return (current < Calculations.groupCount());
+			return (current < superblock.getGroupsCount());
 		}
 
-		public BlockGroupDescriptor next() {
+		public BlockGroup next() {
 			return descriptors[current++];			
 		}
 
@@ -63,11 +69,9 @@ public class BlockGroupAccess {
 			return this;
 		}				
 	}
-		
-	
-	
-	
+			
 	public BlockGroupDescriptorIterator iterateBlockGroups() {
 		return new BlockGroupDescriptorIterator();
 	}
+		
 }

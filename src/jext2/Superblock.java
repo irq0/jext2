@@ -55,6 +55,10 @@ public class Superblock extends Block {
 	private UUID uuid;
 	private String volumeName;
 	private String lastMounted;
+	
+	private int blocksize;
+	private int groupDescPerBlock;
+	private int groupsCount;
 
 	public final int getInodesCount() {
 		return this.inodesCount;
@@ -160,11 +164,19 @@ public class Superblock extends Block {
 	}
 
 	public final int getBlocksize() {
-		return (1024 << this.logBlockSize);
+		return this.blocksize;
 	}
 
 	public final int getBlocksizeBits() {
-		return (1024 << this.logBlockSize) * 8;
+		return this.blocksize * 8;
+	}
+	
+	public final int getGroupDescrPerBlock() {
+		return this.groupDescPerBlock;
+	}
+	
+	public final int getGroupsCount() {
+		return this.groupsCount;
 	}
 	
 	protected void read(ByteBuffer buf) throws IOException{		
@@ -202,7 +214,12 @@ public class Superblock extends Block {
 		this.featuresRoCompat = Ext2fsDataTypes.getLE32(buf, 100);
 		this.uuid = Ext2fsDataTypes.getUUID(buf, 104);
 		this.volumeName = Ext2fsDataTypes.getString(buf, 120, 16);
-		this.lastMounted = Ext2fsDataTypes.getString(buf, 136, 64);	   		
+		this.lastMounted = Ext2fsDataTypes.getString(buf, 136, 64);	   	
+		
+		this.blocksize = (1024 << this.logBlockSize);
+		this.groupDescPerBlock = this.blocksize / 32; // 32 = sizeof (struct ext2_group_desc);
+		this.groupsCount = ((this.blocksCount - this.firstDataBlock) - 1) /
+						   this.blocksPerGroup;
 	}
 
 

@@ -12,15 +12,6 @@ public class Calculations {
 		return (ino - 1) / superblock.getInodesPerGroup();
 	}
 
-	public static int groupFirstBlock(int group) {
-		return superblock.getFirstDataBlock() +
-			(group * superblock.getBlocksPerGroup());
-	}
-
-	public static int groupCount() {
-		return superblock.getBlocksCount() / superblock.getBlocksPerGroup();
-	}
-
 	public static int localInodeIndex(int ino) {
 		return (ino - 1) % superblock.getInodesPerGroup();
 	}
@@ -30,10 +21,6 @@ public class Calculations {
 			superblock.getInodeSize();
 	}
 
-	public static int firstBlockOfGroup(int group) {
-		return superblock.getFirstDataBlock() + 1 +
-			group * superblock.getBlocksPerGroup();
-	}
 
 	public static int blockPerInodeTable() {
 		return superblock.getInodesPerGroup() / superblock.getInodeSize();

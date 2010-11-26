@@ -4,6 +4,7 @@ import java.io.IOException;
 class InodeAccess {
 	private static Superblock superblock = Superblock.getInstance();
 	private static BlockAccess blocks = BlockAccess.getInstance();
+	private static BlockGroupAccess blockGroups = BlockGroupAccess.getInstance();
 	
 	public static Inode readFromByteBuffer(ByteBuffer buf, int offset) throws IOException {
 		Inode inode = Inode.fromByteBuffer(buf, offset);
@@ -31,9 +32,7 @@ class InodeAccess {
 		int offset = Calculations.localInodeOffset(ino);
 		int tblBlock = offset / superblock.getBlocksize();
 	
-		BlockGroupDescriptor descr =
-			BlockGroupDescriptor.fromByteBuffer(blocks.read
-			                                    (Calculations.firstBlockOfGroup(group)));
+		BlockGroup descr = blockGroups.getGroupDescriptor(group);
 	
 		int absBlock = descr.getInodeTable() + tblBlock;
 		int relOffset = offset - (tblBlock * superblock.getBlocksize());
