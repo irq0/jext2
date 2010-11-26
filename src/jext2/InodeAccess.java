@@ -11,19 +11,19 @@ class InodeAccess {
 	}	
 	
 	public static Inode readFromByteBuffer(ByteBuffer buf, int offset) throws IOException {
-		Inode inode = Inode.fromByteBuffer(buf, offset);
-		int mode = inode.getMode();
+		int mode = Ext2fsDataTypes.getLE16(buf, offset);
 
 		if (mask(mode, Constants.LINUX_S_IFDIR)) {
-			DirectoryInode newInode = DirectoryInode.fromByteBuffer(buf, offset);
-			return newInode;
+			DirectoryInode inode = DirectoryInode.fromByteBuffer(buf, offset);
+			return inode;
 		} else if (mask(mode, Constants.LINUX_S_IFREG)) {
-			RegInode newInode = RegInode.fromByteBuffer(buf, offset);
-			return newInode;
+			RegInode inode = RegInode.fromByteBuffer(buf, offset);
+			return inode;
 		} else if (mask(mode, Constants.LINUX_S_IFLNK)) {
-			SymlinkInode newInode = SymlinkInode.fromByteBuffer(buf, offset);
-			return newInode;
+			SymlinkInode inode = SymlinkInode.fromByteBuffer(buf, offset);
+			return inode;
 		} else {
+			Inode inode = Inode.fromByteBuffer(buf, offset);
 			return inode;
 		}
 	}
