@@ -1,12 +1,10 @@
 package jext2;
 
 
-import java.nio.channels.FileChannel;
-import java.nio.ByteBuffer;
-import java.io.RandomAccessFile;
 import java.io.IOException;
-import java.io.FileNotFoundException;
-import java.util.Iterator;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 
 
 class JExt2 {
@@ -53,6 +51,9 @@ class JExt2 {
 		System.out.println("Root Inode: ");
 		try {
 			System.out.println(InodeAccess.readByIno(Constants.EXT2_ROOT_INO));
+			System.out.println(InodeAccess.readByIno(14));
+			System.out.println(InodeAccess.readByIno(15));
+
 		} catch (java.io.IOException e) {
 		}
 	}

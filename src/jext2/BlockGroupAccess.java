@@ -65,7 +65,6 @@ public class BlockGroupAccess {
 		}
 		
 		public BlockGroupDescriptorIterator iterator() {
-			// TODO Auto-generated method stub
 			return this;
 		}				
 	}

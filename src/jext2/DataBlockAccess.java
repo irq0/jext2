@@ -36,7 +36,7 @@ public class DataBlockAccess {
 		return block;
 	}
 
-	static class DataBlockIterator implements Iterator<Integer> {
+	static class DataBlockIterator implements Iterator<Integer>, Iterable<Integer>{
 		Inode inode;
 		int current;
 
@@ -68,6 +68,10 @@ public class DataBlockAccess {
 		}
 
 		public void remove() {
+		}
+		
+		public DataBlockIterator iterator() {
+			return this;
 		}
 	}
 
