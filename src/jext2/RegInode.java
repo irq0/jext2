@@ -16,7 +16,7 @@ public class RegInode extends Inode {
 		
 		Iterator<Integer> i = DataBlockAccess.iterateDataBlockNrStartingAt(this, startFileBlock);
 		
-		while (i.hasNext()) {
+		while (i.hasNext() && result.hasRemaining()) {
 			int blockNr = i.next();
 			ByteBuffer block = blocks.read(blockNr);
 
@@ -27,10 +27,10 @@ public class RegInode extends Inode {
 				offset++;
 			}
 
-			System.out.println( offset + " bytes copied");
 			offset = 0;
 		}
 
+		result.position(0);
 		return result;
 	}
 
