@@ -95,6 +95,10 @@ public class Inode extends Block {
 		return this.uidLow + (16 << this.uidHigh);
 	}
 	
+	public final int getGid() {
+		return this.gidLow + (16 << this.gidHigh);
+	}
+	
 	protected void read(ByteBuffer buf) throws IOException {
 		this.mode = Ext2fsDataTypes.getLE16(buf, 0 + offset);
 		this.uidLow = Ext2fsDataTypes.getLE16(buf, 2 + offset);

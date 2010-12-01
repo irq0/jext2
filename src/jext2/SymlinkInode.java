@@ -8,6 +8,10 @@ public class SymlinkInode extends Inode {
 	private static Superblock superblock = Superblock.getInstance();
 	private String symlink;
 	
+	public final String getSymlink() {
+		return this.symlink;
+	}
+	
 	protected SymlinkInode(int blockNr, int offset) {
 		super(blockNr, offset);
 	}

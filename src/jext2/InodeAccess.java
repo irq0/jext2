@@ -1,7 +1,7 @@
 package jext2;
 import java.nio.ByteBuffer;
 import java.io.IOException;
-class InodeAccess {
+public class InodeAccess {
 	private static Superblock superblock = Superblock.getInstance();
 	private static BlockAccess blocks = BlockAccess.getInstance();
 	private static BlockGroupAccess blockGroups = BlockGroupAccess.getInstance();
