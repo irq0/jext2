@@ -5,6 +5,8 @@
   <property name="source" location="src"/>
   <property name="build" location="bin"/>
   <property name="dist" location="dist"/>
+  <property name="jlowfuse" location="${user.home}/opt/share/java/jlowfuse.jar"/>
+  <property name="apache-common-lang" location="${user.home}/opt/share/java/commons-lang-2.5.jar"/>
 
   <target name="init">
     <tstamp/>
@@ -17,6 +19,10 @@
     <javac srcdir="${source}" destdir="${build}" includeAntRuntime="false">
       <include name="jext2/**"/>
       <include name="fusejext2/**"/>
+      <classpath>
+	<pathelement path="${jlowfuse}"/>
+	<pathelement path="${apache-common-lang}"/>
+      </classpath>
     </javac>
   </target>
 
@@ -25,6 +31,14 @@
     <!-- run with: java -jar jext2.jar -Djava.library.path=PATH_TO_libjlowfuse.so 
 	 and jlowfuse.jar in your CLASSPATH
     -->
+    <jar jarfile="${dist}/jext2-plusdepends.jar" basedir="${build}">
+      <zipfileset includes="**/*.class" src="${jlowfuse}"/>
+      <zipfileset includes="**/*.class" src="${apache-common-lang}"/>
+      <manifest>
+	<attribute name="Main-Class" value="fusejext2.FuseJExt2"/>
+      </manifest>
+    </jar>      
+
     <jar jarfile="${dist}/jext2.jar" basedir="${build}">
       <manifest>
 	<attribute name="Main-Class" value="fusejext2.FuseJExt2"/>
