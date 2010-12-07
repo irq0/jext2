@@ -1,0 +1,39 @@
+<project name="jext2" default="dist" basedir=".">
+  <description>
+    Java implementation of the second extended file system
+  </description>
+  <property name="source" location="src"/>
+  <property name="build" location="bin"/>
+  <property name="dist" location="dist"/>
+
+  <target name="init">
+    <tstamp/>
+    <mkdir dir="${build}"/>
+    <mkdir dir="${dist}"/>
+  </target>
+
+  <target name="javacompile" depends="init" 
+	  description="compile all java source">
+    <javac srcdir="${source}" destdir="${build}" includeAntRuntime="false">
+      <include name="jext2/**"/>
+      <include name="fusejext2/**"/>
+    </javac>
+  </target>
+
+  <target name="dist" depends="javacompile" description="generate jar file">
+
+    <!-- run with: java -jar jext2.jar -Djava.library.path=PATH_TO_libjlowfuse.so 
+	 and jlowfuse.jar in your CLASSPATH
+    -->
+    <jar jarfile="${dist}/jext2.jar" basedir="${build}">
+      <manifest>
+	<attribute name="Main-Class" value="fusejext2.FuseJExt2"/>
+      </manifest>
+    </jar>      
+  </target>
+
+  <target name="clean">
+    <delete dir="${build}"/>
+    <delete dir="${dist}"/>
+  </target>
+</project>
