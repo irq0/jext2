@@ -28,7 +28,7 @@ public class BlockAccess {
 		ByteBuffer buf = ByteBuffer.allocate(blocksize);		
 		buf.order(ByteOrder.BIG_ENDIAN);
 		
-		blockdev.position(nr * blocksize);
+		blockdev.position(((long)(nr & 0xffffffff)) * blocksize);
 		blockdev.read(buf);
 
 		return buf; 
