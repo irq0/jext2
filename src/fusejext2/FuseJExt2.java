@@ -25,10 +25,7 @@ public class FuseJExt2 {
 	static class FuseShutdownHook extends Thread {
 		public void run() {
 			Session.removeChan(chan);
-			
-			Session.destroy(sess);
 			Session.exit(sess);
-			
 			Fuse.unmount(mountpoint, chan);
 		}
 	}	
