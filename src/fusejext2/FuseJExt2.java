@@ -55,9 +55,15 @@ public class FuseJExt2 {
         	System.out.println("Can't open block device / file");
         	System.exit(1);
         }
-        
-        chan = Fuse.mount(mountpoint, fuseArgs);
-        sess = JLowFuse.lowlevelNew(fuseArgs, new JExt2Ops(blockDev));
+
+        try {
+        	chan = Fuse.mount(mountpoint, fuseArgs);
+		if (chan == null) {
+			System.out.println("Can't mount on " + mountpoint);
+			System.exit(1);
+		}
+
+		sess = JLowFuse.lowlevelNew(fuseArgs, new JExt2Ops(blockDev));
         
         Session.addChan(sess, chan);
         
@@ -68,6 +74,3 @@ public class FuseJExt2 {
         // Session.loopMulti(sess);
     }
 }
-
-
-
