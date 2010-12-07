@@ -44,6 +44,11 @@ public class FuseJExt2 {
         SWIGTYPE_p_fuse_session sess = null;
         try {
         	chan = Fuse.mount(mountpoint, fuseArgs);
+		if (chan == null) {
+			System.out.println("Can't mount on " + mountpoint);
+			System.exit(1);
+		}
+
         	sess = JLowFuse.lowlevelNew(fuseArgs, new JExt2Ops(blockDev));
 
         	Session.addChan(sess, chan);
