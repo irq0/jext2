@@ -7,6 +7,7 @@
   <property name="dist" location="dist"/>
   <property name="jlowfuse" location="${user.home}/opt/share/java/jlowfuse.jar"/>
   <property name="apache-common-lang" location="${user.home}/opt/share/java/commons-lang-2.5.jar"/>
+  <property name="apache-common-cli" location="${user.home}/opt/share/java/commons-cli-1.2.jar"/>
 
   <target name="init">
     <tstamp/>
@@ -22,6 +23,7 @@
       <classpath>
 	<pathelement path="${jlowfuse}"/>
 	<pathelement path="${apache-common-lang}"/>
+    <pathelement path="${apache-common-cli}"/>
       </classpath>
     </javac>
   </target>
@@ -34,6 +36,7 @@
     <jar jarfile="${dist}/jext2-plusdepends.jar" basedir="${build}">
       <zipfileset includes="**/*.class" src="${jlowfuse}"/>
       <zipfileset includes="**/*.class" src="${apache-common-lang}"/>
+      <zipfileset includes="**/*.class" src="${apache-common-cli}"/>
       <manifest>
 	<attribute name="Main-Class" value="fusejext2.FuseJExt2"/>
       </manifest>
