@@ -5,6 +5,7 @@ import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.util.List;
 import java.util.LinkedList;
+import java.io.File;
 
 import fuse.Fuse;
 import fuse.SWIGTYPE_p_fuse_chan;
@@ -42,7 +43,7 @@ public class FuseJExt2 {
 		CommandLineParser parser = new PosixParser();
 		
 		Options options = new Options();
-		options.addOption("f", "foreground", false, "do not daemonize");
+		options.addOption("d", "daemonize", false, "java side of daemonzation - use jext_daemon.sh");
 		options.addOption("h", "help", false, "print this usage text");
 		options.addOption(OptionBuilder.withDescription("options passed directly to FUSE")
 		                  .hasArg()
@@ -80,10 +81,28 @@ public class FuseJExt2 {
 		}
 	}
 
+
+	private static File getPidFile() {
+		String filename = System.getProperty("daemon.pidfile");
+		File pidfile = new File(filename);
+
+		return pidfile;
+	}
+	
+	private static void daemonize() {
+		getPidFile().deleteOnExit();
+		System.out.close();
+		System.err.close();
+	}
+
 	public static void main(String[] args) {
 		parseCommandline(args);
 		
 		JLowFuseArgs fuseArgs = JLowFuseArgs.parseCommandline(new String[] {fuseCommandline});
+
+		if (daemon)
+			daemonize();
+			
 		
         try {
     		blockDevFile = new RandomAccessFile(filename, "rw");
