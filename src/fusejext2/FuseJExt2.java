@@ -27,7 +27,7 @@ public class FuseJExt2 {
 	private static String mountpoint;
 	private static String filename;
 
-	private static boolean daemon = true;
+	private static boolean daemon = false;
 	private static String fuseCommandline = "-o foo,subtype=jext2";
 	
 	static class FuseShutdownHook extends Thread {
