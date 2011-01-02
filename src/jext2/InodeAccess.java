@@ -44,12 +44,15 @@ public class InodeAccess {
 		
 		ByteBuffer table = blocks.read(absBlock);
 		Inode inode = InodeAccess.readFromByteBuffer(table, relOffset);
+
+		inode.setBlockGroup(group);
+		inode.setIno(ino);
 		
 		return inode;
 		
 	}
 	
-	
-	
+	public static Inode readRootInode() throws IOException {
+		return readByIno(Constants.EXT2_ROOT_INO);
+	}	
 }
-

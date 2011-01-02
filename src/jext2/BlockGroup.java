@@ -16,6 +16,9 @@ public class BlockGroup extends Block {
 	private short freeInodesCount;
 	private short usedDirsCount;
 
+	// in memory data
+	private int blockGroup = -1;
+	
 	public final int getBlockBitmap() {
 		return this.blockBitmap;
 	}
@@ -35,6 +38,13 @@ public class BlockGroup extends Block {
 		return this.usedDirsCount;
 	}
 
+	public final int getBlockGroup() {
+		return this.blockGroup;
+	}
+	void setBlockGroup(int blockGroup) {
+		this.blockGroup = blockGroup;
+	}
+	
 	
 	protected void read(ByteBuffer buf) throws IOException {
 		this.blockBitmap = Ext2fsDataTypes.getLE32(buf, 0 + offset);
@@ -101,3 +111,11 @@ public class BlockGroup extends Block {
 	}
 
 }		
+
+
+
+
+
+
+
+

@@ -29,6 +29,10 @@ public class Inode extends Block {
 	private byte fsize = 0;
 	private short uidHigh;
 	private short gidHigh;
+
+	// in memory data (ext2_inode_info)
+	private int blockGroup = -1;
+	private long ino = -1;
 	
 	public final short getMode() {
 		return this.mode;
@@ -98,7 +102,20 @@ public class Inode extends Block {
 	public final int getGid() {
 		return this.gidLow + (16 << this.gidHigh);
 	}
-	
+
+	public final int getBlockGroup() {
+		return this.blockGroup;
+	}
+	public void setBlockGroup(int blockGroup) {
+		this.blockGroup = blockGroup;
+	}
+	public final long getIno() {
+		return this.ino;
+	}
+	public void setIno(long ino) {
+		this.ino = ino;
+	}
+
 	protected void read(ByteBuffer buf) throws IOException {
 		this.mode = Ext2fsDataTypes.getLE16(buf, 0 + offset);
 		this.uidLow = Ext2fsDataTypes.getLE16(buf, 2 + offset);
@@ -143,4 +160,18 @@ public class Inode extends Block {
 		inode.read(buf);
 		return inode;
 	}
+
+	public boolean equals(Inode other) {
+		return (this.blockNr == other.blockNr) &&
+			(this.offset == other.offset);
+	}
+
+	public int hashCode() {
+		return this.blockNr ^ this.offset;
+	}
+	
 }
+
+
+
+

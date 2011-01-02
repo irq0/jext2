@@ -33,7 +33,9 @@ public class BlockGroupAccess {
 			ByteBuffer buf = blocks.read(nr);
 			
 			for (int i=0; i<Math.min(groupCount, groupsPerBlock); i++) {				
-				descriptors[group++] = BlockGroup.fromByteBuffer(buf, nr, i*32);
+				descriptors[group] = BlockGroup.fromByteBuffer(buf, nr, i*32);
+				descriptors[group].setBlockGroup(group);
+				group++;
 			}
 			
 			groupCount -= groupsPerBlock;

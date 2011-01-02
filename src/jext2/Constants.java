@@ -185,4 +185,56 @@ public class Constants {
 	public static final int LINUX_S_IROTH = 00004;
 	public static final int LINUX_S_IWOTH = 00002;
 	public static final int LINUX_S_IXOTH = 00001;
+
+
+	/*
+	 * Inode flags (GETFLAGS/SETFLAGS)
+	 */
+	public static final int EXT2_SECRM_FL           = 0x00000001; /* Secure deletion */
+	public static final int EXT2_UNRM_FL			= 0x00000002; /* Undelete */
+	public static final int EXT2_COMPR_FL			= 0x00000004; /* Compress file */
+													
+	public static final int EXT2_SYNC_FL			= 0x00000008; /* Synchronous updates */
+	public static final int EXT2_IMMUTABLE_FL		= 0x00000010; /* Immutable file */
+	public static final int EXT2_APPEND_FL			= 0x00000020; /* writes to file may only append */
+	public static final int EXT2_NODUMP_FL			= 0x00000040; /* do not dump file */
+	public static final int EXT2_NOATIME_FL			= 0x00000080; /* do not update atime */
+	/* Reserved for compression usage... */			
+	public static final int EXT2_DIRTY_FL			= 0x00000100;		
+	public static final int EXT2_COMPRBLK_FL		= 0x00000200; /* One or more compressed clusters */
+	public static final int EXT2_NOCOMP_FL			= 0x00000400; /* Don't compress */
+	public static final int EXT2_ECOMPR_FL			= 0x00000800; /* Compression error */
+	/* End compression flags --- maybe not all used */	
+	public static final int EXT2_BTREE_FL			= 0x00001000; /* btree format dir */
+	public static final int EXT2_INDEX_FL			= 0x00001000; /* hash-indexed directory */
+	public static final int EXT2_IMAGIC_FL			= 0x00002000; /* AFS directory */
+	public static final int EXT2_JOURNAL_DATA_FL	= 0x00004000; /* Reserved for ext3 */
+	public static final int EXT2_NOTAIL_FL			= 0x00008000; /* file tail should not be merged */
+	public static final int EXT2_DIRSYNC_FL			= 0x00010000; /* dirsync behaviour (directories only) */
+	public static final int EXT2_TOPDIR_FL			= 0x00020000; /* Top of directory hierarchies*/
+	public static final int EXT2_RESERVED_FL		= 0x80000000; /* reserved for ext2 lib */
+
+	public static final int EXT2_FL_USER_VISIBLE	= 0x0003DFFF; /* User visible flags */
+	public static final int EXT2_FL_USER_MODIFIABLE = 0x000380FF; /* User modifiable flags */
+
+	/* Flags that should be inherited by new inodes from their parent. */
+	public static final int EXT2_FL_INHERITED = (EXT2_SECRM_FL |
+	                                             EXT2_UNRM_FL |
+	                                             EXT2_COMPR_FL |
+	                                             EXT2_SYNC_FL |
+	                                             EXT2_IMMUTABLE_FL |
+	                                             EXT2_APPEND_FL |
+	                                             EXT2_NODUMP_FL |
+	                                             EXT2_NOATIME_FL |
+	                                             EXT2_COMPRBLK_FL|
+	                                             EXT2_NOCOMP_FL |
+	                                             EXT2_JOURNAL_DATA_FL |
+	                                             EXT2_NOTAIL_FL |
+	                                             EXT2_DIRSYNC_FL);
+
+	/* Flags that are appropriate for regular files (all but dir-specific ones). */
+	public static final int EXT2_REG_FLMASK = (~(EXT2_DIRSYNC_FL | EXT2_TOPDIR_FL));
+
+	/* Flags that are appropriate for non-directories/regular files. */
+	public static final int EXT2_OTHER_FLMASK = (EXT2_NODUMP_FL | EXT2_NOATIME_FL);
 }
