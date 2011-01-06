@@ -42,7 +42,7 @@ class JExt2 {
 		System.out.println(superblock);
 		
 		System.out.println(superblock.getGroupsCount() + " Block groups on filesystem:");
-		for (BlockGroup d : blockGroups.iterateBlockGroups()) {
+		for (BlockGroupDescriptor d : blockGroups.iterateBlockGroups()) {
 			System.out.println(d);
 		}
 		

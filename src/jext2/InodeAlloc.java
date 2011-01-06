@@ -193,6 +193,9 @@ class InodeAlloc {
 			descr.setUsedDirsCount((short)(descr.getUsedDirsCount() + 1));
 		}
 		
+		superblock.write();
+		descr.write();
+		
 		/* set location metadata of inode */
 		int offset = (ino * superblock.getInodeSize()) % superblock.getBlocksize();
 		int block = descr.getInodeTable() + (ino * superblock.getInodeSize()) / superblock.getBlocksize();

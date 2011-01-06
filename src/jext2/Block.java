@@ -17,11 +17,11 @@ public abstract class Block {
 	/** in block offset */
 	protected int offset;
 	
-	public final int getBlockNr() {
+	public int getBlockNr() {
 		return blockNr;
 	}
 
-	public final int getOffset() {
+	public int getOffset() {
 		return offset;
 	}
 
@@ -34,10 +34,10 @@ public abstract class Block {
 	}
 	
 	protected void write(ByteBuffer buf) throws IOException {
-		if (this.offset == -1 || this.blockNr == -1) 
+		if (getOffset() == -1 || getBlockNr() == -1) 
 			throw new IllegalArgumentException("data structure is unregistered");
 
-		BlockAccess.getInstance().writePartitial(this.blockNr, buf, this.offset);
+		BlockAccess.getInstance().writePartitial(getBlockNr(), buf, getOffset());
 	}
 	
 	/** write data to disk */

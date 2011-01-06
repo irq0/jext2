@@ -19,6 +19,10 @@ public class BlockGroupAccess {
 		instance = this;	
 	}
 		
+	/* 
+	 * read descriptos from first block group but set blockNr to the 'real' 
+	 * location afterwards
+	 */
 	public void readDescriptors() throws IOException {
 		int blockCount = (superblock.getGroupsCount() + 
 						  superblock.getGroupDescrPerBlock() - 1) /
@@ -35,6 +39,7 @@ public class BlockGroupAccess {
 			for (int i=0; i<Math.min(groupCount, groupsPerBlock); i++) {				
 				descriptors[group] = BlockGroupDescriptor.fromByteBuffer(buf, nr, i*32);
 				descriptors[group].setBlockGroup(group);
+				descriptors[group].setBlockNr(BlockGroupDescriptor.descriptorLocation(group));
 				group++;
 			}
 			
