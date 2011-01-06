@@ -2,11 +2,12 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
-	<classpathentry kind="lib" path="depends/commons-lang-2.5.jar"/>
+	<classpathentry kind="lib" path="/Users/seri/opt/share/java/commons-lang-2.5.jar"/>
 	<classpathentry kind="lib" path="/Volumes/TrueCrypt_Documents/WORKSPACE/jlowfuse/dist/jlowfuse.jar">
 		<attributes>
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="/Volumes/TrueCrypt_Documents/WORKSPACE/jlowfuse/dist"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="/Users/seri/opt/share/java/commons-cli-1.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
