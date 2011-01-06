@@ -8,7 +8,7 @@ public class RegInode extends Inode {
 	private static Superblock superblock = Superblock.getInstance();
 	private static BlockAccess blocks = BlockAccess.getInstance();
 
-	public ByteBuffer read(int size, int offset) throws IOException {
+	public ByteBuffer readData(int size, int offset) throws IOException {
 		ByteBuffer result = ByteBuffer.allocateDirect(size);
 
 		int startFileBlock = offset / superblock.getBlocksize();

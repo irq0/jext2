@@ -9,7 +9,7 @@ public class BlockGroupAccess {
 	private static BlockAccess blocks = BlockAccess.getInstance();
 	private static Superblock superblock = Superblock.getInstance();
 	
-	private BlockGroup[] descriptors;
+	private BlockGroupDescriptor[] descriptors;
 	private static BlockGroupAccess instance = null;
 	
 	public BlockGroupAccess() {
@@ -24,16 +24,16 @@ public class BlockGroupAccess {
 						  superblock.getGroupDescrPerBlock() - 1) /
 						  superblock.getGroupDescrPerBlock();
 		int groupCount = superblock.getGroupsCount();
-		int start = BlockGroup.descriptorLocation(0);
+		int start = BlockGroupDescriptor.descriptorLocation(0);
 		int groupsPerBlock = superblock.getGroupDescrPerBlock();
 		int group = 0;
-		descriptors = new BlockGroup[superblock.getGroupsCount()];
+		descriptors = new BlockGroupDescriptor[superblock.getGroupsCount()];
 		
 		for (int nr=start; nr<blockCount+start; nr++) {			
 			ByteBuffer buf = blocks.read(nr);
 			
 			for (int i=0; i<Math.min(groupCount, groupsPerBlock); i++) {				
-				descriptors[group] = BlockGroup.fromByteBuffer(buf, nr, i*32);
+				descriptors[group] = BlockGroupDescriptor.fromByteBuffer(buf, nr, i*32);
 				descriptors[group].setBlockGroup(group);
 				group++;
 			}
@@ -42,7 +42,7 @@ public class BlockGroupAccess {
 		}
 	}
 	
-	public BlockGroup getGroupDescriptor(int group) {
+	public BlockGroupDescriptor getGroupDescriptor(int group) {
 		return descriptors[group];
 	}
 	
@@ -52,14 +52,14 @@ public class BlockGroupAccess {
 	
 	
 	private class BlockGroupDescriptorIterator 
-	implements Iterator<BlockGroup>, Iterable<BlockGroup> {
+	implements Iterator<BlockGroupDescriptor>, Iterable<BlockGroupDescriptor> {
 		private int current = 0;
 		
 		public boolean hasNext() {
 			return (current < superblock.getGroupsCount());
 		}
 
-		public BlockGroup next() {
+		public BlockGroupDescriptor next() {
 			return descriptors[current++];			
 		}
 
@@ -83,7 +83,7 @@ public class BlockGroupAccess {
 		return bmap;
 	}
 	
-	public Bitmap readInodeBitmapOf(BlockGroup group) throws IOException {
+	public Bitmap readInodeBitmapOf(BlockGroupDescriptor group) throws IOException {
 		return readBitmapAtBlock(group.getInodeBitmap());
 	}
 	

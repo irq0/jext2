@@ -6,7 +6,7 @@ import java.io.IOException;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
-public class BlockGroup extends Block {
+public class BlockGroupDescriptor extends Block {
 	private static Superblock superblock = Superblock.getInstance();
 	
 	private int blockBitmap;
@@ -18,7 +18,6 @@ public class BlockGroup extends Block {
 	private short freeInodesCount;
 	private short usedDirsCount;
 
-	// in memory data
 	private int blockGroup = -1;
 	
 	public final int getBlockBitmap() {
@@ -53,6 +52,15 @@ public class BlockGroup extends Block {
 	}
 	public void setUsedDirsCount(short usedDirsCount) {
 		this.usedDirsCount = usedDirsCount;
+	}	
+	public final void setBlockBitmap(int blockBitmap) {
+		this.blockBitmap = blockBitmap;
+	}
+	public final void setInodeBitmap(int inodeBitmap) {
+		this.inodeBitmap = inodeBitmap;
+	}
+	public final void setInodeTable(int inodeTable) {
+		this.inodeTable = inodeTable;
 	}
 	
 	protected void read(ByteBuffer buf) throws IOException {
@@ -64,18 +72,38 @@ public class BlockGroup extends Block {
 		this.usedDirsCount = Ext2fsDataTypes.getLE16(buf, 16 + offset);
 	}
 
-	protected BlockGroup(int blockNr, int offset) {
+	protected void write(ByteBuffer buf) throws IOException {
+		Ext2fsDataTypes.putLE32(buf, this.blockBitmap, 0);
+		Ext2fsDataTypes.putLE32(buf, this.inodeBitmap, 4);
+		Ext2fsDataTypes.putLE32(buf, this.inodeTable, 8);
+		Ext2fsDataTypes.putLE16(buf, this.freeBlocksCount, 12);
+		Ext2fsDataTypes.putLE16(buf, this.freeInodesCount, 14);
+		Ext2fsDataTypes.putLE16(buf, this.usedDirsCount, 16);
+		super.write(buf);
+	}
+	
+	public void write() throws IOException {
+		ByteBuffer buf = allocateByteBuffer();
+		write(buf);		
+	}
+	
+	protected ByteBuffer allocateByteBuffer() {		
+		ByteBuffer buf = ByteBuffer.allocate(32);
+		buf.rewind();
+		return buf;
+	}
+	
+	protected BlockGroupDescriptor(int blockNr, int offset) {
 		super(blockNr, offset);
 	}
 	
-	public static BlockGroup fromByteBuffer(ByteBuffer buf, int blockNr, int offset) {
-		BlockGroup b = new BlockGroup(blockNr, offset);
+	public static BlockGroupDescriptor fromByteBuffer(ByteBuffer buf, int blockNr, int offset) {
+		BlockGroupDescriptor b = new BlockGroupDescriptor(blockNr, offset);
 		try {
 			b.read(buf);
 			return b;
 		} catch (IOException e) {
-			// XXX dont irgnore
-			return b;
+			throw new RuntimeException("IOException in BlockGroupDescriptor->fromByteBuffer");
 		}
 	}
 
@@ -118,7 +146,7 @@ public class BlockGroup extends Block {
 			num *= b;
 		return num == a;
 	}
-
+	
 }		
 
 

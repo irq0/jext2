@@ -116,7 +116,54 @@ public class Inode extends Block {
 		this.ino = ino;
 	}
 
-	protected void fillBuffer(ByteBuffer buf) {
+	public final void setMode(short mode) {
+		this.mode = mode;
+	}
+	public final void setGidLow(short gidLow) {
+		this.gidLow = gidLow;
+	}
+	public final void setUidLow(short uidLow) {
+		this.uidLow = uidLow;
+	}
+	public final void setSize(int size) {
+		this.size = size;
+	}
+	public final void setAccessTime(Date accessTime) {
+		this.accessTime = accessTime;
+	}
+	public final void setChangeTime(Date changeTime) {
+		this.changeTime = changeTime;
+	}
+	public final void setModificationTime(Date modificationTime) {
+		this.modificationTime = modificationTime;
+	}
+	public final void setDeletionTime(Date deletionTime) {
+		this.deletionTime = deletionTime;
+	}
+	public final void setLinksCount(short linksCount) {
+		this.linksCount = linksCount;
+	}
+	public final void setBlocks(int blocks) {
+		this.blocks = blocks;
+	}
+	public final void setFlags(int flags) {
+		this.flags = flags;
+	}
+	public final void setBlock(int[] block) {
+		this.block = block;
+	}
+	public final void setGeneration(int generation) {
+		this.generation = generation;
+	}
+	public final void setUidHigh(short uidHigh) {
+		this.uidHigh = uidHigh;
+	}
+	public final void setGidHigh(short gidHigh) {
+		this.gidHigh = gidHigh;
+	}
+	
+	
+	protected void write(ByteBuffer buf) throws IOException {
 		Ext2fsDataTypes.putLE16(buf, this.mode, 0);
 		Ext2fsDataTypes.putLE16(buf, this.uidLow, 2);
 		Ext2fsDataTypes.putLE32(buf, this.size, 4);
@@ -142,6 +189,8 @@ public class Inode extends Block {
 		// this.frag = Ext2fsDataTypes.getLE8(buf, 116 + offset);
 		Ext2fsDataTypes.putLE16(buf, this.uidHigh, 120);
 		Ext2fsDataTypes.putLE16(buf, this.gidHigh, 122);
+		
+		super.write(buf);
 	}
 	
 	protected void read(ByteBuffer buf) throws IOException {
@@ -216,14 +265,16 @@ public class Inode extends Block {
 		return this.blockNr ^ this.offset;
 	}
 	
+	/** allocate a ByteBuffer big enaugh for a Inode */
+	protected ByteBuffer allocateByteBuffer() {		
+		ByteBuffer buf = ByteBuffer.allocate(Superblock.getInstance().getInodeSize());
+		buf.rewind();
+		return buf;
+	}
+	
 	public void write() throws IOException {
-		if (this.offset == -1 || this.blockNr == -1) 
-			throw new IllegalArgumentException("Inode is unregistered");
-		
-		ByteBuffer buf = ByteBuffer.allocate(Superblock.getInstance().getInodeSize());		
-		fillBuffer(buf);		
-		
-		BlockAccess.getInstance().writePartitial(this.blockNr, buf, this.offset);
+		ByteBuffer buf = allocateByteBuffer();
+		write(buf);
 	}
 	
 }

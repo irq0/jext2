@@ -231,7 +231,58 @@ public class Superblock extends Block {
 						   this.blocksPerGroup;
 	}
 
+	
+	protected void write(ByteBuffer buf) throws IOException {
+		Ext2fsDataTypes.putLE32(buf, this.inodesCount, 0);
+		Ext2fsDataTypes.putLE32(buf, this.blocksCount, 4);
+		Ext2fsDataTypes.putLE32(buf, this.resevedBlocksCount, 8);
+		Ext2fsDataTypes.putLE32(buf, this.freeBlocksCount, 12);
+		Ext2fsDataTypes.putLE32(buf, this.freeInodesCount, 16);
+		Ext2fsDataTypes.putLE32(buf, this.firstDataBlock, 20);
+		Ext2fsDataTypes.putLE32(buf, this.logBlockSize, 24);
+		Ext2fsDataTypes.putLE32(buf, this.logFragSize, 28);
+		Ext2fsDataTypes.putLE32(buf, this.blocksPerGroup, 32);
+		Ext2fsDataTypes.putLE32(buf, this.fragsPerGroup, 36);
+		Ext2fsDataTypes.putLE32(buf, this.inodesPerGroup, 40);
+		Ext2fsDataTypes.putDate(buf, this.lastMount, 44);
+		Ext2fsDataTypes.putDate(buf, this.lastWrite, 48);
+		Ext2fsDataTypes.putLE16(buf, this.mountCount, 52);
+		Ext2fsDataTypes.putLE16(buf, this.maxMountCount, 54);
+		Ext2fsDataTypes.putLE16(buf, this.magic, 56);
+		Ext2fsDataTypes.putLE16(buf, this.state, 58);
+		Ext2fsDataTypes.putLE16(buf, this.errors, 60);
+		Ext2fsDataTypes.putLE16(buf, this.minorRevLevel, 62);
+		Ext2fsDataTypes.putDate(buf, this.lastCheck, 64);
+		Ext2fsDataTypes.putLE32(buf, this.checkInterval, 68);
+		Ext2fsDataTypes.putLE32(buf, this.creatorOs, 72);
+		Ext2fsDataTypes.putLE32(buf, this.revLevel, 76);
+		Ext2fsDataTypes.putLE16(buf, this.defaultResuid, 80);
+		Ext2fsDataTypes.putLE16(buf, this.defaultResgid, 80);
 
+		Ext2fsDataTypes.putLE32(buf, this.firstIno, 84);
+		Ext2fsDataTypes.putLE16(buf, this.inodeSize, 88);
+		Ext2fsDataTypes.putLE16(buf, this.blockGroupNr, 90);
+		Ext2fsDataTypes.putLE32(buf, this.featuresCompat, 92);
+		Ext2fsDataTypes.putLE32(buf, this.featuresIncompat, 96);
+		Ext2fsDataTypes.putLE32(buf, this.featuresRoCompat, 100);
+		Ext2fsDataTypes.putUUID(buf, this.uuid, 104);
+		Ext2fsDataTypes.putString(buf, this.volumeName, 16, 120);
+		Ext2fsDataTypes.putString(buf, this.lastMounted, 64, 136);
+		
+		super.write(buf);
+	}
+	
+	public void write() throws IOException {
+		ByteBuffer buf = allocateByteBuffer();
+		write(buf);
+	}	
+	
+	private ByteBuffer allocateByteBuffer() {
+		ByteBuffer buf = ByteBuffer.allocate(this.blocksize);
+		buf.rewind();
+		return buf;
+	}	
+		
 	public static Superblock getInstance() {
 		return Superblock.instance;
 
@@ -242,7 +293,7 @@ public class Superblock extends Block {
 	}
 	
 	public static Superblock fromBlockAccess(BlockAccess blocks) throws IOException {
-		Superblock sb = new Superblock(-1, -1);
+		Superblock sb = new Superblock(1, 0);
 		ByteBuffer buf = blocks.read(1);
 		sb.read(buf);
 

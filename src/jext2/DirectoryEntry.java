@@ -32,6 +32,10 @@ public class DirectoryEntry extends Block {
 		return this.name;
 	}
 
+	public void write() {
+		throw new RuntimeException("not impl");
+	}
+	
 	protected void read(ByteBuffer buf) throws IOException {
 		this.ino = Ext2fsDataTypes.getLE32(buf, 0 + offset);
 		this.recLen = Ext2fsDataTypes.getLE16(buf, 4 + offset);

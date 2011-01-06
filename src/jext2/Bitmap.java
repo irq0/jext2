@@ -73,4 +73,8 @@ public class Bitmap extends Block {
 		bmap.read(buf);
 		return bmap;
 	}
+	
+	public void write() throws IOException {
+		write(bmap);
+	}
 }

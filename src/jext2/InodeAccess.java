@@ -37,7 +37,7 @@ public class InodeAccess {
 		int offset = Calculations.localInodeOffset(ino);
 		int tblBlock = offset / superblock.getBlocksize();
 	
-		BlockGroup descr = blockGroups.getGroupDescriptor(group);
+		BlockGroupDescriptor descr = blockGroups.getGroupDescriptor(group);
 	
 		int absBlock = descr.getInodeTable() + tblBlock;
 		int relOffset = offset - (tblBlock * superblock.getBlocksize());

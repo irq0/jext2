@@ -1,5 +1,6 @@
 /**
- * Base for parsed on disk blocks like Inodes and BlockGroupDescriptors. 
+ * Base for parsed on disk blocks like Inodes and BlockGroupDescriptors. Not used
+ * for data blocks
  */
 
 package jext2;
@@ -31,14 +32,20 @@ public abstract class Block {
 	public final void setOffset(int offset) {
 		this.offset = offset;
 	}
-
-	/** read data structure from a ByteBuffer representing a block */
-	protected abstract void read(ByteBuffer buf) throws IOException;
 	
-	/** write data structure back to disk */
-	protected void write(ByteBuffer buf) {
+	protected void write(ByteBuffer buf) throws IOException {
+		if (this.offset == -1 || this.blockNr == -1) 
+			throw new IllegalArgumentException("data structure is unregistered");
+
+		BlockAccess.getInstance().writePartitial(this.blockNr, buf, this.offset);
 	}
 	
+	/** write data to disk */
+	public abstract void write() throws IOException;
+	
+	/** read data structure from a ByteBuffer representing a block */
+	protected abstract void read(ByteBuffer buf) throws IOException;
+		
 	protected Block(int blockNr, int offset) {
 		this.blockNr = blockNr;
 		this.offset = offset;

@@ -12,7 +12,7 @@ class InodeAlloc {
 	
 	public static long countFreeInodes() {
 		long count = 0;
-		for (BlockGroup group : blockGroups.iterateBlockGroups()) {
+		for (BlockGroupDescriptor group : blockGroups.iterateBlockGroups()) {
 			count += group.getFreeInodesCount();
 		}
 		return count;
@@ -32,10 +32,10 @@ class InodeAlloc {
 	public static int findGroupDir(Inode parent) {
 		int groupsCount = superblock.getGroupsCount();
 		int averageFreeInodes = (int)(countFreeInodes() / groupsCount);
-		BlockGroup bestGroup = null;
+		BlockGroupDescriptor bestGroup = null;
 		int bestNr = -1;
 
-		for (BlockGroup group : blockGroups.iterateBlockGroups()) {
+		for (BlockGroupDescriptor group : blockGroups.iterateBlockGroups()) {
 			if (group.getFreeInodesCount() < averageFreeInodes)
 				continue;
 			if (bestGroup == null ||
@@ -55,7 +55,7 @@ class InodeAlloc {
 	public static int findGroupOther(Inode parent) {
 		int groupsCount = superblock.getGroupsCount();
 		int group = -1;
-		BlockGroup desc = null;
+		BlockGroupDescriptor desc = null;
 		
 		// Try to place inode in its parent directory
 		group = parent.getBlockGroup();
@@ -155,7 +155,7 @@ class InodeAlloc {
 		if (group == -1) 
 			throw new RuntimeException("No group found");			
 
-		BlockGroup descr = blockGroups.getGroupDescriptor(group);
+		BlockGroupDescriptor descr = blockGroups.getGroupDescriptor(group);
 		
 		/* find free inode slot in block groups starting at $group */
 		int ino;
@@ -166,7 +166,7 @@ class InodeAlloc {
 			ino = 0;
 		
 		while (true) {
-			BlockGroup bgroup = blockGroups.getGroupDescriptor(group);
+			BlockGroupDescriptor bgroup = blockGroups.getGroupDescriptor(group);
 			Bitmap bmap = blockGroups.readInodeBitmapOf(bgroup);
 			
 			ino = bmap.getNextZeroBitPos(ino);			
