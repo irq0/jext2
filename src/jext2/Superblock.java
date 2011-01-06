@@ -57,6 +57,9 @@ public class Superblock extends Block {
 	private int groupDescPerBlock;
 	private int groupsCount;
 
+	// sb_info fields
+	private int dirsCount;
+	
 	public final int getInodesCount() {
 		return this.inodesCount;
 	}
@@ -159,21 +162,30 @@ public class Superblock extends Block {
 	public final String getLastMounted() {
 		return this.lastMounted;
 	}
-
 	public final int getBlocksize() {
 		return this.blocksize;
 	}
-
 	public final int getBlocksizeBits() {
 		return this.blocksize * 8;
 	}
-	
 	public final int getGroupDescrPerBlock() {
 		return this.groupDescPerBlock;
 	}
-	
 	public final int getGroupsCount() {
 		return this.groupsCount;
+	}
+	public int getDirsCount() {
+		return this.dirsCount;
+	}
+	
+	public void setFreeBlocksCount(int freeBlocksCount) {
+		this.freeBlocksCount = freeBlocksCount;
+	}
+	public void setFreeInodesCount(int freeInodesCount) {
+		this.freeInodesCount = freeInodesCount;
+	}
+	public void setDirsCount(int dirsCount) {
+		this.dirsCount = dirsCount;
 	}
 	
 	protected void read(ByteBuffer buf) throws IOException {		

@@ -12,6 +12,8 @@ public class BlockGroup extends Block {
 	private int blockBitmap;
 	private int inodeBitmap;
 	private int inodeTable;
+
+
 	private short freeBlocksCount;
 	private short freeInodesCount;
 	private short usedDirsCount;
@@ -37,14 +39,21 @@ public class BlockGroup extends Block {
 	public final short getUsedDirsCount() {
 		return this.usedDirsCount;
 	}
-
 	public final int getBlockGroup() {
 		return this.blockGroup;
 	}
 	void setBlockGroup(int blockGroup) {
 		this.blockGroup = blockGroup;
 	}
-	
+	public void setFreeBlocksCount(short freeBlocksCount) {
+		this.freeBlocksCount = freeBlocksCount;
+	}
+	public void setFreeInodesCount(short freeInodesCount) {
+		this.freeInodesCount = freeInodesCount;
+	}
+	public void setUsedDirsCount(short usedDirsCount) {
+		this.usedDirsCount = usedDirsCount;
+	}
 	
 	protected void read(ByteBuffer buf) throws IOException {
 		this.blockBitmap = Ext2fsDataTypes.getLE32(buf, 0 + offset);

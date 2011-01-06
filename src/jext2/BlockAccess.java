@@ -23,7 +23,7 @@ public class BlockAccess {
 		BlockAccess.instance = this;
 	}
 
-	/** Read a block of size specified by setBlocksize() at logical address nr */
+	/** Read a block offsize specified by setBlocksize() at logical address nr */
 	public ByteBuffer read(int nr) throws IOException {
 		ByteBuffer buf = ByteBuffer.allocate(blocksize);		
 		buf.order(ByteOrder.BIG_ENDIAN);
@@ -34,6 +34,24 @@ public class BlockAccess {
 		return buf; 
 	}	
 
+	/** Write a block to the logical address nr on disk */
+	public void write(int nr, ByteBuffer buf) throws IOException {
+		buf.rewind();
+		blockdev.position(((long)(nr & 0xffffffff)) * blocksize);
+		blockdev.write(buf);
+	}	
+	
+	/** Write only part of a block */
+	public void writePartitial(int nr, ByteBuffer buf, int offset) throws IOException {
+		buf.rewind();
+		if (offset + buf.capacity() >= blocksize)
+			throw new IllegalArgumentException("attempt to write over block boundries" + buf + ", " + offset);
+		System.out.println(offset);
+		blockdev.position((((long)(nr & 0xffffffff)) * blocksize) + offset);
+		blockdev.write(buf);
+	}
+		
+	
 	public void setBlocksize(int blocksize) {
 		this.blocksize = blocksize;
 	}

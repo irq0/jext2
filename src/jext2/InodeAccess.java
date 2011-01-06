@@ -6,7 +6,7 @@ public class InodeAccess {
 	private static BlockAccess blocks = BlockAccess.getInstance();
 	private static BlockGroupAccess blockGroups = BlockGroupAccess.getInstance();
 	
-	private static boolean mask(int mode, int mask) {
+	public static boolean mask(int mode, int mask) {
 		return (mode & Constants.LINUX_S_IFMT) == mask;
 	}	
 	
@@ -47,6 +47,8 @@ public class InodeAccess {
 
 		inode.setBlockGroup(group);
 		inode.setIno(ino);
+		inode.setBlockNr(absBlock);
+		inode.setOffset(relOffset);
 		
 		return inode;
 		
@@ -54,5 +56,9 @@ public class InodeAccess {
 	
 	public static Inode readRootInode() throws IOException {
 		return readByIno(Constants.EXT2_ROOT_INO);
-	}	
+	}
+
+
+
 }
+

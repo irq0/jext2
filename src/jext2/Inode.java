@@ -116,6 +116,34 @@ public class Inode extends Block {
 		this.ino = ino;
 	}
 
+	protected void fillBuffer(ByteBuffer buf) {
+		Ext2fsDataTypes.putLE16(buf, this.mode, 0);
+		Ext2fsDataTypes.putLE16(buf, this.uidLow, 2);
+		Ext2fsDataTypes.putLE32(buf, this.size, 4);
+		Ext2fsDataTypes.putDate(buf, this.accessTime, 8);
+		Ext2fsDataTypes.putDate(buf, this.changeTime, 12);
+		Ext2fsDataTypes.putDate(buf, this.modificationTime, 16);
+		Ext2fsDataTypes.putDate(buf, this.deletionTime, 20);
+		Ext2fsDataTypes.putLE16(buf, this.gidLow, 24);
+		Ext2fsDataTypes.putLE16(buf, this.linksCount, 26);
+		Ext2fsDataTypes.putLE32(buf, this.blocks, 28);
+		Ext2fsDataTypes.putLE32(buf, this.flags, 32);
+		//		this.osd1 = Ext2fsDataTypes.getLE32U(buf, 36 + offset);
+ 		
+		for (int i=0; i<Constants.EXT2_N_BLOCKS; i++) {
+			Ext2fsDataTypes.putLE32(buf, this.block[i], 40 + (i*4));
+		}
+
+		Ext2fsDataTypes.putLE32(buf, this.generation, 100);
+		Ext2fsDataTypes.putLE32(buf, this.fileAcl, 104);
+		Ext2fsDataTypes.putLE32(buf, this.dirAcl, 108);
+		Ext2fsDataTypes.putLE32(buf, this.fragmentAddress, 112);
+		
+		// this.frag = Ext2fsDataTypes.getLE8(buf, 116 + offset);
+		Ext2fsDataTypes.putLE16(buf, this.uidHigh, 120);
+		Ext2fsDataTypes.putLE16(buf, this.gidHigh, 122);
+	}
+	
 	protected void read(ByteBuffer buf) throws IOException {
 		this.mode = Ext2fsDataTypes.getLE16(buf, 0 + offset);
 		this.uidLow = Ext2fsDataTypes.getLE16(buf, 2 + offset);
@@ -161,6 +189,24 @@ public class Inode extends Block {
 		return inode;
 	}
 
+	public static Inode createEmpty() {
+		Inode inode = new Inode(-1, -1);
+		Date now = new Date();
+		
+		inode.uidLow = 23;
+		inode.modificationTime = now;
+		inode.accessTime = now;
+		inode.changeTime = now;
+		inode.fragmentAddress = 0;
+		inode.frag = 0;
+		inode.deletionTime = new Date(0);
+		inode.blocks = 0;
+		inode.block = new int[Constants.EXT2_N_BLOCKS];
+		
+		
+		return inode;
+	}
+	
 	public boolean equals(Inode other) {
 		return (this.blockNr == other.blockNr) &&
 			(this.offset == other.offset);
@@ -168,6 +214,16 @@ public class Inode extends Block {
 
 	public int hashCode() {
 		return this.blockNr ^ this.offset;
+	}
+	
+	public void write() throws IOException {
+		if (this.offset == -1 || this.blockNr == -1) 
+			throw new IllegalArgumentException("Inode is unregistered");
+		
+		ByteBuffer buf = ByteBuffer.allocate(Superblock.getInstance().getInodeSize());		
+		fillBuffer(buf);		
+		
+		BlockAccess.getInstance().writePartitial(this.blockNr, buf, this.offset);
 	}
 	
 }

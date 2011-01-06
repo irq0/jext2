@@ -9,7 +9,6 @@ import org.apache.commons.lang.builder.ToStringStyle;
 /* directory structure for linked list directories */
 
 public class DirectoryEntry extends Block {
-	private int offset;
 
 	private int ino;
 	private short recLen;
@@ -17,10 +16,6 @@ public class DirectoryEntry extends Block {
 	private byte fileType;
 	private String name;
 
-	
-	public final int getOffset() {
-		return this.offset;
-	}
 	public final int getIno() {
 		return this.ino;
 	}

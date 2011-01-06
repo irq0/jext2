@@ -65,11 +65,35 @@ class JExt2 {
 		}		
 	}
 	
-	public static void main(String[] args) throws IOException {	   
-		JExt2 fs = new JExt2();		
-		fs.initializeFilesystem(args[0]);
-		fs.checkFeatures();
-		fs.printMeta();		
+	public static void main(String[] args) {
+		try { 
+			
+			JExt2 fs = new JExt2();		
+			fs.initializeFilesystem(args[0]);
+			fs.checkFeatures();
+			fs.printMeta();		
+			
+			Inode root = InodeAccess.readByIno(Constants.EXT2_ROOT_INO);
+			
+			Inode inode = Inode.createEmpty();
+			InodeAlloc.registerInode(root, inode);
+			inode.write();
+			
+			System.out.println("NEW INODE: \n" + inode);
+			
+			
+			Inode newinode = InodeAccess.readByIno((int)inode.getIno());
+			
+			System.out.println("NEW INODE ON DISK: \n" + newinode);
+			
+		} catch (IOException e) {
+			System.err.println("IO Exception - possibly something with block device..");
+			e.printStackTrace();
+		} catch (Exception e) {
+			System.err.println("Some error occured :(");
+			System.err.println("MESSAGE: " + e.getMessage());
+			e.printStackTrace();
+		}
 	}
 
 	public void dumpByteBuffer(ByteBuffer buf, int offset) {

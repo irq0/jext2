@@ -16,6 +16,22 @@ public abstract class Block {
 	/** in block offset */
 	protected int offset;
 	
+	public final int getBlockNr() {
+		return blockNr;
+	}
+
+	public final int getOffset() {
+		return offset;
+	}
+
+	public final void setBlockNr(int blockNr) {
+		this.blockNr = blockNr;
+	}
+
+	public final void setOffset(int offset) {
+		this.offset = offset;
+	}
+
 	/** read data structure from a ByteBuffer representing a block */
 	protected abstract void read(ByteBuffer buf) throws IOException;
 	

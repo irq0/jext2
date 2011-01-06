@@ -75,4 +75,16 @@ public class BlockGroupAccess {
 		return new BlockGroupDescriptorIterator();
 	}
 		
+	
+	private Bitmap readBitmapAtBlock(int nr) throws IOException {
+		ByteBuffer buf = blocks.read(nr);
+		Bitmap bmap = Bitmap.fromByteBuffer(buf, nr);
+		
+		return bmap;
+	}
+	
+	public Bitmap readInodeBitmapOf(BlockGroup group) throws IOException {
+		return readBitmapAtBlock(group.getInodeBitmap());
+	}
+	
 }

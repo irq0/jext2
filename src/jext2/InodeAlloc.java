@@ -1,13 +1,18 @@
 package jext2;
 
-/** Inode allocation and deallocation routines */
+import java.io.IOException;
+
+/** Inode allocation and deallocation routines 
+ * Adapted to jext2 from the linux kernel impl. 
+ * 
+ * */
 class InodeAlloc {
 	private static Superblock superblock = Superblock.getInstance();
-	private static BlockGroupAccess groups = BlockGroupAccess.getInstance();
+	private static BlockGroupAccess blockGroups = BlockGroupAccess.getInstance();
 	
 	public static long countFreeInodes() {
 		long count = 0;
-		for (BlockGroup group : groups.iterateBlockGroups()) {
+		for (BlockGroup group : blockGroups.iterateBlockGroups()) {
 			count += group.getFreeInodesCount();
 		}
 		return count;
@@ -30,7 +35,7 @@ class InodeAlloc {
 		BlockGroup bestGroup = null;
 		int bestNr = -1;
 
-		for (BlockGroup group : groups.iterateBlockGroups()) {
+		for (BlockGroup group : blockGroups.iterateBlockGroups()) {
 			if (group.getFreeInodesCount() < averageFreeInodes)
 				continue;
 			if (bestGroup == null ||
@@ -54,7 +59,7 @@ class InodeAlloc {
 		
 		// Try to place inode in its parent directory
 		group = parent.getBlockGroup();
-		desc = groups.getGroupDescriptor(parent.getBlockGroup());
+		desc = blockGroups.getGroupDescriptor(parent.getBlockGroup());
 		if (desc != null && desc.getFreeInodesCount() > 0 &&
 		    desc.getFreeBlocksCount() > 0) {
 			return group;
@@ -79,7 +84,7 @@ class InodeAlloc {
 			group += i;
 			if (group >= groupsCount)
 				group -= groupsCount;
-			desc = groups.getGroupDescriptor(group);
+			desc = blockGroups.getGroupDescriptor(group);
 			if (desc != null && desc.getFreeInodesCount() > 0 &&
 			    desc.getFreeBlocksCount() > 0)
 				return group;
@@ -96,7 +101,7 @@ class InodeAlloc {
 			if (group >= groupsCount)
 				group = 0;
 
-			desc = groups.getGroupDescriptor(group);
+			desc = blockGroups.getGroupDescriptor(group);
 			if (desc.getFreeInodesCount() > 0)
 				return group;
 		}
@@ -133,6 +138,70 @@ class InodeAlloc {
 		return -1;
 	}
 
+	
+	/** Register Inode on disk. Find suitable position an reserve this position
+	 * for the Inode. Finally set location data in Inode
+	 */
+	public static void registerInode(Inode dir, Inode inode) throws IOException {
+		/* find best suitable block group */
+		int group;
+		
+		if (InodeAccess.mask(inode.getMode(), Constants.LINUX_S_IFDIR)) {
+			group = InodeAlloc.findGroupDir(dir);
+		} else {
+			group = InodeAlloc.findGroupOther(dir);
+		}
+
+		if (group == -1) 
+			throw new RuntimeException("No group found");			
+
+		BlockGroup descr = blockGroups.getGroupDescriptor(group);
+		
+		/* find free inode slot in block groups starting at $group */
+		int ino;
+		int globalIno;
+		if (group == 0) 
+			ino = superblock.getFirstIno();
+		else 
+			ino = 0;
+		
+		while (true) {
+			BlockGroup bgroup = blockGroups.getGroupDescriptor(group);
+			Bitmap bmap = blockGroups.readInodeBitmapOf(bgroup);
+			
+			ino = bmap.getNextZeroBitPos(ino);			
+			if (ino > superblock.getInodesPerGroup()) {
+				group++;
+				continue;
+			}			
+			
+			globalIno = ino + (group * superblock.getInodesPerGroup() + 1);					
+			if (globalIno < superblock.getFirstIno() ||
+				globalIno > superblock.getInodesCount()) {				
+				continue;
+			}
+			
+			break;			
+		} 
+		
+		/* apply changes to meta data */
+		superblock.setFreeInodesCount(superblock.getFreeInodesCount() - 1);
+		descr.setFreeInodesCount((short)(descr.getFreeInodesCount() - 1));
+
+		if (InodeAccess.mask(inode.getMode(), Constants.LINUX_S_IFDIR)) { 
+			superblock.setDirsCount(superblock.getDirsCount() + 1);
+			descr.setUsedDirsCount((short)(descr.getUsedDirsCount() + 1));
+		}
+		
+		/* set location metadata of inode */
+		int offset = (ino * superblock.getInodeSize()) % superblock.getBlocksize();
+		int block = descr.getInodeTable() + (ino * superblock.getInodeSize()) / superblock.getBlocksize();
+		
+		inode.setBlockGroup(group);
+		inode.setBlockNr(block);		
+		inode.setOffset(offset);
+		inode.setIno(globalIno);
+	}
 	
 }
 
