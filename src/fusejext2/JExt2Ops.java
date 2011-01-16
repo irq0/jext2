@@ -96,7 +96,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		RegInode inode = openInodes.get((int)fi.getFh());
 
 		try {
-			ByteBuffer buf = inode.read((int)size, (int)off);
+			ByteBuffer buf = inode.readData((int)size, (int)off);
 			Reply.byteBuffer(req, buf, 0, size);
 		} catch (IOException e) {
 			Reply.err(req, Errno.EIO);

@@ -42,9 +42,9 @@ public class BlockAccess {
 	}	
 	
 	/** Write only part of a block */
-	public void writePartitial(int nr, ByteBuffer buf, int offset) throws IOException {
+	public void write(int nr, ByteBuffer buf, int offset) throws IOException {
 		buf.rewind();
-		if (offset + buf.capacity() >= blocksize)
+		if (offset + buf.capacity() > blocksize)
 			throw new IllegalArgumentException("attempt to write over block boundries" + buf + ", " + offset);
 		System.out.println(offset);
 		blockdev.position((((long)(nr & 0xffffffff)) * blocksize) + offset);

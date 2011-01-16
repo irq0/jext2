@@ -188,6 +188,14 @@ public class Superblock extends Block {
 		this.dirsCount = dirsCount;
 	}
 	
+	public int getAddressesPerBlock() {
+		return this.blocksize / 4;
+	}
+	
+	public int getAddressesPerBlockBits() {
+		return 31 - Integer.numberOfLeadingZeros(getAddressesPerBlock());
+	}
+	
 	protected void read(ByteBuffer buf) throws IOException {		
 		this.inodesCount = Ext2fsDataTypes.getLE32(buf, 0);
 		this.blocksCount = Ext2fsDataTypes.getLE32(buf, 4);

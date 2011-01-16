@@ -1,7 +1,9 @@
 package jext2;
 
 import java.nio.ByteBuffer;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Vector;
 import java.nio.ByteOrder;
 import java.io.IOException;
 import java.util.Iterator;
@@ -116,4 +118,146 @@ public class DataBlockAccess {
 	public static ByteBuffer readDataBlock(Inode inode, int fileBlockNumber) throws IOException {
 		return blocks.read(getDataBlockNr(inode, fileBlockNumber));
 	}
+	
+	/** 
+	 * parse the block number into array of offsets
+	 * 
+	 * @param	fileBlockNr		block number to be parsed
+	 * @return	array of offsets, length is the path depth 
+	 */
+	private static long[] blockToPath(long fileBlockNr) {
+		
+		int ptrs = superblock.getAddressesPerBlock();
+		int ptrs_bits = superblock.getAddressesPerBlockBits();
+		
+		final long directBlocks = Constants.EXT2_NDIR_BLOCKS;
+		final long indirectBlocks = ptrs;
+		final long doubleBlocks = ptrs*ptrs;
+		final long trippleBlocks = ptrs*ptrs*ptrs;
+				
+		if (fileBlockNr < 0) {
+			throw new RuntimeException("blockToPath: file block number < 0");
+		} else if (fileBlockNr < Constants.EXT2_NDIR_BLOCKS) {
+			return new long[] { fileBlockNr };			
+		} else if ((fileBlockNr -= directBlocks) < indirectBlocks) {
+			return new long[] { Constants.EXT2_IND_BLOCK,
+							    fileBlockNr };
+		} else if ((fileBlockNr -= indirectBlocks) < doubleBlocks) {
+			return new long[] { Constants.EXT2_DIND_BLOCK,
+							    fileBlockNr >> ptrs_bits,
+							    fileBlockNr & (ptrs - 1) };
+		} else if ((fileBlockNr -= doubleBlocks)  < trippleBlocks) {
+			return new long[] { Constants.EXT2_TIND_BLOCK, 
+							    fileBlockNr >> (ptrs_bits * 2),
+							    (fileBlockNr >> ptrs_bits) & (ptrs - 1),
+							    fileBlockNr & (ptrs - 1) };
+		} else {
+			throw new RuntimeException("blockToPath: block is to big");
+		}
+	}
+
+	/**
+	 * Read the chain of indirect blocks leading to data
+	 * @param inode 	Inode in question
+	 * @param offsets	offsets of pointers in inode/indirect blocks
+	 * @return	array of length depth with block numbers on the path. 
+	 * 	  array[depth-1] is data block number rest is the indirection on the path.
+	 * 
+	 * If the chain is incomplete return.length < offsets.length
+	 */
+	private static long[] getBranch(Inode inode, long[] offsets) throws IOException {
+		int depth = offsets.length;
+		long[] blockNrs = new long[depth];
+		
+		
+		blockNrs[0] = inode.getBlock()[(int)offsets[0]];
+		
+		if (blockNrs[0] == 0) {
+			return new long[] {blockNrs[0]};
+		} 
+				
+		for (int i=1; i<depth; i++) {
+				long nr = readBlockNumberFromBlock((int)blockNrs[i-1], 
+					    					       (int)offsets[i]);
+
+				blockNrs[i] = nr;
+				if (nr == 0) { /* chain is incomplete */
+					long[] result = new long[i];
+					for (int k=0; k<i; k++)
+						result[k] = blockNrs[k];
+					return result;
+				} else { /* add to chain */
+				}
+
+		}
+				
+		return blockNrs;
+	}
+	
+	
+	public static LinkedList<Long> getBlocks(Inode inode, long fileBlockNr, int maxBlocks, boolean create) throws IOException {
+		if (fileBlockNr < 0 || maxBlocks < 1) 
+			throw new IllegalArgumentException();
+		
+		
+		LinkedList<Long> result = new LinkedList<Long>();
+		long[] offsets;
+		long[] blockNrs;
+		int depth;
+		int existDepth;
+				
+		offsets = blockToPath(fileBlockNr);
+		depth = offsets.length;
+		
+		blockNrs = getBranch(inode, offsets);
+		existDepth = blockNrs.length;
+		
+		/* Simplest case - block found, no allocation needed */
+		if (depth == existDepth) {			
+			long firstBlockNr = blockNrs[depth-1];			
+			result.addFirst(firstBlockNr);
+			
+			int blocksToBoundary = 0;
+			if (depth >= 2) /* indirect blocks */
+				blocksToBoundary = 
+					(int)(superblock.getAddressesPerBlock() - offsets[depth-1] - 1); 
+			else /* direct blocks */
+				blocksToBoundary = 
+					(int)(Constants.EXT2_NDIR_BLOCKS - offsets[0] - 1);
+			
+			int count = 1;
+			while(count < maxBlocks && count <= blocksToBoundary) {
+								
+				long nextByNumber = firstBlockNr + count;
+				long nextOnDisk = -1;
+				if (depth >= 2) /* indirect blocks */
+					nextOnDisk = readBlockNumberFromBlock(
+						(int)blockNrs[depth-2], (int)offsets[depth-1] + count);
+				else 
+					nextOnDisk = inode.getBlock()[(int)(offsets[0] + count)];
+				
+						
+						
+				/* check if next neighbor block belongs to inode */
+				if (nextByNumber == nextOnDisk) {
+					result.addLast(nextByNumber);
+					count++;
+				} else {
+					return result;
+				}
+			}
+			return result;
+		}
+		
+		/* Next simple case - plain lookup */
+		if (!create) {
+			return null;
+		}
+
+		
+		// TODO block allocation
+		return null;
+	}
+	
+	
 }

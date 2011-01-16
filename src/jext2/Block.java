@@ -37,7 +37,7 @@ public abstract class Block {
 		if (getOffset() == -1 || getBlockNr() == -1) 
 			throw new IllegalArgumentException("data structure is unregistered");
 
-		BlockAccess.getInstance().writePartitial(getBlockNr(), buf, getOffset());
+		BlockAccess.getInstance().write(getBlockNr(), buf, getOffset());
 	}
 	
 	/** write data to disk */
