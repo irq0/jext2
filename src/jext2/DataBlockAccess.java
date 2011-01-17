@@ -12,6 +12,23 @@ public class DataBlockAccess {
 	protected static Superblock superblock = Superblock.getInstance();
 	protected static BlockAccess blocks = BlockAccess.getInstance();
 
+	/** number of pointers in indirection block */
+	private static int ptrs = superblock.getAddressesPerBlock();
+	/** number of bits a pointer in an indirection block takes */
+    private static int ptrs_bits = superblock.getAddressesPerBlockBits();
+    
+    /** number of direct Blocks */
+    public static final long directBlocks = Constants.EXT2_NDIR_BLOCKS;
+    /** number of indirect Blocks */
+    public static final long indirectBlocks = ptrs;
+    /** number of double indirect blocks */
+    public static final long doubleBlocks = ptrs*ptrs;
+    /** number of tripple indirect blocks */
+    public static final long trippleBlocks = ptrs*ptrs*ptrs;
+	
+	
+	
+	
 	private static int readBlockNumberFromBlock(int dataBlock, int index) throws IOException{
 		ByteBuffer buffer = blocks.read(dataBlock);
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -125,16 +142,7 @@ public class DataBlockAccess {
 	 * @param	fileBlockNr		block number to be parsed
 	 * @return	array of offsets, length is the path depth 
 	 */
-	private static long[] blockToPath(long fileBlockNr) {
-		
-		int ptrs = superblock.getAddressesPerBlock();
-		int ptrs_bits = superblock.getAddressesPerBlockBits();
-		
-		final long directBlocks = Constants.EXT2_NDIR_BLOCKS;
-		final long indirectBlocks = ptrs;
-		final long doubleBlocks = ptrs*ptrs;
-		final long trippleBlocks = ptrs*ptrs*ptrs;
-				
+	public static long[] blockToPath(long fileBlockNr) {
 		if (fileBlockNr < 0) {
 			throw new RuntimeException("blockToPath: file block number < 0");
 		} else if (fileBlockNr < Constants.EXT2_NDIR_BLOCKS) {
@@ -144,13 +152,13 @@ public class DataBlockAccess {
 							    fileBlockNr };
 		} else if ((fileBlockNr -= indirectBlocks) < doubleBlocks) {
 			return new long[] { Constants.EXT2_DIND_BLOCK,
-							    fileBlockNr >> ptrs_bits,
-							    fileBlockNr & (ptrs - 1) };
+							    fileBlockNr / ptrs,
+							    fileBlockNr % ptrs };
 		} else if ((fileBlockNr -= doubleBlocks)  < trippleBlocks) {
 			return new long[] { Constants.EXT2_TIND_BLOCK, 
-							    fileBlockNr >> (ptrs_bits * 2),
-							    (fileBlockNr >> ptrs_bits) & (ptrs - 1),
-							    fileBlockNr & (ptrs - 1) };
+							    fileBlockNr / (ptrs*ptrs),
+							    (fileBlockNr / ptrs) % ptrs ,
+							    fileBlockNr % ptrs };
 		} else {
 			throw new RuntimeException("blockToPath: block is to big");
 		}
@@ -165,7 +173,7 @@ public class DataBlockAccess {
 	 * 
 	 * If the chain is incomplete return.length < offsets.length
 	 */
-	private static long[] getBranch(Inode inode, long[] offsets) throws IOException {
+	public static long[] getBranch(Inode inode, long[] offsets) throws IOException {
 		int depth = offsets.length;
 		long[] blockNrs = new long[depth];
 		

@@ -2,6 +2,7 @@ package jext2;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -19,9 +20,14 @@ public class RegInode extends Inode {
 		
 		while (start < max) { 
 			LinkedList<Long> b = DataBlockAccess.getBlocks(this, start, max-start, false);
-						
-			start += b.size();
 			
+			// getBlocks returns null in case create=false and the block does not exist. FUSE can
+			// and will request not existing blocks. 
+			if (b == null) {
+                break;
+			}
+						
+			start += b.size();			
 			blockNrs.addAll(b);
 		}
 		
