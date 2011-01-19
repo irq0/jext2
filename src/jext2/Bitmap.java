@@ -10,18 +10,10 @@ public class Bitmap extends Block {
 		bmap.put(buf);
 	}
 
-	public synchronized int getAndSetNextZeroBit() {
-		int pos = getNextZeroBitPos(0);
-		
-		setBit(pos, true);		
-		return pos;
-		
-	}	
-
 	public int getNextZeroBitPos(int start) {
 		int pos = -1;
 		
-		bmap.position(start);
+		bmap.position(start/8);
 		while(bmap.hasRemaining()) {
 			byte chunk = bmap.get();
 			
@@ -39,7 +31,7 @@ public class Bitmap extends Block {
 	        int pos = -1;
 	        int iter = end - start;
 	        
-	        bmap.position(start);
+	        bmap.position(start/8);
 	        while(bmap.hasRemaining() && iter-- > 0 ) {
 	            byte chunk = bmap.get();
 	            
@@ -105,5 +97,23 @@ public class Bitmap extends Block {
 	
 	public void write() throws IOException {
 		write(bmap);
+	}
+	
+	public String toString() {
+	    StringBuffer sb = new StringBuffer();
+	    sb.append(this.getClass());
+	    sb.append("[\n");
+	    sb.append("  blockNr=" + getBlockNr() + "\n");
+	    sb.append("  offset=" + getOffset() + "\n");
+	    sb.append("  bitmap=\n");
+	    
+	    bmap.rewind();
+	    for (int i=0; i<bmap.limit()/Integer.SIZE; i++) {
+	        sb.append(String.format("%1$#32s", Integer.toBinaryString(bmap.getInt())).replace(' ', '0'));
+	        sb.append("\n");
+	    }
+	    
+	    sb.append("]");
+	    return sb.toString();
 	}
 }
