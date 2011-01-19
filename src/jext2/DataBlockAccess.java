@@ -183,7 +183,7 @@ public class DataBlockAccess {
 		blockNrs[0] = inode.getBlock()[(int)offsets[0]];
 		
 		if (blockNrs[0] == 0) {
-			return new long[] {blockNrs[0]};
+			return new long[] {};
 		} 
 				
 		for (int i=1; i<depth; i++) {
@@ -219,7 +219,8 @@ public class DataBlockAccess {
 	// XXX put somewhere sane. 
 	private static long getPID() {
 	    String appName = ManagementFactory.getRuntimeMXBean().getName();
-	    long pid = Long.parseLong(appName);
+	    String strPid = appName.substring(0, appName.indexOf('@')-1); 
+	    long pid = Long.parseLong(strPid);
 	    return pid;	    
 	}
 	    
@@ -238,17 +239,16 @@ public class DataBlockAccess {
 	    int depth = blockNrs.length;
 	    
 	    /* Try to find previous block */
-	    if (depth == 1)  { /* search direct blocks */
+	    if (depth == 0)  { /* search direct blocks */
 	        int[] directBlocks = inode.getBlock();
-	        for (int i=(int)(blockNrs[0] - 1); i >= 0; i--) {
+	        for (int i=directBlocks.length-1; i >= 0; i--) {
 	            if (directBlocks[i] != 0) 
 	                return directBlocks[i];
 	        }
 	    } else { /* search last indirect block */
 	        ByteBuffer indirectBlock = blocks.read(blockNrs[depth-1]);
-	        indirectBlock.position((int)(offsets[depth-1]*4));
 	        
-	        for (int i=(int)(blockNrs[depth-1] -1); i>= 0; i--) {
+	        for (int i=(int)(offsets[depth-1]-1); i>= 0; i--) {
 	            int pointer = Ext2fsDataTypes.getLE32(indirectBlock, i*4);
 	            if (pointer != 0) 
 	                return pointer;
@@ -290,6 +290,7 @@ public class DataBlockAccess {
 
 	    
 	    long parent = newBlock(goal);
+	    result.addLast(parent);
 	    
 	    if (parent > 0) {
 	        for (n=1; n < num; n++) {
@@ -364,26 +365,31 @@ public class DataBlockAccess {
 
 	    long groupNr = Calculations.groupOfBlk((int)goal);
 	    BlockGroupDescriptor groupDescr = blockGroups.getGroupDescriptor((int)groupNr);
-	    Bitmap bitmap = Bitmap.fromByteBuffer(blocks.read(groupDescr.getBlockBitmap()),
-	                                          groupDescr.getBlockBitmap());
+	    Bitmap bitmap = Bitmap.fromByteBuffer(blocks.read(groupDescr.getBlockBitmapPointer()),
+	                                          groupDescr.getBlockBitmapPointer());
 	    
 	    long allocatedBlock = -1;
+	    do {
 	    if (groupDescr.getFreeBlocksCount() > 0) {
 	        int localGoal = (int) ((goal - superblock.getFirstDataBlock()) %
-	                                    superblock.getBlocksPerGroup());
+	                        superblock.getBlocksPerGroup());
 	        
 	        if (!bitmap.isSet(localGoal)) { /* got goal block */
 	            bitmap.setBit(localGoal, true);
+	            bitmap.write();
                 allocatedBlock = Calculations.blockNrOfLocal(localGoal, groupNr);
+                break;
 	        }
 	        
 	        /* the goal was occupied; search forward for a free block 
 	         * within the next XX blocks. */
-	        int end = (localGoal + 63) & - 63;
+	        int end = (localGoal + 63) & (-63);
 	        localGoal = bitmap.getNextZeroBitPos(localGoal, end);
 	        if (localGoal < end) {
 	            bitmap.setBit(localGoal, true);
+	            bitmap.write();
                 allocatedBlock = Calculations.blockNrOfLocal(localGoal, groupNr);
+                break;
 	        }
 	        
 	        
@@ -394,10 +400,14 @@ public class DataBlockAccess {
 	        localGoal = bitmap.getNextZeroBitPos(localGoal);
 	        if (localGoal > 0) {
 	            bitmap.setBit(localGoal, true);
+	            bitmap.write();
 	            allocatedBlock = Calculations.blockNrOfLocal(localGoal, groupNr);
+	            break;
 	        }
 	    }
+	    } while (false);
 
+	    next:
 	    if (allocatedBlock == -1) {
 	        /* Now search the rest of the groups */
 	        for (int k=0; k < superblock.getGroupsCount(); k++) {
@@ -408,8 +418,8 @@ public class DataBlockAccess {
 	                break;
 	        }
 
-	        bitmap = Bitmap.fromByteBuffer(blocks.read(groupDescr.getBlockBitmap()),
-	                groupDescr.getBlockBitmap());
+	        bitmap = Bitmap.fromByteBuffer(blocks.read(groupDescr.getBlockBitmapPointer()),
+	                groupDescr.getBlockBitmapPointer());
 
 	        int localGoal = bitmap.getNextZeroBitPos(0);
 	        if (localGoal > 0) {
@@ -421,6 +431,8 @@ public class DataBlockAccess {
 	    /* Finally return pointer to allocated block or an error */
 	    if (allocatedBlock > 0) { /* block was allocated in group */
             // GOT IT !!!
+	        
+	        
             groupDescr.setFreeBlocksCount((short)(groupDescr.getFreeBlocksCount() - 1));
             superblock.setFreeBlocksCount(superblock.getFreeBlocksCount() - 1);
 
@@ -433,6 +445,14 @@ public class DataBlockAccess {
 	    }
 	}
 	
+	
+	public static LinkedList<Long> getBlocks(Inode inode, long fileBlockNr, int maxBlocks) throws IOException {
+	    return getBlocks(inode, fileBlockNr, maxBlocks, false);
+	}
+	
+    public static LinkedList<Long> getBlocksAllocate(Inode inode, long fileBlockNr, int maxBlocks) throws IOException {
+        return getBlocks(inode, fileBlockNr, maxBlocks, true);
+    }	
 
 
 	/** Get up to maxBlocks BlockNrs for the logical fileBlockNr. The Blocks returned are sequential.
@@ -442,7 +462,7 @@ public class DataBlockAccess {
 	 * @param create       true: create blocks if nesseccary; false: just read
 	 * @return             list of block nrs; if create=false null is returned if block does not exist
 	 */
-	public static LinkedList<Long> getBlocks(Inode inode, long fileBlockNr, int maxBlocks, boolean create) throws IOException {
+	private static LinkedList<Long> getBlocks(Inode inode, long fileBlockNr, int maxBlocks, boolean create) throws IOException {
 		if (fileBlockNr < 0 || maxBlocks < 1) 
 			throw new IllegalArgumentException();
 		

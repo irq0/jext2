@@ -20,13 +20,13 @@ public class BlockGroupDescriptor extends Block {
 
 	private int blockGroup = -1;
 	
-	public final int getBlockBitmap() {
+	public final int getBlockBitmapPointer() {
 		return this.blockBitmap;
 	}
-	public final int getInodeBitmap() {
+	public final int getInodeBitmapPointer() {
 		return this.inodeBitmap;
 	}
-	public final int getInodeTable() {
+	public final int getInodeTablePointer() {
 		return this.inodeTable;
 	}
 	public final short getFreeBlocksCount() {

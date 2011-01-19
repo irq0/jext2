@@ -3,6 +3,7 @@ package fusejext2;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.List;
 import java.util.RandomAccess;
@@ -101,7 +102,24 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		} catch (IOException e) {
 			Reply.err(req, Errno.EIO);
 		}
-	}	
+	}
+	
+	
+	public void write(FuseReq req, long ino, ByteBuffer buf, int off, FileInfo fi) {
+	    RegInode inode = openInodes.get((int)fi.getFh());
+	    
+	    try {
+	        System.out.println("WRITE");
+	        int count = inode.writeData(buf, off);
+	        if (count < 1) 
+	            throw new IOException();
+	        else
+	            Reply.write(req, count);
+	    
+	    } catch (IOException e) {
+	        Reply.err(req, Errno.EIO);
+	    }
+	}
 	
 	public void release(FuseReq req, long ino, FileInfo fi) {
 		openInodes.remove((int)fi.getFh());
@@ -147,6 +165,41 @@ public class JExt2Ops extends AbstractLowlevelOps {
 			Reply.err(req, Errno.EIO);
 		}
 	}
+
+	
+	private BitSet intToBitSet(int value) {
+	    BitSet bmap = new BitSet(Integer.SIZE);
+	    int i = 0;
+	    
+	    while (value != 0) {
+	        if ((value & 1) != 0) 
+	            bmap.set(i);
+	        i++;
+	        value = value >>> 1;
+	    }
+	    return bmap;
+	}
+	
+	
+	
+	
+    public void setattr(FuseReq req, long ino, Stat attr, int to_set, FileInfo fi) {
+        if (ino == 1) ino = Constants.EXT2_ROOT_INO;
+        
+        try {
+            Inode inode = InodeAccess.readByIno((int)ino);
+            if (inode == null) {
+                Reply.err(req, Errno.ENOENT);
+                return;
+            }
+
+        
+            Reply.attr(req, attr, 0.0);
+        } catch (IOException e) {
+            Reply.err(req, Errno.EIO);
+        }
+    }
+
 	
 	public void lookup(FuseReq req, long ino, String name) {
 		if (ino == 1) ino = Constants.EXT2_ROOT_INO;

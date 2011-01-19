@@ -34,24 +34,56 @@ public class BlockAccess {
 		return buf; 
 	}	
 
-	/** Write a block to the logical address nr on disk */
+	/** Write a whole block to the logical address nr on disk */
 	public void write(int nr, ByteBuffer buf) throws IOException {
 		buf.rewind();
 		blockdev.position(((long)(nr & 0xffffffff)) * blocksize);
 		blockdev.write(buf);
+        blockdev.force(true);
 	}	
 	
-	/** Write only part of a block */
-	public void write(int nr, ByteBuffer buf, int offset) throws IOException {
-		buf.rewind();
-		if (offset + buf.capacity() > blocksize)
+	
+	private void dumpByteBuffer(ByteBuffer buf) {
+	    try {
+	    while (buf.hasRemaining()) {
+	        for (int i=0; i<8; i++) {
+	            System.out.print(buf.get());
+	            System.out.print("\t\t");
+	        }
+	        System.out.println();
+	    }
+	    } catch (Exception e) {
+	        return;
+	    }
+	}   
+	
+	
+	/** 
+	 * Write partial buffer to a disk block. It is not possible to write over 
+	 * the blocksize boundry. 
+	 * @throws IOException 
+	 */
+	public void writePartial(int nr, int offset, ByteBuffer buf) throws IOException {
+        if (offset + buf.limit() > blocksize)
+            throw new IllegalArgumentException("attempt to write over block boundries" + buf + ", " + offset);
+
+	    buf.rewind();
+	    blockdev.write(buf, ((((long)(nr & 0xffffffff)) * blocksize) + offset));
+	    blockdev.force(true);
+	}
+	
+	public void writePartial(int nr, int offset, ByteBuffer buf, int bufOffset, int bufLength) throws IOException {
+		if (offset + bufLength > blocksize)
 			throw new IllegalArgumentException("attempt to write over block boundries" + buf + ", " + offset);
-		System.out.println(offset);
-		blockdev.position((((long)(nr & 0xffffffff)) * blocksize) + offset);
-		blockdev.write(buf);
+
+		ByteBuffer partial = ByteBuffer.allocate(bufLength);
+		buf.position(bufOffset);
+		for (int i=0; i<bufLength; i++) 
+		    partial.put(buf.get());
+		blockdev.write(partial, (((long)(nr & 0xffffffff)) * blocksize) + offset);
+		blockdev.force(true);
 	}
 		
-	
 	public void setBlocksize(int blocksize) {
 		this.blocksize = blocksize;
 	}

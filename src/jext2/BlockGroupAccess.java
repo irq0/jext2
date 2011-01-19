@@ -89,7 +89,7 @@ public class BlockGroupAccess {
 	}
 	
 	public Bitmap readInodeBitmapOf(BlockGroupDescriptor group) throws IOException {
-		return readBitmapAtBlock(group.getInodeBitmap());
+		return readBitmapAtBlock(group.getInodeBitmapPointer());
 	}
 	
 }

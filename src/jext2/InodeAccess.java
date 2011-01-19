@@ -39,7 +39,7 @@ public class InodeAccess {
 	
 		BlockGroupDescriptor descr = blockGroups.getGroupDescriptor(group);
 	
-		int absBlock = descr.getInodeTable() + tblBlock;
+		int absBlock = descr.getInodeTablePointer() + tblBlock;
 		int relOffset = offset - (tblBlock * superblock.getBlocksize());
 		
 		ByteBuffer table = blocks.read(absBlock);
