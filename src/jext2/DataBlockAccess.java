@@ -4,8 +4,6 @@ import java.lang.management.ManagementFactory;
 import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Vector;
 import java.nio.ByteOrder;
 import java.io.IOException;
 import java.util.Iterator;
@@ -17,8 +15,6 @@ public class DataBlockAccess {
 	
 	/** number of pointers in indirection block */
 	private static int ptrs = superblock.getAddressesPerBlock();
-	/** number of bits a pointer in an indirection block takes */
-    private static int ptrs_bits = superblock.getAddressesPerBlockBits();
     
     /** number of direct Blocks */
     public static final long directBlocks = Constants.EXT2_NDIR_BLOCKS;
@@ -407,7 +403,6 @@ public class DataBlockAccess {
 	    }
 	    } while (false);
 
-	    next:
 	    if (allocatedBlock == -1) {
 	        /* Now search the rest of the groups */
 	        for (int k=0; k < superblock.getGroupsCount(); k++) {

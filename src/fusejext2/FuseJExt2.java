@@ -3,8 +3,6 @@ package fusejext2;
 import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
-import java.util.List;
-import java.util.LinkedList;
 import java.io.File;
 
 import fuse.Fuse;
@@ -38,8 +36,8 @@ public class FuseJExt2 {
 		}
 	}	
 	
-	public static void parseCommandline(String[] args) {
-		LinkedList<String> fuseCommandList = new LinkedList<String>();
+	@SuppressWarnings("static-access")
+    public static void parseCommandline(String[] args) {
 		CommandLineParser parser = new PosixParser();
 		
 		Options options = new Options();

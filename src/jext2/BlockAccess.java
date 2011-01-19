@@ -6,8 +6,8 @@ import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 
 /**
- * access to filesystem blocks - smallest access unit is a block which depends on 
- * filesystem.
+ * access to file system blocks - smallest access unit is a block which depends on 
+ * file system.
  */
 public class BlockAccess {
 	private int blocksize = Constants.EXT2_MIN_BLOCK_SIZE;
@@ -43,7 +43,8 @@ public class BlockAccess {
 	}	
 	
 	
-	private void dumpByteBuffer(ByteBuffer buf) {
+	@SuppressWarnings("unused")
+    private void dumpByteBuffer(ByteBuffer buf) {
 	    try {
 	    while (buf.hasRemaining()) {
 	        for (int i=0; i<8; i++) {

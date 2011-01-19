@@ -2,8 +2,6 @@ package jext2;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.LinkedList;
 
 public class RegInode extends Inode {

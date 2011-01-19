@@ -3,12 +3,7 @@ package fusejext2;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.BitSet;
-import java.util.Collection;
 import java.util.List;
-import java.util.RandomAccess;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.UUID;
 import java.util.Vector;
 
@@ -166,22 +161,6 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		}
 	}
 
-	
-	private BitSet intToBitSet(int value) {
-	    BitSet bmap = new BitSet(Integer.SIZE);
-	    int i = 0;
-	    
-	    while (value != 0) {
-	        if ((value & 1) != 0) 
-	            bmap.set(i);
-	        i++;
-	        value = value >>> 1;
-	    }
-	    return bmap;
-	}
-	
-	
-	
 	
     public void setattr(FuseReq req, long ino, Stat attr, int to_set, FileInfo fi) {
         if (ino == 1) ino = Constants.EXT2_ROOT_INO;
