@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.Arrays;
+import java.util.LinkedList;
 
 
 class JExt2 {
@@ -75,16 +77,18 @@ class JExt2 {
 			
 			Inode root = InodeAccess.readByIno(Constants.EXT2_ROOT_INO);
 			
-			Inode inode = Inode.createEmpty();
-			InodeAlloc.registerInode(root, inode);
-			inode.write();
-			
-			System.out.println("NEW INODE: \n" + inode);
 			
 			
-			Inode newinode = InodeAccess.readByIno((int)inode.getIno());
 			
-			System.out.println("NEW INODE ON DISK: \n" + newinode);
+			Inode newinode = InodeAccess.readByIno(12);
+			System.out.println("NEW INODE: \n" + newinode);
+			LinkedList<Long> block = DataBlockAccess.getBlocks(newinode, 0, 1, true);
+			System.out.println("blocks: " + block);
+			ByteBuffer buf = BlockAccess.getInstance().read(block.getFirst());
+			Ext2fsDataTypes.putString(buf, "TESTTESTTESTTEST", 16, 0);
+			BlockAccess.getInstance().write(block.getFirst().intValue(), buf);
+            System.out.println("NEW INODE: \n" + newinode);
+			
 			
 		} catch (IOException e) {
 			System.err.println("IO Exception - possibly something with block device..");

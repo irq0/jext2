@@ -33,6 +33,10 @@ public class Inode extends Block {
 	// in memory data (ext2_inode_info)
 	private int blockGroup = -1;
 	private long ino = -1;
+	// XXX are this two just needed for regular inodes?
+	private long lastAllocLogicalBlock = 0; 
+	private long lastAllocPhysicalBlock = 0;
+	
 	
 	public final short getMode() {
 		return this.mode;
@@ -162,8 +166,19 @@ public class Inode extends Block {
 		this.gidHigh = gidHigh;
 	}
 	
-	
-	protected void write(ByteBuffer buf) throws IOException {
+	public final long getLastAllocLogicalBlock() {
+        return lastAllocLogicalBlock;
+    }
+    public final long getLastAllocPhysicalBlock() {
+        return lastAllocPhysicalBlock;
+    }
+    public final void setLastAllocLogicalBlock(long lastAllocLogicalBlock) {
+        this.lastAllocLogicalBlock = lastAllocLogicalBlock;
+    }
+    public final void setLastAllocPhysicalBlock(long lastAllocPhysicalBlock) {
+        this.lastAllocPhysicalBlock = lastAllocPhysicalBlock;
+    }
+    protected void write(ByteBuffer buf) throws IOException {
 		Ext2fsDataTypes.putLE16(buf, this.mode, 0);
 		Ext2fsDataTypes.putLE16(buf, this.uidLow, 2);
 		Ext2fsDataTypes.putLE32(buf, this.size, 4);

@@ -21,9 +21,13 @@ public class Calculations {
 			superblock.getInodeSize();
 	}
 
-
 	public static int blockPerInodeTable() {
 		return superblock.getInodesPerGroup() / superblock.getInodeSize();
+	}
+	
+	public static long blockNrOfLocal(int index, long groupNr) {
+	    return index + groupNr * superblock.getBlocksPerGroup() + 
+	        superblock.getFirstDataBlock();
 	}
 
 }

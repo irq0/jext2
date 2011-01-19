@@ -35,6 +35,35 @@ public class Bitmap extends Block {
 		return pos;
 	}		
 	
+	public int getNextZeroBitPos(int start, int end) {
+	        int pos = -1;
+	        int iter = end - start;
+	        
+	        bmap.position(start);
+	        while(bmap.hasRemaining() && iter-- > 0 ) {
+	            byte chunk = bmap.get();
+	            
+	            if (chunk != 0xFF) { // has zero bit
+	                pos = bmap.position()*8 + findFirstBitInByte(chunk);
+	                break;
+	            }
+	        }
+	        
+	        if (pos == -1) return -1;
+	        return pos;
+	    }       
+
+	
+	
+	public boolean isSet(int pos) {
+        int byteNum = pos / 8;
+        byte offset = (byte) (pos % 8);
+        
+	    byte b = bmap.get(byteNum);
+	    byte mask = (byte)(1 << offset);
+	    
+	    return ((mask & b) != 0);
+	}
 	
 	public void setBit(int pos, boolean value) {
 		int byteNum = pos / 8;

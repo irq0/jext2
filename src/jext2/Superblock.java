@@ -196,6 +196,18 @@ public class Superblock extends Block {
 		return 31 - Integer.numberOfLeadingZeros(getAddressesPerBlock());
 	}
 	
+	public boolean hasFreeBlocks() {
+	    long freeBlocks = this.freeBlocksCount;
+	    long rootBlocks = this.resevedBlocksCount;
+	    
+	    if (freeBlocks < rootBlocks + 1) {
+	        // TODO support reserve blocks
+	        return false;
+	    }
+	            
+	    return true;
+	}
+	
 	protected void read(ByteBuffer buf) throws IOException {		
 		this.inodesCount = Ext2fsDataTypes.getLE32(buf, 0);
 		this.blocksCount = Ext2fsDataTypes.getLE32(buf, 4);

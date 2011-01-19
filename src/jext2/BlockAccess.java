@@ -23,8 +23,8 @@ public class BlockAccess {
 		BlockAccess.instance = this;
 	}
 
-	/** Read a block offsize specified by setBlocksize() at logical address nr */
-	public ByteBuffer read(int nr) throws IOException {
+	/** Read a block off size specified by setBlocksize() at logical address nr */
+	public ByteBuffer read(long nr) throws IOException {
 		ByteBuffer buf = ByteBuffer.allocate(blocksize);		
 		buf.order(ByteOrder.BIG_ENDIAN);
 		
