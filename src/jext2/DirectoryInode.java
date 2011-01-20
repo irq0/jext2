@@ -6,15 +6,15 @@ import java.util.Iterator;
 
 
 /** Extends Inode with directory access methods */
-public class DirectoryInode extends DataInode implements Iterable<DirectoryEntry> {
+public class DirectoryInode extends DataInode {
 	private static BlockAccess blocks = BlockAccess.getInstance();
 	private static Superblock superblock = Superblock.getInstance();
 
-	public DirectoryIterator iterator() {
+	public DirectoryIterator iterateDirectory() {
 		return new DirectoryIterator(this);
 	}
 	
-	class DirectoryIterator implements Iterator<DirectoryEntry> {
+	class DirectoryIterator implements Iterator<DirectoryEntry>, Iterable<DirectoryEntry> {
 		private DirectoryInode inode;
 		private int fileBlockNr = 0;
 		private ByteBuffer block;
@@ -77,10 +77,15 @@ public class DirectoryInode extends DataInode implements Iterable<DirectoryEntry
 
 		public void remove() {
 		}
+
+        public Iterator<DirectoryEntry> iterator() {
+            return this;
+        }
+		
 	}
 
 	public DirectoryEntry lookup(String name) {
-		for (DirectoryEntry dir : this) {
+		for (DirectoryEntry dir : iterateDirectory()) {
 			if (name.equals(dir.getName())) {
 				return dir;
 			}
@@ -92,7 +97,7 @@ public class DirectoryInode extends DataInode implements Iterable<DirectoryEntry
 		StringBuffer sb = new StringBuffer(super.toString());
 
 		sb.append(" DIRECTORY={");		
-		for (DirectoryEntry dir : this) {
+		for (DirectoryEntry dir : iterateDirectory()) {
 			sb.append("   ");
 			sb.append(dir.getName());
 			sb.append(",");

@@ -240,7 +240,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		DirectoryInode inode = openDirectories.get((int)fi.getFh());
 		Dirbuf buf = new Dirbuf();
 
-		for (DirectoryEntry d : inode) {
+		for (DirectoryEntry d : inode.iterateDirectory()) {
 			FuseExtra.dirbufAdd(req, 
 					buf,
 					d.getName(),
