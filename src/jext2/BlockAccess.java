@@ -4,11 +4,10 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
-import java.util.LinkedList;
 
 /**
  * Access to the filesystem blocks  
- * */
+ */
 public class BlockAccess {
 	private int blocksize = Constants.EXT2_MIN_BLOCK_SIZE;
 	private FileChannel blockdev;

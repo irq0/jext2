@@ -14,18 +14,22 @@ public class DirectoryInode extends DataInode {
 		return new DirectoryIterator(this);
 	}
 	
+	/**
+	 * blockwise iterates data for directory entries 
+	 */
 	class DirectoryIterator implements Iterator<DirectoryEntry>, Iterable<DirectoryEntry> {
 		private DirectoryInode inode;
-		private int fileBlockNr = 0;
 		private ByteBuffer block;
 		private DirectoryEntry entry;
 		private int offset = 0;
+
+		private Iterator<Long> blockIter;
 		
 		DirectoryIterator(DirectoryInode inode) {
 			this.inode = inode;
 
 			try {
-				int blockNr = DataBlockAccess.getDataBlockNr(inode, fileBlockNr);
+			    blockIter = inode.accessData().iterateBlocks();
 				block = blocks.read(blockNr);
 			} catch (IOException e) {
 				entry = null;
@@ -46,15 +50,10 @@ public class DirectoryInode extends DataInode {
 
 				// entry was last in this block
 				if (offset == superblock.getBlocksize()) {
-					fileBlockNr += 1;
-					int blockNr = DataBlockAccess.getDataBlockNr(inode, fileBlockNr);
-				
-					if (blockNr == 0) { // entry was last
-						block = null;
-					} else { // start with new block
-						block = blocks.read(blockNr);
-					}
-					
+				    if (blockIter.hasNext())
+				        block = blocks.read(blockIter.next());
+				    else
+				        block = null;			    
 					offset = 0;
 				}
 				
