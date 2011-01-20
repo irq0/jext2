@@ -379,7 +379,7 @@ public class DataBlockAccess {
 	        
 	        /* the goal was occupied; search forward for a free block 
 	         * within the next XX blocks. */
-	        int end = (localGoal + 63) & (-63);
+	        int end = 64/8;
 	        localGoal = bitmap.getNextZeroBitPos(localGoal, end);
 	        if (localGoal < end) {
 	            bitmap.setBit(localGoal, true);
@@ -419,15 +419,13 @@ public class DataBlockAccess {
 	        int localGoal = bitmap.getNextZeroBitPos(0);
 	        if (localGoal > 0) {
 	            bitmap.setBit(localGoal, true);
+	            bitmap.write();
 	            allocatedBlock = Calculations.blockNrOfLocal(localGoal, groupNr);
 	        }
 	    }
 
 	    /* Finally return pointer to allocated block or an error */
 	    if (allocatedBlock > 0) { /* block was allocated in group */
-            // GOT IT !!!
-	        
-	        
             groupDescr.setFreeBlocksCount((short)(groupDescr.getFreeBlocksCount() - 1));
             superblock.setFreeBlocksCount(superblock.getFreeBlocksCount() - 1);
 
