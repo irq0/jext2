@@ -1,11 +1,9 @@
 package jext2;
 
-import java.lang.management.ManagementFactory;
 import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.LinkedList;
 import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -14,6 +12,10 @@ public class DataBlockAccess {
 	protected static BlockAccess blocks = BlockAccess.getInstance();
 	protected static BlockGroupAccess blockGroups = BlockGroupAccess.getInstance();
 	protected Inode inode = null;
+	
+	// XXX are this two just needed for regular inodes?
+    private long lastAllocLogicalBlock = 0; 
+    private long lastAllocPhysicalBlock = 0;
 	
 	/** number of pointers in indirection block */
 	private static int ptrs = superblock.getAddressesPerBlock();
@@ -212,9 +214,9 @@ public class DataBlockAccess {
 	 * @return Preferrred place for a block (the goal)
 	 */
 	public long findGoal(long block, long[] blockNrs, long[] offsets) throws IOException {
-	    if (block == (inode.getLastAllocLogicalBlock() + 1) 
-	        && (inode.getLastAllocPhysicalBlock() != 0)) {
-	            return (inode.getLastAllocPhysicalBlock() + 1);
+	    if (block == (lastAllocLogicalBlock + 1) 
+	        && (lastAllocPhysicalBlock != 0)) {
+	            return (lastAllocPhysicalBlock + 1);
 	        }
 	    return findNear(inode, blockNrs, offsets);
 	}
@@ -332,8 +334,8 @@ public class DataBlockAccess {
 	        blocks.write((int)blockNrs[existDepth-1], buf);	        
 	    }
 	    
-	    inode.setLastAllocLogicalBlock(logicalBlock);
-	    inode.setLastAllocPhysicalBlock(newBlockNrs.getLast().intValue());
+	    lastAllocLogicalBlock = logicalBlock;
+	    lastAllocPhysicalBlock = newBlockNrs.getLast().intValue();
 	    
 	    inode.setChangeTime(new Date());
 	    inode.write();
