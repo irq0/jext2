@@ -74,22 +74,21 @@ class JExt2 {
 			fs.checkFeatures();
 			fs.printMeta();		
 			
-			DirectoryInode root = (DirectoryInode)(InodeAccess.readRootInode());
-			
+			DirectoryInode root = (DirectoryInode)(InodeAccess.readRootInode());			
 			DirectoryEntry dir42 = root.lookup("42");
 			
 			Inode newinode = InodeAccess.readByIno(dir42.getIno());
 			newinode.write();
 			
 			System.out.println("NEW INODE: \n" + newinode);
-			LinkedList<Long> block = DataBlockAccess.getBlocksAllocate(newinode, 6, 1);
+			DataBlockAccess inodeData = ((RegInode)newinode).accessData();
+			LinkedList<Long> block = inodeData.getBlocks(6, 1);
 			System.out.println("blocks: " + block);
 			BlockGroupDescriptor bg = BlockGroupAccess.getInstance().getGroupDescriptor(0);
 			Bitmap bmap = Bitmap.fromByteBuffer(BlockAccess.getInstance().read(bg.getBlockBitmapPointer()), bg.getBlockBitmapPointer());
 			System.out.println(bmap);
 			bmap.setBit(4, true);
             System.out.println(bmap);
-			
 			
 			ByteBuffer buf = BlockAccess.getInstance().read(block.getFirst());
 			Ext2fsDataTypes.putString(buf, "TESTTESTTESTTEST", 16, 0);

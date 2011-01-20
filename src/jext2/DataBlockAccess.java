@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.LinkedList;
 import java.nio.ByteOrder;
+import java.nio.channels.FileChannel;
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -12,6 +13,7 @@ public class DataBlockAccess {
 	protected static Superblock superblock = Superblock.getInstance();
 	protected static BlockAccess blocks = BlockAccess.getInstance();
 	protected static BlockGroupAccess blockGroups = BlockGroupAccess.getInstance();
+	protected Inode inode = null;
 	
 	/** number of pointers in indirection block */
 	private static int ptrs = superblock.getAddressesPerBlock();
@@ -22,32 +24,29 @@ public class DataBlockAccess {
     public static final long indirectBlocks = ptrs;
     /** number of double indirect blocks */
     public static final long doubleBlocks = ptrs*ptrs;
-    /** number of tripple indirect blocks */
+    /** number of triple indirect blocks */
     public static final long trippleBlocks = ptrs*ptrs*ptrs;
-	
-	
-	
-	
-	private static int readBlockNumberFromBlock(int dataBlock, int index) throws IOException{
+		
+	public static int readBlockNumberFromBlock(int dataBlock, int index) throws IOException{
 		ByteBuffer buffer = blocks.read(dataBlock);
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
 		int nr = buffer.getInt(index*4);
 		return nr;
 	}
 	
-	private static int readIndirect(int ind, int nr) throws IOException {
+	public static int readIndirect(int ind, int nr) throws IOException {
 		int block = readBlockNumberFromBlock(ind, nr);
 		return block;
 	}
 
-	private static int readDoubleIndirect(int dint, int nr) throws IOException {
+	public static int readDoubleIndirect(int dint, int nr) throws IOException {
 		int addrPerBlock = superblock.getBlocksize()/4;
 		int ind = readIndirect(dint, nr / addrPerBlock);
 		int block = readIndirect(ind, nr % addrPerBlock);
 		return block;
 	}
 
-	private static int readTripleIndirect(int tind, int nr) throws IOException{
+	public static int readTripleIndirect(int tind, int nr) throws IOException{
 		int addrPerBlock = superblock.getBlocksize()/4;
 		int dind = readDoubleIndirect(tind, nr / addrPerBlock);
 		int block = readIndirect(dind, nr % addrPerBlock);
@@ -172,7 +171,7 @@ public class DataBlockAccess {
 	 * 
 	 * If the chain is incomplete return.length < offsets.length
 	 */
-	public static long[] getBranch(Inode inode, long[] offsets) throws IOException {
+	public long[] getBranch(long[] offsets) throws IOException {
 		int depth = offsets.length;
 		long[] blockNrs = new long[depth];
 		
@@ -204,7 +203,7 @@ public class DataBlockAccess {
 	 * @param  block   block we want
 	 * @return Preferrred place for a block (the goal)
 	 */
-	public static long findGoal(Inode inode, long block, long[] blockNrs, long[] offsets) throws IOException {
+	public long findGoal(long block, long[] blockNrs, long[] offsets) throws IOException {
 	    if (block == (inode.getLastAllocLogicalBlock() + 1) 
 	        && (inode.getLastAllocPhysicalBlock() != 0)) {
 	            return (inode.getLastAllocPhysicalBlock() + 1);
@@ -212,15 +211,7 @@ public class DataBlockAccess {
 	    return findNear(inode, blockNrs, offsets);
 	}
 
-	// XXX put somewhere sane. 
-	private static long getPID() {
-	    String appName = ManagementFactory.getRuntimeMXBean().getName();
-	    String strPid = appName.substring(0, appName.indexOf('@')-1); 
-	    long pid = Long.parseLong(strPid);
-	    return pid;	    
-	}
-	    
-	    
+
 	
 	/** Find a place for allocation with sufficient locality
 	 * @param  inode   owner
@@ -260,7 +251,7 @@ public class DataBlockAccess {
 	     * the same cylinder group then
 	     */
 	    int bgStart = BlockGroupDescriptor.firstBlock(inode.getBlockGroup());
-	    long colour = (getPID() % 16) * (superblock.getBlocksPerGroup() / 16);
+	    long colour = (Filesystem.getPID() % 16) * (superblock.getBlocksPerGroup() / 16);
 	    return bgStart + colour;
 	    
 	}
@@ -275,8 +266,8 @@ public class DataBlockAccess {
 	 * This function allocates num blocks, zeros out all but the last one, links 
 	 * them into a chain and writes them to disk.
 	 */
-	public static LinkedList<Long> allocBranch(Inode inode, int num, long goal, 
-	                                           long[] offsets, long[] blockNrs) 
+	public LinkedList<Long> allocBranch(int num, long goal, 
+	                                    long[] offsets, long[] blockNrs) 
 	                                           throws IOException {
 
 	    int n = 0;
@@ -318,9 +309,9 @@ public class DataBlockAccess {
 	 * Splice the allocated branch onto inode
 	 * @throws IOException 
 	 */
-	public static void spliceBranch(Inode inode, long logicalBlock, 
-	                                long[] offsets, long[] blockNrs, LinkedList<Long> newBlockNrs) 
-	                                throws IOException {
+	public void spliceBranch(long logicalBlock, 
+	                         long[] offsets, long[] blockNrs, LinkedList<Long> newBlockNrs) 
+	                         throws IOException {
 	    
 	    int existDepth = blockNrs.length;
 	    
@@ -341,121 +332,40 @@ public class DataBlockAccess {
 	}
 	
 	
-	
 	/** 
-	 * Allocate a new block. Uses a goal block to assist allocation. If 
-	 * the goal is free, or there is a free block within 32 blocks of the gloal, that block is
-	 * allocated. Otherwise a forward search is made for a free block.
-	 * @param  goal    the goal block
-	 * @return     pointer to allocated block
+	 * Get up to maxBlocks block numbers for the logical block number. Do not allocate new blocks
+	 * @see    getBlocksAllocate
+	 * @param  fileBlockNr  logical block address
+	 * @param  maxBlocks    maximum blocks returned
+	 * @return list of block nrs or null if logical block not found
 	 */
-	public static long newBlock(long goal) throws IOException {
-	    
-	    if (! superblock.hasFreeBlocks()) {
-	        return -1;
-	    }
-	    	    
-	    if (goal < superblock.getFirstDataBlock() ||
-	            goal >= superblock.getBlocksCount())
-	        goal = superblock.getFirstDataBlock();
-
-	    long groupNr = Calculations.groupOfBlk((int)goal);
-	    BlockGroupDescriptor groupDescr = blockGroups.getGroupDescriptor((int)groupNr);
-	    Bitmap bitmap = Bitmap.fromByteBuffer(blocks.read(groupDescr.getBlockBitmapPointer()),
-	                                          groupDescr.getBlockBitmapPointer());
-	    
-	    long allocatedBlock = -1;
-	    do { /* uargh... */
-	    if (groupDescr.getFreeBlocksCount() > 0) {
-	        int localGoal = (int) ((goal - superblock.getFirstDataBlock()) %
-	                        superblock.getBlocksPerGroup());
-	        
-	        if (!bitmap.isSet(localGoal)) { /* got goal block */
-	            bitmap.setBit(localGoal, true);
-	            bitmap.write();
-                allocatedBlock = Calculations.blockNrOfLocal(localGoal, groupNr);
-                break;
-	        }
-	        
-	        /* the goal was occupied; search forward for a free block 
-	         * within the next XX blocks. */
-	        int end = 64/8 + 1;
-	        localGoal = bitmap.getNextZeroBitPos(localGoal, end);
-	        if (localGoal < end) {
-	            bitmap.setBit(localGoal, true);
-	            bitmap.write();
-                allocatedBlock = Calculations.blockNrOfLocal(localGoal, groupNr);
-                break;
-	        }
-	        
-	        
-	        /* There has been no free block found in the near vicinity of the goal:
-	         * do a search forward through the block groups */
-	        
-	        /* Search first in the remainder of th current group */
-	        localGoal = bitmap.getNextZeroBitPos(localGoal);
-	        if (localGoal > 0) {
-	            bitmap.setBit(localGoal, true);
-	            bitmap.write();
-	            allocatedBlock = Calculations.blockNrOfLocal(localGoal, groupNr);
-	            break;
-	        }
-	    }
-	    } while (false);
-
-	    if (allocatedBlock == -1) {
-	        /* Now search the rest of the groups */
-	        for (int k=0; k < superblock.getGroupsCount(); k++) {
-	            groupNr = (groupNr + 1) % superblock.getGroupsCount();
-	            groupDescr = blockGroups.getGroupDescriptor((int)groupNr);
-
-	            if (groupDescr.getFreeBlocksCount() > 0) 
-	                break;
-	        }
-
-	        bitmap = Bitmap.fromByteBuffer(blocks.read(groupDescr.getBlockBitmapPointer()),
-	                groupDescr.getBlockBitmapPointer());
-
-	        int localGoal = bitmap.getNextZeroBitPos(0);
-	        if (localGoal > 0) {
-	            bitmap.setBit(localGoal, true);
-	            bitmap.write();
-	            allocatedBlock = Calculations.blockNrOfLocal(localGoal, groupNr);
-	        }
-	    }
-
-	    /* Finally return pointer to allocated block or an error */
-	    if (allocatedBlock > 0) { /* block was allocated in group */
-            groupDescr.setFreeBlocksCount((short)(groupDescr.getFreeBlocksCount() - 1));
-            superblock.setFreeBlocksCount(superblock.getFreeBlocksCount() - 1);
-
-            groupDescr.write();
-            superblock.write();
-            
-            return allocatedBlock;
-	    } else {
-	        return -1;
-	    }
+	public LinkedList<Long> getBlocks(long fileBlockNr, int maxBlocks) throws IOException {
+	    return getBlocks(fileBlockNr, maxBlocks, false);
 	}
-	
-	
-	public static LinkedList<Long> getBlocks(Inode inode, long fileBlockNr, int maxBlocks) throws IOException {
-	    return getBlocks(inode, fileBlockNr, maxBlocks, false);
-	}
-	
-    public static LinkedList<Long> getBlocksAllocate(Inode inode, long fileBlockNr, int maxBlocks) throws IOException {
-        return getBlocks(inode, fileBlockNr, maxBlocks, true);
+
+	/** 
+     * Get up to maxBlocks block numbers for the logical block number. Allocate new blocks if
+     * necessary. In case of block allocation only one blockNr returns. 
+     * @see    getBlocksAllocate
+     * @param  fileBlockNr  logical block address
+     * @param  maxBlocks    maximum blocks returned
+     * @return list of block nrs
+     */
+    public LinkedList<Long> getBlocksAllocate(long fileBlockNr, int maxBlocks) throws IOException {
+        return getBlocks(fileBlockNr, maxBlocks, true);
     }	
 
 
-	/** Get up to maxBlocks BlockNrs for the logical fileBlockNr. The Blocks returned are sequential.
+	/** Get up to maxBlocks BlockNrs for the logical fileBlockNr. I dont really like to change behavior
+	 * by specifing a flag variable but this is more or less like the linux implementation. Use getBlocks
+	 * or getBlocksAllocate.
 	 * @param inode    Inode of the data block
 	 * @param fileBlockNr  the logical block address
 	 * @param maxBlocks    maximum blocks returned
 	 * @param create       true: create blocks if nesseccary; false: just read
 	 * @return             list of block nrs; if create=false null is returned if block does not exist
 	 */
-	private static LinkedList<Long> getBlocks(Inode inode, long fileBlockNr, int maxBlocks, boolean create) throws IOException {
+	private LinkedList<Long> getBlocks(long fileBlockNr, int maxBlocks, boolean create) throws IOException {
 		if (fileBlockNr < 0 || maxBlocks < 1) 
 			throw new IllegalArgumentException();
 		
@@ -469,7 +379,7 @@ public class DataBlockAccess {
 		offsets = blockToPath(fileBlockNr);
 		depth = offsets.length;
 		
-		blockNrs = getBranch(inode, offsets);
+		blockNrs = getBranch(offsets);
 		existDepth = blockNrs.length;
 		
 		/* Simplest case - block found, no allocation needed */
@@ -513,16 +423,241 @@ public class DataBlockAccess {
 		}
 
 		/* Okay, we need to do block allocation. */
-		long goal = findGoal(inode, fileBlockNr, blockNrs, offsets);
+		long goal = findGoal(fileBlockNr, blockNrs, offsets);
 		int count = depth - existDepth;
 
-		LinkedList<Long> newBlockNrs = allocBranch(inode, count, goal, offsets, blockNrs);
-		spliceBranch(inode, fileBlockNr, offsets, blockNrs, newBlockNrs);
+		LinkedList<Long> newBlockNrs = allocBranch(count, goal, offsets, blockNrs);
+		spliceBranch(fileBlockNr, offsets, blockNrs, newBlockNrs);
 		
 		result.add(newBlockNrs.getLast());
 		return result;
 	}
 	
+	/** 
+     * Allocate a new block. Uses a goal block to assist allocation. If 
+     * the goal is free, or there is a free block within 32 blocks of the gloal, that block is
+     * allocated. Otherwise a forward search is made for a free block.
+     * @param  goal    the goal block
+     * @return     pointer to allocated block
+     */
+    public static long newBlock(long goal) throws IOException {
+        
+        if (! superblock.hasFreeBlocks()) {
+            return -1;
+        }
+        	    
+        if (goal < superblock.getFirstDataBlock() ||
+                goal >= superblock.getBlocksCount())
+            goal = superblock.getFirstDataBlock();
+    
+        long groupNr = Calculations.groupOfBlk((int)goal);
+        BlockGroupDescriptor groupDescr = blockGroups.getGroupDescriptor((int)groupNr);
+        Bitmap bitmap = Bitmap.fromByteBuffer(blocks.read(groupDescr.getBlockBitmapPointer()),
+                                              groupDescr.getBlockBitmapPointer());
+        
+        long allocatedBlock = -1;
+        do { /* uargh... */
+        if (groupDescr.getFreeBlocksCount() > 0) {
+            int localGoal = (int) ((goal - superblock.getFirstDataBlock()) %
+                            superblock.getBlocksPerGroup());
+            
+            if (!bitmap.isSet(localGoal)) { /* got goal block */
+                bitmap.setBit(localGoal, true);
+                bitmap.write();
+                allocatedBlock = Calculations.blockNrOfLocal(localGoal, groupNr);
+                break;
+            }
+            
+            /* the goal was occupied; search forward for a free block 
+             * within the next XX blocks. */
+            int end = 64/8 + 1;
+            localGoal = bitmap.getNextZeroBitPos(localGoal, end);
+            if (localGoal < end) {
+                bitmap.setBit(localGoal, true);
+                bitmap.write();
+                allocatedBlock = Calculations.blockNrOfLocal(localGoal, groupNr);
+                break;
+            }
+            
+            
+            /* There has been no free block found in the near vicinity of the goal:
+             * do a search forward through the block groups */
+            
+            /* Search first in the remainder of th current group */
+            localGoal = bitmap.getNextZeroBitPos(localGoal);
+            if (localGoal > 0) {
+                bitmap.setBit(localGoal, true);
+                bitmap.write();
+                allocatedBlock = Calculations.blockNrOfLocal(localGoal, groupNr);
+                break;
+            }
+        }
+        } while (false);
+    
+        if (allocatedBlock == -1) {
+            /* Now search the rest of the groups */
+            for (int k=0; k < superblock.getGroupsCount(); k++) {
+                groupNr = (groupNr + 1) % superblock.getGroupsCount();
+                groupDescr = blockGroups.getGroupDescriptor((int)groupNr);
+    
+                if (groupDescr.getFreeBlocksCount() > 0) 
+                    break;
+            }
+    
+            bitmap = Bitmap.fromByteBuffer(blocks.read(groupDescr.getBlockBitmapPointer()),
+                    groupDescr.getBlockBitmapPointer());
+    
+            int localGoal = bitmap.getNextZeroBitPos(0);
+            if (localGoal > 0) {
+                bitmap.setBit(localGoal, true);
+                bitmap.write();
+                allocatedBlock = Calculations.blockNrOfLocal(localGoal, groupNr);
+            }
+        }
+    
+        /* Finally return pointer to allocated block or an error */
+        if (allocatedBlock > 0) { /* block was allocated in group */
+            groupDescr.setFreeBlocksCount((short)(groupDescr.getFreeBlocksCount() - 1));
+            superblock.setFreeBlocksCount(superblock.getFreeBlocksCount() - 1);
+    
+            groupDescr.write();
+            superblock.write();
+            
+            return allocatedBlock;
+        } else {
+            return -1;
+        }
+    }
+
+    private DataBlockAccess(Inode inode) {
+	    this.inode = inode;
+	}
+	
+	/** 
+	 * Create access provider to inode data 
+	 */ 
+	public static DataBlockAccess fromInode(Inode inode) {
+	    DataBlockAccess access = new DataBlockAccess(inode);
+	    return access;
+	}
+	
+	/**
+	 * Old implementation of readData. Dont use this. Its just for reference how not to do it
+	 */
+    public ByteBuffer readSlow(int size, int offset) throws IOException {
+        ByteBuffer result = ByteBuffer.allocateDirect(size);
+
+        int start = offset / superblock.getBlocksize();
+        int max = size / superblock.getBlocksize() + start;
+        offset = offset % superblock.getBlocksize();        
+        LinkedList<Long> blockNrs = new LinkedList<Long>();   
+        
+        while (start < max) { 
+            LinkedList<Long> b = getBlocks(start, max-start);
+            
+            // getBlocks returns null in case create=false and the block does not exist. FUSE can
+            // and will request not existing blocks. 
+            if (b == null) {
+                break;
+            }
+                        
+            start += b.size();          
+            blockNrs.addAll(b);
+        }
+        
+        for (long nr : blockNrs) {
+            ByteBuffer block = blocks.read((int)nr);
+            block.position(offset);
+
+            while (result.hasRemaining() && block.hasRemaining()) {
+                    result.put(block.get());
+            }
+
+            offset = 0;
+        }
+        
+        result.rewind();
+        return result;
+    }
+	
+	/**
+	 * Read Inode data 
+	 * @param  size    size of the data to be read
+	 * @param  offset  start adress in data area
+	 * @return buffer of size size containing data.
+	 */ 
+	public ByteBuffer read(int size, int offset) throws IOException {
+	    ByteBuffer result = ByteBuffer.allocateDirect(size);
+
+	    int blocksize = superblock.getBlocksize();
+	    int start = offset / blocksize;
+	    int max = size / blocksize + start;
+	    offset = offset % blocksize;        
+
+	    while (start < max) { 
+	        LinkedList<Long> b = getBlocks(start, max-start);
+
+	        // getBlocks returns null in case create=false and the block does not exist. FUSE can
+	        // and will request not existing blocks. 
+	        if (b == null) {
+	            break;
+	        }
+
+	        int count = b.size();
+	        result.limit(result.position() + count * blocksize);
+	        blocks.readToBuffer((((long)(b.getFirst() & 0xffffffff)) * blocksize) + offset, result);
+	        start += b.size();          
+	        offset = 0;
+	    }
+
+	    result.position(offset);
+	    return result;
+	}
+
+    
+    public int write(ByteBuffer buf, int offset) throws IOException {
+        System.out.println("WRITE DATA: " + buf + " AT: " + offset);
+        
+        int start = offset / superblock.getBlocksize();
+        int max = buf.capacity() / superblock.getBlocksize() + start + 1;
+        buf.rewind();
+
+        System.out.println("START: " + start + " MAX: " + max);
+        
+        LinkedList<Long> blockNrs = new LinkedList<Long>();
+        
+        /* get all the blocks needed to hold buf */
+        while (start < max) {
+            LinkedList<Long> b = getBlocksAllocate(start, max-start);
+            
+            if (b == null) 
+                break;
+            
+            start += b.size();
+            blockNrs.addAll(b);
+        }
+
+        /* iterate blocks and write buf */
+        int blocksize = superblock.getBlocksize();
+        int blockOffset = offset % blocksize;
+        int bufOffset = 0;
+        int remaining = buf.capacity();
+        for (long nr : blockNrs) {
+            int bytesToWrite = remaining;
+            if (bytesToWrite > blocksize)
+                bytesToWrite = blocksize - blockOffset;
+            
+            blocks.writePartial((int) nr, blockOffset, buf, bufOffset, bytesToWrite); 
+            
+            remaining -= bytesToWrite;
+            bufOffset += bytesToWrite;
+            blockOffset = 0;
+        }
+        return bufOffset;
+    }
+    
+
+
 	
 }
 

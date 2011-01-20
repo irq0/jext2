@@ -4,16 +4,16 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
+import java.util.LinkedList;
 
 /**
- * access to file system blocks - smallest access unit is a block which depends on 
- * file system.
- */
+ * Access to the filesystem blocks  
+ * */
 public class BlockAccess {
 	private int blocksize = Constants.EXT2_MIN_BLOCK_SIZE;
 	private FileChannel blockdev;
 	private static BlockAccess instance;
-
+	
 	
 	public BlockAccess(FileChannel blockdev) {
 		if (BlockAccess.instance != null) {
@@ -101,5 +101,9 @@ public class BlockAccess {
 	public static BlockAccess getInstance() {
 		return BlockAccess.instance;
 	}
+	
+
+	
+	
 	
 }
