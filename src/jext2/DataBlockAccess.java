@@ -365,7 +365,7 @@ public class DataBlockAccess {
 	                                          groupDescr.getBlockBitmapPointer());
 	    
 	    long allocatedBlock = -1;
-	    do {
+	    do { /* uargh... */
 	    if (groupDescr.getFreeBlocksCount() > 0) {
 	        int localGoal = (int) ((goal - superblock.getFirstDataBlock()) %
 	                        superblock.getBlocksPerGroup());
@@ -379,7 +379,7 @@ public class DataBlockAccess {
 	        
 	        /* the goal was occupied; search forward for a free block 
 	         * within the next XX blocks. */
-	        int end = 64/8;
+	        int end = 64/8 + 1;
 	        localGoal = bitmap.getNextZeroBitPos(localGoal, end);
 	        if (localGoal < end) {
 	            bitmap.setBit(localGoal, true);

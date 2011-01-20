@@ -87,6 +87,36 @@ public class RegInode extends Inode {
 		return result;
 	}
 
+	public ByteBuffer readDataFast(int size, int offset) throws IOException {
+        ByteBuffer result = ByteBuffer.allocateDirect(size);
+
+        int blocksize = superblock.getBlocksize();
+        int start = offset / blocksize;
+        int max = size / blocksize + start;
+        offset = offset % blocksize;        
+        
+        while (start < max) { 
+            LinkedList<Long> b = DataBlockAccess.getBlocks(this, start, max-start);
+            
+            // getBlocks returns null in case create=false and the block does not exist. FUSE can
+            // and will request not existing blocks. 
+            if (b == null) {
+                break;
+            }
+            
+            int count = b.size();
+            result.limit(result.position() + count * blocksize);
+            blocks.readToBuffer((((long)(b.getFirst() & 0xffffffff)) * blocksize) + offset, result);
+            start += b.size();          
+            offset = 0;
+        }
+                
+        result.position(offset);
+        return result;
+    }
+
+	
+	
 	protected RegInode(int blockNr, int offset) throws IOException {
 		super(blockNr, offset);
 	}

@@ -27,12 +27,21 @@ public class BlockAccess {
 	public ByteBuffer read(long nr) throws IOException {
 		ByteBuffer buf = ByteBuffer.allocate(blocksize);		
 		buf.order(ByteOrder.BIG_ENDIAN);
-		
-		blockdev.position(((long)(nr & 0xffffffff)) * blocksize);
-		blockdev.read(buf);
+		blockdev.read(buf,(((long)(nr & 0xffffffff)) * blocksize));
 
 		return buf; 
 	}	
+	
+	/**
+	 * Read data from device to buffer starting at postion. To use this method set the
+	 * limit and position of the buffer to your needs and note that position is
+	 * not the block number. This method is indened for bulk data retrieval such as
+	 * the inode.read()  
+	 */
+	public void readToBuffer(long position, ByteBuffer buf) throws IOException {
+	   buf.order(ByteOrder.BIG_ENDIAN);
+	   blockdev.read(buf, position);
+	}
 
 	/** Write a whole block to the logical address nr on disk */
 	public void write(int nr, ByteBuffer buf) throws IOException {
