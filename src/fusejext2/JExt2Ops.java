@@ -20,7 +20,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 
 	private FileChannel blockDev;
 	
-	private List<RegInode> openInodes = new Vector<RegInode>();
+	private List<RegularInode> openInodes = new Vector<RegularInode>();
 	private List<DirectoryInode> openDirectories = new Vector<DirectoryInode>();
 	
 	public JExt2Ops(FileChannel blockDev) {
@@ -74,13 +74,13 @@ public class JExt2Ops extends AbstractLowlevelOps {
 			if (inode == null) { 
 				Reply.err(req, Errno.ENOSYS);
 				return;
-			} else if (!(inode instanceof RegInode)) { 
+			} else if (!(inode instanceof RegularInode)) { 
 				Reply.err(req, Errno.EPERM);
 				return;
 			}
 			
 			long pos = openInodes.size();
-			openInodes.add((int)pos,((RegInode)inode));
+			openInodes.add((int)pos,((RegularInode)inode));
 			fi.setFh(pos);
 			Reply.open(req, fi);
 		} catch (IOException e) {
@@ -89,7 +89,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 	}
 	
 	public void read(FuseReq req, long ino, int size, int off, FileInfo fi) {
-		RegInode inode = openInodes.get((int)fi.getFh());
+		RegularInode inode = openInodes.get((int)fi.getFh());
 
 		try {
 			ByteBuffer buf = inode.readData((int)size, (int)off);
@@ -101,7 +101,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 	
 	
 	public void write(FuseReq req, long ino, ByteBuffer buf, int off, FileInfo fi) {
-	    RegInode inode = openInodes.get((int)fi.getFh());
+	    RegularInode inode = openInodes.get((int)fi.getFh());
 	    
 	    try {
 	        System.out.println("WRITE");

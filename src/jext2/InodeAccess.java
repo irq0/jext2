@@ -17,7 +17,7 @@ public class InodeAccess {
 			DirectoryInode inode = DirectoryInode.fromByteBuffer(buf, offset);
 			return inode;
 		} else if (mask(mode, Constants.LINUX_S_IFREG)) {
-			RegInode inode = RegInode.fromByteBuffer(buf, offset);
+			RegularInode inode = RegularInode.fromByteBuffer(buf, offset);
 			return inode;
 		} else if (mask(mode, Constants.LINUX_S_IFLNK)) {
 			SymlinkInode inode = SymlinkInode.fromByteBuffer(buf, offset);

@@ -81,7 +81,7 @@ class JExt2 {
 			newinode.write();
 			
 			System.out.println("NEW INODE: \n" + newinode);
-			DataBlockAccess inodeData = ((RegInode)newinode).accessData();
+			DataBlockAccess inodeData = ((RegularInode)newinode).accessData();
 			LinkedList<Long> block = inodeData.getBlocks(6, 1);
 			System.out.println("blocks: " + block);
 			BlockGroupDescriptor bg = BlockGroupAccess.getInstance().getGroupDescriptor(0);
