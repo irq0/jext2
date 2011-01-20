@@ -53,35 +53,43 @@ public class DataBlockAccess {
 		return block;
 	}
 
-	static class DataBlockIterator implements Iterator<Integer>, Iterable<Integer>{
+	class DataBlockIterator implements Iterator<Long>, Iterable<Long>{
 		Inode inode;
-		int current;
+		int remaining; 
+		long current;
+		LinkedList<Long> blocks; /* cache for block nrs */
 
-		DataBlockIterator(Inode inode, int offset) {
+		DataBlockIterator(Inode inode, int start) {
 			this.inode = inode;
-			this.current = offset - 1;
+			this.current = start;
+			this.remaining = inode.getBlocks();
 		}
 			
 		DataBlockIterator(Inode inode) {
-			this.inode = inode;
-			this.current = -1;
+		    this(inode , -1);
 		}
 
 		public boolean hasNext() {
 			try {
-				return (getDataBlockNr(this.inode, current + 1) != 0);
+			   if (remaining > 0) { /* still blocks to fetch */
+			       if (blocks.size() == 0) { /* blockNr cache empty */
+			           blocks = getBlocks(current + 1, remaining);
+			           if (blocks == null) /* should not happen */ 
+			               return false;
+			           remaining -= blocks.size();
+			           current += blocks.size();
+			       }
+			       return true;
+			   } else {
+			       return false;
+			   }
 			} catch (IOException e) {
 				return false;
 			}
 		}
 
-		public Integer next() {
-			current += 1;
-			try {
-				return getDataBlockNr(this.inode, current);
-			} catch (IOException e) {
-				return null;
-			}
+		public Long next() {
+		    return (blocks.removeFirst());
 		}
 
 		public void remove() {
@@ -91,13 +99,13 @@ public class DataBlockAccess {
 			return this;
 		}
 	}
-
-	public static DataBlockIterator iterateDataBlockNr(Inode inode) {
+	
+	public DataBlockIterator iterateBlocks() {
 		return new DataBlockIterator(inode);
 	}
 
-	public static DataBlockIterator iterateDataBlockNrStartingAt(Inode inode, int offset) {
-		return new DataBlockIterator(inode, offset);
+	public DataBlockIterator iterateBlocksStartAt(int start) {
+		return new DataBlockIterator(inode, start);
 	}
 	
 	/** get the logical block number of file block */
@@ -540,121 +548,6 @@ public class DataBlockAccess {
 	    DataBlockAccess access = new DataBlockAccess(inode);
 	    return access;
 	}
-	
-	/**
-	 * Old implementation of readData. Dont use this. Its just for reference how not to do it
-	 */
-    public ByteBuffer readSlow(int size, int offset) throws IOException {
-        ByteBuffer result = ByteBuffer.allocateDirect(size);
-
-        int start = offset / superblock.getBlocksize();
-        int max = size / superblock.getBlocksize() + start;
-        offset = offset % superblock.getBlocksize();        
-        LinkedList<Long> blockNrs = new LinkedList<Long>();   
-        
-        while (start < max) { 
-            LinkedList<Long> b = getBlocks(start, max-start);
-            
-            // getBlocks returns null in case create=false and the block does not exist. FUSE can
-            // and will request not existing blocks. 
-            if (b == null) {
-                break;
-            }
-                        
-            start += b.size();          
-            blockNrs.addAll(b);
-        }
-        
-        for (long nr : blockNrs) {
-            ByteBuffer block = blocks.read((int)nr);
-            block.position(offset);
-
-            while (result.hasRemaining() && block.hasRemaining()) {
-                    result.put(block.get());
-            }
-
-            offset = 0;
-        }
-        
-        result.rewind();
-        return result;
-    }
-	
-	/**
-	 * Read Inode data 
-	 * @param  size    size of the data to be read
-	 * @param  offset  start adress in data area
-	 * @return buffer of size size containing data.
-	 */ 
-	public ByteBuffer read(int size, int offset) throws IOException {
-	    ByteBuffer result = ByteBuffer.allocateDirect(size);
-
-	    int blocksize = superblock.getBlocksize();
-	    int start = offset / blocksize;
-	    int max = size / blocksize + start;
-	    offset = offset % blocksize;        
-
-	    while (start < max) { 
-	        LinkedList<Long> b = getBlocks(start, max-start);
-
-	        // getBlocks returns null in case create=false and the block does not exist. FUSE can
-	        // and will request not existing blocks. 
-	        if (b == null) {
-	            break;
-	        }
-
-	        int count = b.size();
-	        result.limit(result.position() + count * blocksize);
-	        blocks.readToBuffer((((long)(b.getFirst() & 0xffffffff)) * blocksize) + offset, result);
-	        start += b.size();          
-	        offset = 0;
-	    }
-
-	    result.position(offset);
-	    return result;
-	}
-
-    
-    public int write(ByteBuffer buf, int offset) throws IOException {
-        System.out.println("WRITE DATA: " + buf + " AT: " + offset);
-        
-        int start = offset / superblock.getBlocksize();
-        int max = buf.capacity() / superblock.getBlocksize() + start + 1;
-        buf.rewind();
-
-        System.out.println("START: " + start + " MAX: " + max);
-        
-        LinkedList<Long> blockNrs = new LinkedList<Long>();
-        
-        /* get all the blocks needed to hold buf */
-        while (start < max) {
-            LinkedList<Long> b = getBlocksAllocate(start, max-start);
-            
-            if (b == null) 
-                break;
-            
-            start += b.size();
-            blockNrs.addAll(b);
-        }
-
-        /* iterate blocks and write buf */
-        int blocksize = superblock.getBlocksize();
-        int blockOffset = offset % blocksize;
-        int bufOffset = 0;
-        int remaining = buf.capacity();
-        for (long nr : blockNrs) {
-            int bytesToWrite = remaining;
-            if (bytesToWrite > blocksize)
-                bytesToWrite = blocksize - blockOffset;
-            
-            blocks.writePartial((int) nr, blockOffset, buf, bufOffset, bytesToWrite); 
-            
-            remaining -= bytesToWrite;
-            bufOffset += bytesToWrite;
-            blockOffset = 0;
-        }
-        return bufOffset;
-    }
     
 
 

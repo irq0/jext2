@@ -3,7 +3,7 @@ package jext2;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public class SymlinkInode extends Inode {
+public class SymlinkInode extends DataInode {
 	private static BlockAccess blocks = BlockAccess.getInstance();
 	private static Superblock superblock = Superblock.getInstance();
 	private String symlink;
@@ -12,7 +12,7 @@ public class SymlinkInode extends Inode {
 		return this.symlink;
 	}
 	
-	protected SymlinkInode(int blockNr, int offset) {
+	protected SymlinkInode(int blockNr, int offset) throws IOException {
 		super(blockNr, offset);
 	}
 
@@ -20,13 +20,13 @@ public class SymlinkInode extends Inode {
 		super.read(buf);
 		int size = getSize();
 				
-		if (getBlocks() == 0) { // fast symlink
+		if (isFastSymlink()) {
 			symlink = Ext2fsDataTypes.getString(buf, 40 + offset, size);			
 			
-		} else { // slow symlink
+		} else { 
 			StringBuffer sb = new StringBuffer();
 			
-			for (int nr : DataBlockAccess.iterateDataBlockNr(this)) {
+			for (long nr : accessData().iterateBlocks()) {
 				buf = blocks.read(nr);
 				sb.append(Ext2fsDataTypes.getString(buf, 0, size));
 				size -= superblock.getBlocksize();
@@ -36,6 +36,11 @@ public class SymlinkInode extends Inode {
 		}
 		
 		
+	}
+	
+	
+	public boolean isFastSymlink() {
+	    return (getBlocks() == 0);
 	}
 	
 	

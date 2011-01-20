@@ -92,7 +92,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		RegInode inode = openInodes.get((int)fi.getFh());
 
 		try {
-			ByteBuffer buf = inode.accessData().read((int)size, (int)off);
+			ByteBuffer buf = inode.readData((int)size, (int)off);
 			Reply.byteBuffer(req, buf, 0, size);
 		} catch (IOException e) {
 			Reply.err(req, Errno.EIO);
@@ -105,7 +105,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 	    
 	    try {
 	        System.out.println("WRITE");
-	        int count = inode.accessData().write(buf, off);
+	        int count = inode.writeData(buf, off);
 	        if (count < 1) 
 	            throw new IOException();
 	        else

@@ -6,7 +6,7 @@ import java.util.Iterator;
 
 
 /** Extends Inode with directory access methods */
-public class DirectoryInode extends Inode implements Iterable<DirectoryEntry> {
+public class DirectoryInode extends DataInode implements Iterable<DirectoryEntry> {
 	private static BlockAccess blocks = BlockAccess.getInstance();
 	private static Superblock superblock = Superblock.getInstance();
 
@@ -103,9 +103,6 @@ public class DirectoryInode extends Inode implements Iterable<DirectoryEntry> {
 		return sb.toString();
 	}
 
-	
-	
-	
 	protected DirectoryInode(int blockNr, int offset) throws IOException {
 		super(blockNr, offset);
 	}
