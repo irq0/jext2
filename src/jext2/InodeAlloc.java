@@ -181,6 +181,8 @@ public class InodeAlloc {
 				continue;
 			}
 			
+			bmap.setBit(ino, true);
+			bmap.write();
 			break;			
 		} 
 		

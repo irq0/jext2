@@ -242,7 +242,6 @@ public class Inode extends Block {
 		Inode inode = new Inode(-1, -1);
 		Date now = new Date();
 		
-		inode.uidLow = 23;
 		inode.modificationTime = now;
 		inode.accessTime = now;
 		inode.changeTime = now;

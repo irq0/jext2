@@ -28,21 +28,16 @@ public class Bitmap extends Block {
 
 		/* start may not be byte aligned - mask first XX bits */
 		chunk = bmap.get();
-        System.out.println(Integer.toBinaryString(chunk));
 
 		chunk = (byte)((0xFF >> offset) ^ 0xFF | chunk);
-        System.out.println(Integer.toBinaryString(chunk));
 		
 		while(bmap.hasRemaining() && numBytes > 0) {
-		    System.out.println(Integer.toBinaryString(chunk));
 			if (chunk == 0) { /* is zero */
 		         System.out.println("==0");
 
 			    pos = (bmap.position()-1) * 8;
 			    break;
 			} else if (chunk != (byte)0xFF) { /* has at least one zero bit */
-			    System.out.println("!= 0xFF");
-
 				pos = (bmap.position()-1)*8 + findFirstZeroBitInByte(chunk);
 				break;
 			} 
