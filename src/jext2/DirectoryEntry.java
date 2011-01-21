@@ -70,10 +70,10 @@ public class DirectoryEntry {
 	    
 	    DirectoryEntry dir = new DirectoryEntry();
 	    
-	    dir.nameLen = (byte)(name.length() + (-1*name.length() % 4)); 	    
+	    dir.nameLen = (byte)(name.length() + ((-1*name.length()) % 4)); 	    
 	    String namePadded = StringUtils.rightPad(name, dir.nameLen, '\0'); 	    
 	    dir.name = namePadded;
-	    
+	    dir.recLen = (byte)(8 + dir.nameLen);
 	    return dir;
 	}
 

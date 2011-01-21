@@ -6,7 +6,7 @@ import java.io.IOException;
  * Adapted to jext2 from the linux kernel impl. 
  * 
  * */
-class InodeAlloc {
+public class InodeAlloc {
 	private static Superblock superblock = Superblock.getInstance();
 	private static BlockGroupAccess blockGroups = BlockGroupAccess.getInstance();
 	

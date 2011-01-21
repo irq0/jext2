@@ -270,7 +270,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
                 return;
             }
            
-            DirectoryInode inode = (DirectoryInode)(DirectoryInode.createEmpty());
+            Inode inode = Inode.createEmpty();
             inode.setMode(mode);
             
             DirectoryEntry newDir = DirectoryEntry.create(name);
@@ -279,6 +279,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
             
             ((DirectoryInode)parentInode).addLink(newDir);
             
+            InodeAlloc.registerInode(parentInode, inode);
             inode.write();
             parentInode.write();
             

@@ -42,6 +42,9 @@ public class InodeAccess {
 		int absBlock = descr.getInodeTablePointer() + tblBlock;
 		int relOffset = offset - (tblBlock * superblock.getBlocksize());
 		
+		if (absBlock < 0 || relOffset < 0) 
+		    throw new IOException(); 
+		
 		ByteBuffer table = blocks.read(absBlock);
 		Inode inode = InodeAccess.readFromByteBuffer(table, relOffset);
 
