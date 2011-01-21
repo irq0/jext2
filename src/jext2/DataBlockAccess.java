@@ -72,25 +72,29 @@ public class DataBlockAccess {
 		}
 
 		public boolean hasNext() {
+		    fetchNext();
+		    return (remaining > 0);
+		}
+		
+		private void fetchNext() {		    
 			try {
 			   if (remaining > 0) { /* still blocks to fetch */
-			       if (blocks.size() == 0) { /* blockNr cache empty */
+			      if (blocks == null || blocks.size() == 0) { /* blockNr cache empty */
 			           blocks = getBlocks(current + 1, remaining);
-			           if (blocks == null) /* should not happen */ 
-			               return false;
+			           if (blocks == null) {
+			               remaining = 0;
+			               return;
+			           }
 			           remaining -= blocks.size();
 			           current += blocks.size();
 			       }
-			       return true;
-			   } else {
-			       return false;
 			   }
 			} catch (IOException e) {
-				return false;
 			}
 		}
 
 		public Long next() {
+		    fetchNext();
 		    return (blocks.removeFirst());
 		}
 
@@ -337,6 +341,7 @@ public class DataBlockAccess {
 	    lastAllocLogicalBlock = logicalBlock;
 	    lastAllocPhysicalBlock = newBlockNrs.getLast().intValue();
 	    
+	    inode.setBlocks(inode.getBlocks() + newBlockNrs.size());
 	    inode.setChangeTime(new Date());
 	    inode.write();
 	}

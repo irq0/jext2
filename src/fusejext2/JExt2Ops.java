@@ -8,6 +8,7 @@ import java.util.UUID;
 import java.util.Vector;
 
 import jext2.*;
+import jext2.DirectoryInode.FileExistsException;
 import fuse.*;
 import jlowfuse.*;
 import fuse.StatVFS;
@@ -255,6 +256,48 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		openDirectories.remove((int)fi.getFh());
 		Reply.err(req, 0);		
 	}
+
+	
+    public void mkdir(FuseReq req, long parent, String name, short mode) {
+        if (parent == 1) parent = Constants.EXT2_ROOT_INO;
+        try {
+            Inode parentInode = InodeAccess.readByIno((int)parent);
+            if (parentInode == null) { 
+                Reply.err(req, Errno.ENOENT);
+                return;
+            } else if (!(parentInode instanceof DirectoryInode)) {
+                Reply.err(req, Errno.ENOTDIR);
+                return;
+            }
+           
+            DirectoryInode inode = (DirectoryInode)(DirectoryInode.createEmpty());
+            inode.setMode(mode);
+            
+            DirectoryEntry newDir = DirectoryEntry.create(name);
+            newDir.setIno((int)(inode.getIno()));
+            newDir.setFileType((byte)(Constants.LINUX_S_IFDIR));
+            
+            ((DirectoryInode)parentInode).addLink(newDir);
+            
+            inode.write();
+            parentInode.write();
+            
+            EntryParam e = new EntryParam();
+            e.setAttr(getStat((Inode)inode, (int)(inode.getIno())));
+            e.setGeneration(inode.getGeneration());
+            e.setAttr_timeout(0.0);
+            e.setEntry_timeout(0.0);
+            e.setIno(inode.getIno());
+            
+            Reply.entry(req, e);    
+        } catch (IOException e) {
+            Reply.err(req, Errno.EIO);
+        } catch (FileExistsException e) {
+            Reply.err(req, Errno.EEXIST);
+        }
+        
+    }
+	
 	
     public void statfs(FuseReq req, long ino) {
         StatVFS s = new StatVFS();
