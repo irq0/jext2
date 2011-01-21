@@ -104,10 +104,20 @@ public class Ext2fsDataTypes {
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
 		buffer.putInt(offset, value);
 	}
+
+	public static void putLE32U(ByteBuffer buffer, long value, int offset) {
+	    buffer.order(ByteOrder.LITTLE_ENDIAN);
+	    buffer.putInt(offset, (int)(value & 0xffffffffL));
+	}
 	
 	public static void putLE16(ByteBuffer buffer, short value, int offset) {
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
 		buffer.putShort(offset, value);
+	}
+
+	public static void putLE16U(ByteBuffer buffer, short value, int offset) {
+	    buffer.order(ByteOrder.LITTLE_ENDIAN);
+	    buffer.putShort(offset, (short)(value & 0xffff));
 	}
 	
 	public static void putLE8(ByteBuffer buffer, byte value, int offset) {
@@ -115,4 +125,8 @@ public class Ext2fsDataTypes {
 		buffer.put(offset, value);
 	}
 
+	public static void putLE8U(ByteBuffer buffer, byte value, int offset) {
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        buffer.put(offset, (byte)(value & 0xff));
+    }
 }
