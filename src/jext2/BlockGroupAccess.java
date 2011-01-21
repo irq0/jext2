@@ -28,12 +28,12 @@ public class BlockGroupAccess {
 						  superblock.getGroupDescrPerBlock() - 1) /
 						  superblock.getGroupDescrPerBlock();
 		int groupCount = superblock.getGroupsCount();
-		int start = BlockGroupDescriptor.descriptorLocation(0);
+		long start = BlockGroupDescriptor.descriptorLocation(0);
 		int groupsPerBlock = superblock.getGroupDescrPerBlock();
 		int group = 0;
 		descriptors = new BlockGroupDescriptor[superblock.getGroupsCount()];
 		
-		for (int nr=start; nr<blockCount+start; nr++) {			
+		for (long nr=start; nr<blockCount+start; nr++) {			
 			ByteBuffer buf = blocks.read(nr);
 			
 			for (int i=0; i<Math.min(groupCount, groupsPerBlock); i++) {				
@@ -81,7 +81,7 @@ public class BlockGroupAccess {
 	}
 		
 	
-	private Bitmap readBitmapAtBlock(int nr) throws IOException {
+	private Bitmap readBitmapAtBlock(long nr) throws IOException {
 		ByteBuffer buf = blocks.read(nr);
 		Bitmap bmap = Bitmap.fromByteBuffer(buf, nr);
 		

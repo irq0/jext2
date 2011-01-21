@@ -43,7 +43,7 @@ public class BlockAccess {
 	}
 
 	/** Write a whole block to the logical address nr on disk */
-	public void write(int nr, ByteBuffer buf) throws IOException {
+	public void write(long nr, ByteBuffer buf) throws IOException {
 		buf.rewind();
 		blockdev.position(((long)(nr & 0xffffffff)) * blocksize);
 		blockdev.write(buf);
@@ -72,7 +72,7 @@ public class BlockAccess {
 	 * the blocksize boundry. 
 	 * @throws IOException 
 	 */
-	public void writePartial(int nr, int offset, ByteBuffer buf) throws IOException {
+	public void writePartial(long nr, long offset, ByteBuffer buf) throws IOException {
         if (offset + buf.limit() > blocksize)
             throw new IllegalArgumentException("attempt to write over block boundries" + buf + ", " + offset);
 
@@ -81,7 +81,7 @@ public class BlockAccess {
 	    blockdev.force(true);
 	}
 	
-	public void writePartial(int nr, int offset, ByteBuffer buf, int bufOffset, int bufLength) throws IOException {
+	public void writePartial(long nr, long offset, ByteBuffer buf, int bufOffset, int bufLength) throws IOException {
 		if (offset + bufLength > blocksize)
 			throw new IllegalArgumentException("attempt to write over block boundries" + buf + ", " + offset);
 

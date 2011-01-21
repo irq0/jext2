@@ -29,35 +29,35 @@ public class DataBlockAccess {
     /** number of triple indirect blocks */
     public static final long trippleBlocks = ptrs*ptrs*ptrs;
 		
-	public static int readBlockNumberFromBlock(int dataBlock, int index) throws IOException{
+	public static long readBlockNumberFromBlock(long dataBlock, int index) throws IOException{
 		ByteBuffer buffer = blocks.read(dataBlock);
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
-		int nr = buffer.getInt(index*4);
+		long nr = Ext2fsDataTypes.getLE32U(buffer, index*4);
 		return nr;
 	}
 	
-	public static int readIndirect(int ind, int nr) throws IOException {
-		int block = readBlockNumberFromBlock(ind, nr);
+	public static long readIndirect(long ind, int nr) throws IOException {
+		long block = readBlockNumberFromBlock(ind, nr);
 		return block;
 	}
 
-	public static int readDoubleIndirect(int dint, int nr) throws IOException {
-		int addrPerBlock = superblock.getBlocksize()/4;
-		int ind = readIndirect(dint, nr / addrPerBlock);
-		int block = readIndirect(ind, nr % addrPerBlock);
+	public static long readDoubleIndirect(long dint, int nr) throws IOException {
+		long addrPerBlock = superblock.getBlocksize()/4;
+		long ind = readIndirect(dint, (int)(nr / addrPerBlock));
+		long block = readIndirect(ind, (int)(nr % addrPerBlock));
 		return block;
 	}
 
-	public static int readTripleIndirect(int tind, int nr) throws IOException{
-		int addrPerBlock = superblock.getBlocksize()/4;
-		int dind = readDoubleIndirect(tind, nr / addrPerBlock);
-		int block = readIndirect(dind, nr % addrPerBlock);
+	public static long  readTripleIndirect(long tind, int nr) throws IOException{
+		long addrPerBlock = superblock.getBlocksize()/4;
+		long dind = readDoubleIndirect(tind, (int)(nr / addrPerBlock));
+		long block = readIndirect(dind, (int)(nr % addrPerBlock));
 		return block;
 	}
 
 	class DataBlockIterator implements Iterator<Long>, Iterable<Long>{
 		Inode inode;
-		int remaining; 
+		long remaining; 
 		long current;
 		LinkedList<Long> blocks; /* cache for block nrs */
 
@@ -115,8 +115,8 @@ public class DataBlockAccess {
 	}
 	
 	/** get the logical block number of file block */
-	public static int getDataBlockNr(Inode inode, int fileBlockNumber) throws IOException {
-		int[] directBlocks = inode.getBlock();
+	public static long getDataBlockNr(Inode inode, int fileBlockNumber) throws IOException {
+		long[] directBlocks = inode.getBlock();
 		int addrPerBlock = superblock.getBlocksize()/4;
 			
 		// direct
@@ -241,7 +241,7 @@ public class DataBlockAccess {
 	    
 	    /* Try to find previous block */
 	    if (depth == 0)  { /* search direct blocks */
-	        int[] directBlocks = inode.getBlock();
+	        long[] directBlocks = inode.getBlock();
 	        for (int i=directBlocks.length-1; i >= 0; i--) {
 	            if (directBlocks[i] != 0) 
 	                return directBlocks[i];
@@ -330,7 +330,7 @@ public class DataBlockAccess {
 	    int existDepth = blockNrs.length;
 	    
 	    if (existDepth == 0) { /* add direct block */
-	        int[] directBlocks = inode.getBlock();
+	        long[] directBlocks = inode.getBlock();
 	        directBlocks[(int)offsets[0]] = newBlockNrs.getFirst().intValue();
 	    } else {
 	        ByteBuffer buf = blocks.read(blockNrs[existDepth-1]);

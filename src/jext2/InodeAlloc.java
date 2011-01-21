@@ -74,7 +74,7 @@ public class InodeAlloc {
 		 *
 		 * So add our directory's i_ino into the starting point for the hash.
 		 */
-		group = (int)((group + parent.getIno()) % groupsCount);
+		group = (group + parent.getIno()) % groupsCount;
 		
 		/*
 		 * Use a quadratic hash to find a group with a free inode and some
@@ -159,9 +159,9 @@ public class InodeAlloc {
 		
 		/* find free inode slot in block groups starting at $group */
 		int ino;
-		int globalIno;
+		long globalIno;
 		if (group == 0) 
-			ino = superblock.getFirstIno();
+			ino = (int)(superblock.getFirstIno());
 		else 
 			ino = 0;
 		
@@ -188,11 +188,11 @@ public class InodeAlloc {
 		
 		/* apply changes to meta data */
 		superblock.setFreeInodesCount(superblock.getFreeInodesCount() - 1);
-		descr.setFreeInodesCount((short)(descr.getFreeInodesCount() - 1));
+		descr.setFreeInodesCount(descr.getFreeInodesCount() - 1);
 
 		if (InodeAccess.mask(inode.getMode(), Constants.LINUX_S_IFDIR)) { 
 			superblock.setDirsCount(superblock.getDirsCount() + 1);
-			descr.setUsedDirsCount((short)(descr.getUsedDirsCount() + 1));
+			descr.setUsedDirsCount(descr.getUsedDirsCount() + 1);
 		}
 		
 		superblock.write();
@@ -200,7 +200,7 @@ public class InodeAlloc {
 		
 		/* set location metadata of inode */
 		int offset = (ino * superblock.getInodeSize()) % superblock.getBlocksize();
-		int block = descr.getInodeTablePointer() + (ino * superblock.getInodeSize()) / superblock.getBlocksize();
+		long block = descr.getInodeTablePointer() + (ino * superblock.getInodeSize()) / superblock.getBlocksize();
 		
 		inode.setBlockGroup(group);
 		inode.setBlockNr(block);		

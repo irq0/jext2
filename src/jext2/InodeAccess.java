@@ -33,13 +33,13 @@ public class InodeAccess {
 			return null;
 		}
 		
-		int group = Calculations.groupOfIno(ino);
+		long group = Calculations.groupOfIno(ino);
 		int offset = Calculations.localInodeOffset(ino);
 		int tblBlock = offset / superblock.getBlocksize();
 	
 		BlockGroupDescriptor descr = blockGroups.getGroupDescriptor(group);
 	
-		int absBlock = descr.getInodeTablePointer() + tblBlock;
+		long absBlock = descr.getInodeTablePointer() + tblBlock;
 		int relOffset = offset - (tblBlock * superblock.getBlocksize());
 		
 		if (absBlock < 0 || relOffset < 0) 

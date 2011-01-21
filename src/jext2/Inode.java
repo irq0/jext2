@@ -7,44 +7,44 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class Inode extends Block {
-	private short mode;
-	private short gidLow;
-	private short uidLow;
-	private int size;
+	private int mode;
+	private int gidLow;
+	private int uidLow;
+	private long size;
 	private Date accessTime;
 	private Date changeTime;
 	private Date modificationTime;
 	private Date deletionTime;
-	private short linksCount;
-	private int blocks;
-	private	int flags;
-	private int[] block;
-	private	int generation;
-	private	int fileAcl;
-	private	int dirAcl;
-	private	int fragmentAddress;
+	private int linksCount;
+	private long blocks;
+	private	long flags;
+	private long[] block;
+	private	long generation;
+	private	long fileAcl;
+	private	long dirAcl;
+	private	long fragmentAddress;
 
 	// Linux OS dependent values
-	private byte frag = 0;
-	private byte fsize = 0;
-	private short uidHigh;
-	private short gidHigh;
+	//private int frag = 0;
+	//private int fsize = 0;
+	private int uidHigh;
+	private int gidHigh;
 
 	// in memory data (ext2_inode_info)
-	private int blockGroup = -1;
+	private long blockGroup = -1;
 	private long ino = -1;
 	
 	
-	public final short getMode() {
+	public final int getMode() {
 		return this.mode;
 	}
-	public final short getGidLow() {
+	public final int getGidLow() {
 		return this.gidLow;
 	}
-	public final short getUidLow() {
+	public final int getUidLow() {
 		return this.uidLow;
 	}
-	public final int getSize() {
+	public final long getSize() {
 		return this.size;
 	}
 	public final Date getAccessTime() {
@@ -59,55 +59,49 @@ public class Inode extends Block {
 	public final Date getDeletionTime() {
 		return this.deletionTime;
 	}
-	public final short getLinksCount() {
+	public final long getLinksCount() {
 		return this.linksCount;
 	}
-	public final int getBlocks() {
+	public final long getBlocks() {
 		return this.blocks;
 	}
-	public final int getFlags() {
+	public final long getFlags() {
 		return this.flags;
 	}
-	public final int[] getBlock() {
+	public final long[] getBlock() {
 		return this.block;
 	}
-	public final int getGeneration() {
+	public final long getGeneration() {
 		return this.generation;
 	}
-	public final int getFileAcl() {
+	public final long getFileAcl() {
 		return this.fileAcl;
 	}
-	public final int getDirAcl() {
+	public final long getDirAcl() {
 		return this.dirAcl;
 	}
-	public final int getFragmentAddress() {
+	public final long getFragmentAddress() {
 		return this.fragmentAddress;
 	}
-	public final byte getFrag() {
-		return this.frag;
-	}
-	public final byte getFsize() {
-		return this.fsize;
-	}
-	public final short getUidHigh() {
+	public final int getUidHigh() {
 		return this.uidHigh;
 	}
-	public final short getGidHigh() {
+	public final int getGidHigh() {
 		return this.gidHigh;
 	}
 
-	public final int getUid() {
+	public final long getUid() {
 		return this.uidLow + (16 << this.uidHigh);
 	}
 	
-	public final int getGid() {
+	public final long getGid() {
 		return this.gidLow + (16 << this.gidHigh);
 	}
 
-	public final int getBlockGroup() {
+	public final long getBlockGroup() {
 		return this.blockGroup;
 	}
-	public void setBlockGroup(int blockGroup) {
+	public void setBlockGroup(long blockGroup) {
 		this.blockGroup = blockGroup;
 	}
 	public final long getIno() {
@@ -117,16 +111,16 @@ public class Inode extends Block {
 		this.ino = ino;
 	}
 
-	public final void setMode(short mode) {
+	public final void setMode(int mode) {
 		this.mode = mode;
 	}
-	public final void setGidLow(short gidLow) {
+	public final void setGidLow(int gidLow) {
 		this.gidLow = gidLow;
 	}
-	public final void setUidLow(short uidLow) {
+	public final void setUidLow(int uidLow) {
 		this.uidLow = uidLow;
 	}
-	public final void setSize(int size) {
+	public final void setSize(long size) {
 		this.size = size;
 	}
 	public final void setAccessTime(Date accessTime) {
@@ -141,19 +135,19 @@ public class Inode extends Block {
 	public final void setDeletionTime(Date deletionTime) {
 		this.deletionTime = deletionTime;
 	}
-	public final void setLinksCount(short linksCount) {
+	public final void setLinksCount(int linksCount) {
 		this.linksCount = linksCount;
 	}
-	public final void setBlocks(int blocks) {
+	public final void setBlocks(long blocks) {
 		this.blocks = blocks;
 	}
-	public final void setFlags(int flags) {
+	public final void setFlags(long flags) {
 		this.flags = flags;
 	}
-	public final void setBlock(int[] block) {
+	public final void setBlock(long[] block) {
 		this.block = block;
 	}
-	public final void setGeneration(int generation) {
+	public final void setGeneration(long generation) {
 		this.generation = generation;
 	}
 	public final void setUidHigh(short uidHigh) {
@@ -164,62 +158,62 @@ public class Inode extends Block {
 	}
 	
     protected void write(ByteBuffer buf) throws IOException {
-		Ext2fsDataTypes.putLE16(buf, this.mode, 0);
-		Ext2fsDataTypes.putLE16(buf, this.uidLow, 2);
-		Ext2fsDataTypes.putLE32(buf, this.size, 4);
+		Ext2fsDataTypes.putLE16U(buf, this.mode, 0);
+		Ext2fsDataTypes.putLE16U(buf, this.uidLow, 2);
+		Ext2fsDataTypes.putLE32U(buf, this.size, 4);
 		Ext2fsDataTypes.putDate(buf, this.accessTime, 8);
 		Ext2fsDataTypes.putDate(buf, this.changeTime, 12);
 		Ext2fsDataTypes.putDate(buf, this.modificationTime, 16);
 		Ext2fsDataTypes.putDate(buf, this.deletionTime, 20);
-		Ext2fsDataTypes.putLE16(buf, this.gidLow, 24);
-		Ext2fsDataTypes.putLE16(buf, this.linksCount, 26);
-		Ext2fsDataTypes.putLE32(buf, this.blocks, 28);
-		Ext2fsDataTypes.putLE32(buf, this.flags, 32);
+		Ext2fsDataTypes.putLE16U(buf, this.gidLow, 24);
+		Ext2fsDataTypes.putLE16U(buf, this.linksCount, 26);
+		Ext2fsDataTypes.putLE32U(buf, this.blocks, 28);
+		Ext2fsDataTypes.putLE32U(buf, this.flags, 32);
 		//		this.osd1 = Ext2fsDataTypes.getLE32U(buf, 36 + offset);
  		
 		for (int i=0; i<Constants.EXT2_N_BLOCKS; i++) {
-			Ext2fsDataTypes.putLE32(buf, this.block[i], 40 + (i*4));
+			Ext2fsDataTypes.putLE32U(buf, this.block[i], 40 + (i*4));
 		}
 
-		Ext2fsDataTypes.putLE32(buf, this.generation, 100);
-		Ext2fsDataTypes.putLE32(buf, this.fileAcl, 104);
-		Ext2fsDataTypes.putLE32(buf, this.dirAcl, 108);
-		Ext2fsDataTypes.putLE32(buf, this.fragmentAddress, 112);
+		Ext2fsDataTypes.putLE32U(buf, this.generation, 100);
+		Ext2fsDataTypes.putLE32U(buf, this.fileAcl, 104);
+		Ext2fsDataTypes.putLE32U(buf, this.dirAcl, 108);
+		Ext2fsDataTypes.putLE32U(buf, this.fragmentAddress, 112);
 		
 		// this.frag = Ext2fsDataTypes.getLE8(buf, 116 + offset);
-		Ext2fsDataTypes.putLE16(buf, this.uidHigh, 120);
-		Ext2fsDataTypes.putLE16(buf, this.gidHigh, 122);
+		Ext2fsDataTypes.putLE16U(buf, this.uidHigh, 120);
+		Ext2fsDataTypes.putLE16U(buf, this.gidHigh, 122);
 		
 		super.write(buf);
 	}
 	
 	protected void read(ByteBuffer buf) throws IOException {
-		this.mode = Ext2fsDataTypes.getLE16(buf, 0 + offset);
-		this.uidLow = Ext2fsDataTypes.getLE16(buf, 2 + offset);
-		this.size = Ext2fsDataTypes.getLE32(buf, 4 + offset);
+		this.mode = Ext2fsDataTypes.getLE16U(buf, 0 + offset);
+		this.uidLow = Ext2fsDataTypes.getLE16U(buf, 2 + offset);
+		this.size = Ext2fsDataTypes.getLE32U(buf, 4 + offset);
 		this.accessTime = Ext2fsDataTypes.getDate(buf, 8 + offset);
 		this.changeTime = Ext2fsDataTypes.getDate(buf, 12 + offset);
 		this.modificationTime = Ext2fsDataTypes.getDate(buf, 16 + offset);
 		this.deletionTime = Ext2fsDataTypes.getDate(buf, 20 + offset);
-		this.gidLow = Ext2fsDataTypes.getLE16(buf, 24 + offset);
-		this.linksCount = Ext2fsDataTypes.getLE16(buf, 26 + offset);
-		this.blocks = Ext2fsDataTypes.getLE32(buf, 28 + offset);
-		this.flags = Ext2fsDataTypes.getLE32(buf, 32 + offset);
+		this.gidLow = Ext2fsDataTypes.getLE16U(buf, 24 + offset);
+		this.linksCount = Ext2fsDataTypes.getLE16U(buf, 26 + offset);
+		this.blocks = Ext2fsDataTypes.getLE32U(buf, 28 + offset);
+		this.flags = Ext2fsDataTypes.getLE32U(buf, 32 + offset);
 		//		this.osd1 = Ext2fsDataTypes.getLE32U(buf, 36 + offset);
  		
-		this.block = new int[Constants.EXT2_N_BLOCKS];
+		this.block = new long[Constants.EXT2_N_BLOCKS];
 		for (int i=0; i<Constants.EXT2_N_BLOCKS; i++) {
-			this.block[i] = Ext2fsDataTypes.getLE32(buf, 40 + (i*4) + offset);
+			this.block[i] = Ext2fsDataTypes.getLE32U(buf, 40 + (i*4) + offset);
 		}
 		
-		this.generation = Ext2fsDataTypes.getLE32(buf, 100 + offset);
-		this.fileAcl = Ext2fsDataTypes.getLE32(buf, 104 + offset);
-		this.dirAcl = Ext2fsDataTypes.getLE32(buf, 108 + offset);
-		this.fragmentAddress = Ext2fsDataTypes.getLE32(buf, 112 + offset);
+		this.generation = Ext2fsDataTypes.getLE32U(buf, 100 + offset);
+		this.fileAcl = Ext2fsDataTypes.getLE32U(buf, 104 + offset);
+		this.dirAcl = Ext2fsDataTypes.getLE32U(buf, 108 + offset);
+		this.fragmentAddress = Ext2fsDataTypes.getLE32U(buf, 112 + offset);
 		
 		// this.frag = Ext2fsDataTypes.getLE8(buf, 116 + offset);
-		this.uidHigh = Ext2fsDataTypes.getLE16(buf, 120 + offset);
-		this.gidHigh = Ext2fsDataTypes.getLE16(buf, 122 + offset);
+		this.uidHigh = Ext2fsDataTypes.getLE16U(buf, 120 + offset);
+		this.gidHigh = Ext2fsDataTypes.getLE16U(buf, 122 + offset);
 	}
 
 
@@ -228,7 +222,7 @@ public class Inode extends Block {
 		                                          ToStringStyle.MULTI_LINE_STYLE);
 	}
 	
-	protected Inode(int blockNr, int offset) {
+	protected Inode(long blockNr, int offset) {
 		super(blockNr, offset);
 	}
 
@@ -246,10 +240,9 @@ public class Inode extends Block {
 		inode.accessTime = now;
 		inode.changeTime = now;
 		inode.fragmentAddress = 0;
-		inode.frag = 0;
 		inode.deletionTime = new Date(0);
 		inode.blocks = 0;
-		inode.block = new int[Constants.EXT2_N_BLOCKS];
+		inode.block = new long[Constants.EXT2_N_BLOCKS];
 		
 		
 		return inode;
@@ -261,7 +254,7 @@ public class Inode extends Block {
 	}
 
 	public int hashCode() {
-		return this.blockNr ^ this.offset;
+		return (int)(this.blockNr ^ this.offset);
 	}
 	
 	/** allocate a ByteBuffer big enaugh for a Inode */

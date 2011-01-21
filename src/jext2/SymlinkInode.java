@@ -12,23 +12,24 @@ public class SymlinkInode extends DataInode {
 		return this.symlink;
 	}
 	
-	protected SymlinkInode(int blockNr, int offset) throws IOException {
+	protected SymlinkInode(long blockNr, int offset) throws IOException {
 		super(blockNr, offset);
 	}
 
 	protected void read(ByteBuffer buf) throws IOException {
 		super.read(buf);
-		int size = getSize();
+		long size = getSize();
 				
 		if (isFastSymlink()) {
-			symlink = Ext2fsDataTypes.getString(buf, 40 + offset, size);			
+			symlink = Ext2fsDataTypes.getString(buf, 40 + offset, (int)size);			
 			
 		} else { 
 			StringBuffer sb = new StringBuffer();
 			
 			for (long nr : accessData().iterateBlocks()) {
 				buf = blocks.read(nr);
-				sb.append(Ext2fsDataTypes.getString(buf, 0, size));
+				sb.append(Ext2fsDataTypes.getString(buf, 0, 
+				        (int)(size % superblock.getBlocksize())));
 				size -= superblock.getBlocksize();
 			}
 			

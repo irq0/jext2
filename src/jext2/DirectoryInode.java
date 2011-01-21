@@ -176,7 +176,7 @@ public class DirectoryInode extends DataInode {
 		return sb.toString();
 	}
 
-	protected DirectoryInode(int blockNr, int offset) throws IOException {
+	protected DirectoryInode(long blockNr, int offset) throws IOException {
 		super(blockNr, offset);
 	}
 

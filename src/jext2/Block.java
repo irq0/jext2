@@ -13,11 +13,11 @@ import org.apache.commons.lang.builder.ToStringStyle;
 
 public abstract class Block {
 	/** block location on filesystem */
-	protected int blockNr;
+	protected long blockNr;
 	/** in block offset */
 	protected int offset;
 	
-	public int getBlockNr() {
+	public long getBlockNr() {
 		return blockNr;
 	}
 
@@ -25,7 +25,7 @@ public abstract class Block {
 		return offset;
 	}
 
-	public final void setBlockNr(int blockNr) {
+	public final void setBlockNr(long blockNr) {
 		this.blockNr = blockNr;
 	}
 
@@ -46,7 +46,7 @@ public abstract class Block {
 	/** read data structure from a ByteBuffer representing a block */
 	protected abstract void read(ByteBuffer buf) throws IOException;
 		
-	protected Block(int blockNr, int offset) {
+	protected Block(long blockNr, int offset) {
 		this.blockNr = blockNr;
 		this.offset = offset;
 	}

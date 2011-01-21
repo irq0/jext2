@@ -18,178 +18,175 @@ import org.apache.commons.lang.builder.ToStringStyle;
 public class Superblock extends Block {
 	private static Superblock instance;
 	
-	private int inodesCount;
-	private int blocksCount;
-	private int resevedBlocksCount;
-	private int freeBlocksCount;
-	private int freeInodesCount;
-	private int firstDataBlock;
-	private int logBlockSize;
-	private int logFragSize;
-	private int blocksPerGroup;
-	private int fragsPerGroup;
-	private int inodesPerGroup;
+	private long inodesCount;
+	private long blocksCount;
+	private long resevedBlocksCount;
+	private long freeBlocksCount;
+	private long freeInodesCount;
+	private long firstDataBlock;
+	private long logBlockSize;
+	private long logFragSize;
+	private long blocksPerGroup;
+	private long fragsPerGroup;
+	private long inodesPerGroup;
 	private Date lastMount;
 	private Date lastWrite;
-	private short mountCount;
-	private short maxMountCount;
-	private short magic;
-	private short state;
-	private short errors;
-	private short minorRevLevel;
+	private int mountCount;
+	private int maxMountCount;
+	private int magic;
+	private int state;
+	private int errors;
+	private int minorRevLevel;
 	private Date lastCheck;
-	private int checkInterval;
-	private int creatorOs;
-	private int revLevel;
-	private short defaultResuid;
-	private short defaultResgid;
-	private int firstIno;
-	private short inodeSize;
-	private short blockGroupNr;
-	private int featuresCompat;
-	private int featuresIncompat;
-	private int featuresRoCompat;
+	private long checkInterval;
+	private long creatorOs;
+	private long revLevel;
+	private int defaultResuid;
+	private int defaultResgid;
+	private long firstIno;
+	private int inodeSize;
+	private int blockGroupNr;
+	private long featuresCompat;
+	private long featuresIncompat;
+	private long featuresRoCompat;
 	private UUID uuid;
 	private String volumeName;
 	private String lastMounted;
 	
 	private int blocksize;
-	private int groupDescPerBlock;
+	private int groupDescrPerBlock;
 	private int groupsCount;
 
 	// sb_info fields
-	private int dirsCount;
-	
-	public final int getInodesCount() {
-		return this.inodesCount;
-	}
-	public final int getBlocksCount() {
-		return this.blocksCount;
-	}
-	public final int getResevedBlocksCount() {
-		return this.resevedBlocksCount;
-	}
-	public final int getFreeBlocksCount() {
-		return this.freeBlocksCount;
-	}
-	public final int getFreeInodesCount() {
-		return this.freeInodesCount;
-	}
-	public final int getFirstDataBlock() {
-		return this.firstDataBlock;
-	}
-	public final int getLogBlockSize() {
-		return this.logBlockSize;
-	}
-	public final int getLogFragSize() {
-		return this.logFragSize;
-	}
-	public final int getBlocksPerGroup() {
-		return this.blocksPerGroup;
-	}
-	public final int getFragsPerGroup() {
-		return this.fragsPerGroup;
-	}
-	public final int getInodesPerGroup() {
-		return this.inodesPerGroup;
-	}
-	public final Date getLastMount() {
-		return this.lastMount;
-	}
-	public final Date getLastWrite() {
-		return this.lastWrite;
-	}
-	public final short getMountCount() {
-		return this.mountCount;
-	}
-	public final short getMaxMountCount() {
-		return this.maxMountCount;
-	}
-	public final short getMagic() {
-		return this.magic;
-	}
-	public final short getState() {
-		return this.state;
-	}
-	public final short getErrors() {
-		return this.errors;
-	}
-	public final short getMinorRevLevel() {
-		return this.minorRevLevel;
-	}
-	public final Date getLastCheck() {
-		return this.lastCheck;
-	}
-	public final int getCheckInterval() {
-		return this.checkInterval;
-	}
-	public final int getCreatorOs() {
-		return this.creatorOs;
-	}
-	public final int getRevLevel() {
-		return this.revLevel;
-	}
-	public final short getDefaultResuid() {
-		return this.defaultResuid;
-	}
-	public final short getDefaultResgid() {
-		return this.defaultResgid;
-	}
-	public final int getFirstIno() {
-		return this.firstIno;
-	}
-	public final short getInodeSize() {
-		return this.inodeSize;
-	}
-	public final short getBlockGroupNr() {
-		return this.blockGroupNr;
-	}
-	public final int getFeaturesCompat() {
-		return this.featuresCompat;
-	}
-	public final int getFeaturesIncompat() {
-		return this.featuresIncompat;
-	}
-	public final int getFeaturesRoCompat() {
-		return this.featuresRoCompat;
-	}
-	public final UUID getUuid() {
-		return this.uuid;
-	}
-	public final String getVolumeName() {
-		return this.volumeName;
-	}
-	public final String getLastMounted() {
-		return this.lastMounted;
-	}
-	public final int getBlocksize() {
-		return this.blocksize;
-	}
-	public final int getBlocksizeBits() {
-		return this.blocksize * 8;
-	}
-	public final int getGroupDescrPerBlock() {
-		return this.groupDescPerBlock;
-	}
-	public final int getGroupsCount() {
-		return this.groupsCount;
-	}
-	public int getDirsCount() {
-		return this.dirsCount;
-	}
-	
-	public void setFreeBlocksCount(int freeBlocksCount) {
+	private long dirsCount;
+
+	public final long getInodesCount() {
+        return inodesCount;
+    }
+    public final long getBlocksCount() {
+        return blocksCount;
+    }
+    public final long getResevedBlocksCount() {
+        return resevedBlocksCount;
+    }
+    public final long getFreeBlocksCount() {
+        return freeBlocksCount;
+    }
+    public final long getFreeInodesCount() {
+        return freeInodesCount;
+    }
+    public final long getFirstDataBlock() {
+        return firstDataBlock;
+    }
+    public final long getLogBlockSize() {
+        return logBlockSize;
+    }
+    public final long getLogFragSize() {
+        return logFragSize;
+    }
+    public final long getBlocksPerGroup() {
+        return blocksPerGroup;
+    }
+    public final long getFragsPerGroup() {
+        return fragsPerGroup;
+    }
+    public final long getInodesPerGroup() {
+        return inodesPerGroup;
+    }
+    public final Date getLastMount() {
+        return lastMount;
+    }
+    public final Date getLastWrite() {
+        return lastWrite;
+    }
+    public final int getMountCount() {
+        return mountCount;
+    }
+    public final int getMaxMountCount() {
+        return maxMountCount;
+    }
+    public final int getMagic() {
+        return magic;
+    }
+    public final int getState() {
+        return state;
+    }
+    public final int getErrors() {
+        return errors;
+    }
+    public final int getMinorRevLevel() {
+        return minorRevLevel;
+    }
+    public final Date getLastCheck() {
+        return lastCheck;
+    }
+    public final long getCheckInterval() {
+        return checkInterval;
+    }
+    public final long getCreatorOs() {
+        return creatorOs;
+    }
+    public final long getRevLevel() {
+        return revLevel;
+    }
+    public final int getDefaultResuid() {
+        return defaultResuid;
+    }
+    public final int getDefaultResgid() {
+        return defaultResgid;
+    }
+    public final long getFirstIno() {
+        return firstIno;
+    }
+    public final int getInodeSize() {
+        return inodeSize;
+    }
+    public final int getBlockGroupNr() {
+        return blockGroupNr;
+    }
+    public final long getFeaturesCompat() {
+        return featuresCompat;
+    }
+    public final long getFeaturesIncompat() {
+        return featuresIncompat;
+    }
+    public final long getFeaturesRoCompat() {
+        return featuresRoCompat;
+    }
+    public final UUID getUuid() {
+        return uuid;
+    }
+    public final String getVolumeName() {
+        return volumeName;
+    }
+    public final String getLastMounted() {
+        return lastMounted;
+    }
+    public final int getBlocksize() {
+        return blocksize;
+    }
+    public final int getGroupDescrPerBlock() {
+        return groupDescrPerBlock;
+    }
+    public final int getGroupsCount() {
+        return groupsCount;
+    }
+    public final long getDirsCount() {
+        return dirsCount;
+    }
+    
+    public void setFreeBlocksCount(long freeBlocksCount) {
 		this.freeBlocksCount = freeBlocksCount;
 	}
-	public void setFreeInodesCount(int freeInodesCount) {
+	public void setFreeInodesCount(long freeInodesCount) {
 		this.freeInodesCount = freeInodesCount;
 	}
-	public void setDirsCount(int dirsCount) {
+	public void setDirsCount(long dirsCount) {
 		this.dirsCount = dirsCount;
 	}
 	
 	public int getAddressesPerBlock() {
-		return this.blocksize / 4;
+		return (int)(this.blocksize / 4);
 	}
 	
 	public int getAddressesPerBlockBits() {
@@ -209,82 +206,82 @@ public class Superblock extends Block {
 	}
 	
 	protected void read(ByteBuffer buf) throws IOException {		
-		this.inodesCount = Ext2fsDataTypes.getLE32(buf, 0);
-		this.blocksCount = Ext2fsDataTypes.getLE32(buf, 4);
-		this.resevedBlocksCount = Ext2fsDataTypes.getLE32(buf, 8);
-		this.freeBlocksCount = Ext2fsDataTypes.getLE32(buf, 12);
-		this.freeInodesCount = Ext2fsDataTypes.getLE32(buf, 16);
-		this.firstDataBlock = Ext2fsDataTypes.getLE32(buf, 20);
-		this.logBlockSize = Ext2fsDataTypes.getLE32(buf, 24);
-		this.logFragSize = Ext2fsDataTypes.getLE32(buf, 28);
-		this.blocksPerGroup = Ext2fsDataTypes.getLE32(buf, 32);
-		this.fragsPerGroup = Ext2fsDataTypes.getLE32(buf, 36);
-		this.inodesPerGroup = Ext2fsDataTypes.getLE32(buf, 40);
+		this.inodesCount = Ext2fsDataTypes.getLE32U(buf, 0);
+		this.blocksCount = Ext2fsDataTypes.getLE32U(buf, 4);
+		this.resevedBlocksCount = Ext2fsDataTypes.getLE32U(buf, 8);
+		this.freeBlocksCount = Ext2fsDataTypes.getLE32U(buf, 12);
+		this.freeInodesCount = Ext2fsDataTypes.getLE32U(buf, 16);
+		this.firstDataBlock = Ext2fsDataTypes.getLE32U(buf, 20);
+		this.logBlockSize = Ext2fsDataTypes.getLE32U(buf, 24);
+		this.logFragSize = Ext2fsDataTypes.getLE32U(buf, 28);
+		this.blocksPerGroup = Ext2fsDataTypes.getLE32U(buf, 32);
+		this.fragsPerGroup = Ext2fsDataTypes.getLE32U(buf, 36);
+		this.inodesPerGroup = Ext2fsDataTypes.getLE32U(buf, 40);
 		this.lastMount = Ext2fsDataTypes.getDate(buf, 44);
 		this.lastWrite = Ext2fsDataTypes.getDate(buf, 48);
-		this.mountCount = Ext2fsDataTypes.getLE16(buf, 52);
-		this.maxMountCount = Ext2fsDataTypes.getLE16(buf, 54);
-		this.magic = Ext2fsDataTypes.getLE16(buf, 56);
-		this.state = Ext2fsDataTypes.getLE16(buf, 58);
-		this.errors = Ext2fsDataTypes.getLE16(buf, 60);
-		this.minorRevLevel = Ext2fsDataTypes.getLE16(buf, 62);
+		this.mountCount = Ext2fsDataTypes.getLE16U(buf, 52);
+		this.maxMountCount = Ext2fsDataTypes.getLE16U(buf, 54);
+		this.magic = Ext2fsDataTypes.getLE16U(buf, 56);
+		this.state = Ext2fsDataTypes.getLE16U(buf, 58);
+		this.errors = Ext2fsDataTypes.getLE16U(buf, 60);
+		this.minorRevLevel = Ext2fsDataTypes.getLE16U(buf, 62);
 		this.lastCheck = Ext2fsDataTypes.getDate(buf, 64);
-		this.checkInterval = Ext2fsDataTypes.getLE32(buf, 68);
-		this.creatorOs = Ext2fsDataTypes.getLE32(buf, 72);
-		this.revLevel = Ext2fsDataTypes.getLE32(buf, 76);
-		this.defaultResuid = Ext2fsDataTypes.getLE16(buf, 80);
-		this.defaultResgid = Ext2fsDataTypes.getLE16(buf, 82);
+		this.checkInterval = Ext2fsDataTypes.getLE32U(buf, 68);
+		this.creatorOs = Ext2fsDataTypes.getLE32U(buf, 72);
+		this.revLevel = Ext2fsDataTypes.getLE32U(buf, 76);
+		this.defaultResuid = Ext2fsDataTypes.getLE16U(buf, 80);
+		this.defaultResgid = Ext2fsDataTypes.getLE16U(buf, 82);
 
-		this.firstIno = Ext2fsDataTypes.getLE32(buf, 84);
-		this.inodeSize = Ext2fsDataTypes.getLE16(buf, 88);
-		this.blockGroupNr = Ext2fsDataTypes.getLE16(buf, 90);
-		this.featuresCompat = Ext2fsDataTypes.getLE32(buf, 92);
-		this.featuresIncompat = Ext2fsDataTypes.getLE32(buf, 96);
-		this.featuresRoCompat = Ext2fsDataTypes.getLE32(buf, 100);
+		this.firstIno = Ext2fsDataTypes.getLE32U(buf, 84);
+		this.inodeSize = Ext2fsDataTypes.getLE16U(buf, 88);
+		this.blockGroupNr = Ext2fsDataTypes.getLE16U(buf, 90);
+		this.featuresCompat = Ext2fsDataTypes.getLE32U(buf, 92);
+		this.featuresIncompat = Ext2fsDataTypes.getLE32U(buf, 96);
+		this.featuresRoCompat = Ext2fsDataTypes.getLE32U(buf, 100);
 		this.uuid = Ext2fsDataTypes.getUUID(buf, 104);
 		this.volumeName = Ext2fsDataTypes.getString(buf, 120, 16);
 		this.lastMounted = Ext2fsDataTypes.getString(buf, 136, 64);	   	
 		
 		this.blocksize = (1024 << this.logBlockSize);
-		this.groupDescPerBlock = this.blocksize / 32; // 32 = sizeof (struct ext2_group_desc);
-		this.groupsCount = ((this.blocksCount - this.firstDataBlock) - 1) /
-						   this.blocksPerGroup;
+		this.groupDescrPerBlock = this.blocksize / 32; // 32 = sizeof (struct ext2_group_desc);
+		this.groupsCount = (int)( ((this.blocksCount - this.firstDataBlock) - 1) /
+						   this.blocksPerGroup);
 	}
 
 	
 	protected void write(ByteBuffer buf) throws IOException {
-		Ext2fsDataTypes.putLE32(buf, this.inodesCount, 0);
-		Ext2fsDataTypes.putLE32(buf, this.blocksCount, 4);
-		Ext2fsDataTypes.putLE32(buf, this.resevedBlocksCount, 8);
-		Ext2fsDataTypes.putLE32(buf, this.freeBlocksCount, 12);
-		Ext2fsDataTypes.putLE32(buf, this.freeInodesCount, 16);
-		Ext2fsDataTypes.putLE32(buf, this.firstDataBlock, 20);
-		Ext2fsDataTypes.putLE32(buf, this.logBlockSize, 24);
-		Ext2fsDataTypes.putLE32(buf, this.logFragSize, 28);
-		Ext2fsDataTypes.putLE32(buf, this.blocksPerGroup, 32);
-		Ext2fsDataTypes.putLE32(buf, this.fragsPerGroup, 36);
-		Ext2fsDataTypes.putLE32(buf, this.inodesPerGroup, 40);
+		Ext2fsDataTypes.putLE32U(buf, this.inodesCount, 0);
+		Ext2fsDataTypes.putLE32U(buf, this.blocksCount, 4);
+		Ext2fsDataTypes.putLE32U(buf, this.resevedBlocksCount, 8);
+		Ext2fsDataTypes.putLE32U(buf, this.freeBlocksCount, 12);
+		Ext2fsDataTypes.putLE32U(buf, this.freeInodesCount, 16);
+		Ext2fsDataTypes.putLE32U(buf, this.firstDataBlock, 20);
+		Ext2fsDataTypes.putLE32U(buf, this.logBlockSize, 24);
+		Ext2fsDataTypes.putLE32U(buf, this.logFragSize, 28);
+		Ext2fsDataTypes.putLE32U(buf, this.blocksPerGroup, 32);
+		Ext2fsDataTypes.putLE32U(buf, this.fragsPerGroup, 36);
+		Ext2fsDataTypes.putLE32U(buf, this.inodesPerGroup, 40);
 		Ext2fsDataTypes.putDate(buf, this.lastMount, 44);
 		Ext2fsDataTypes.putDate(buf, this.lastWrite, 48);
-		Ext2fsDataTypes.putLE16(buf, this.mountCount, 52);
-		Ext2fsDataTypes.putLE16(buf, this.maxMountCount, 54);
-		Ext2fsDataTypes.putLE16(buf, this.magic, 56);
-		Ext2fsDataTypes.putLE16(buf, this.state, 58);
-		Ext2fsDataTypes.putLE16(buf, this.errors, 60);
-		Ext2fsDataTypes.putLE16(buf, this.minorRevLevel, 62);
+		Ext2fsDataTypes.putLE16U(buf, this.mountCount, 52);
+		Ext2fsDataTypes.putLE16U(buf, this.maxMountCount, 54);
+		Ext2fsDataTypes.putLE16U(buf, this.magic, 56);
+		Ext2fsDataTypes.putLE16U(buf, this.state, 58);
+		Ext2fsDataTypes.putLE16U(buf, this.errors, 60);
+		Ext2fsDataTypes.putLE16U(buf, this.minorRevLevel, 62);
 		Ext2fsDataTypes.putDate(buf, this.lastCheck, 64);
-		Ext2fsDataTypes.putLE32(buf, this.checkInterval, 68);
-		Ext2fsDataTypes.putLE32(buf, this.creatorOs, 72);
-		Ext2fsDataTypes.putLE32(buf, this.revLevel, 76);
-		Ext2fsDataTypes.putLE16(buf, this.defaultResuid, 80);
-		Ext2fsDataTypes.putLE16(buf, this.defaultResgid, 80);
+		Ext2fsDataTypes.putLE32U(buf, this.checkInterval, 68);
+		Ext2fsDataTypes.putLE32U(buf, this.creatorOs, 72);
+		Ext2fsDataTypes.putLE32U(buf, this.revLevel, 76);
+		Ext2fsDataTypes.putLE16U(buf, this.defaultResuid, 80);
+		Ext2fsDataTypes.putLE16U(buf, this.defaultResgid, 80);
 
-		Ext2fsDataTypes.putLE32(buf, this.firstIno, 84);
-		Ext2fsDataTypes.putLE16(buf, this.inodeSize, 88);
-		Ext2fsDataTypes.putLE16(buf, this.blockGroupNr, 90);
-		Ext2fsDataTypes.putLE32(buf, this.featuresCompat, 92);
-		Ext2fsDataTypes.putLE32(buf, this.featuresIncompat, 96);
-		Ext2fsDataTypes.putLE32(buf, this.featuresRoCompat, 100);
+		Ext2fsDataTypes.putLE32U(buf, this.firstIno, 84);
+		Ext2fsDataTypes.putLE16U(buf, this.inodeSize, 88);
+		Ext2fsDataTypes.putLE16U(buf, this.blockGroupNr, 90);
+		Ext2fsDataTypes.putLE32U(buf, this.featuresCompat, 92);
+		Ext2fsDataTypes.putLE32U(buf, this.featuresIncompat, 96);
+		Ext2fsDataTypes.putLE32U(buf, this.featuresRoCompat, 100);
 		Ext2fsDataTypes.putUUID(buf, this.uuid, 104);
 		Ext2fsDataTypes.putString(buf, this.volumeName, 16, 120);
 		Ext2fsDataTypes.putString(buf, this.lastMounted, 64, 136);
@@ -308,7 +305,7 @@ public class Superblock extends Block {
 
 	}
 	
-	protected Superblock(int blockNr, int offset) {
+	protected Superblock(long blockNr, int offset) {
 		super(blockNr, offset);
 	}
 	

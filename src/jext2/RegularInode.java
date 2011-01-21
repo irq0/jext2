@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class RegularInode extends DataInode {
-    protected RegularInode(int blockNr, int offset) throws IOException {
+    protected RegularInode(long blockNr, int offset) throws IOException {
         super(blockNr, offset);
     }
 	
