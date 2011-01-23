@@ -3,25 +3,25 @@ package jext2;
 public class Calculations {
 	private static Superblock superblock = Superblock.getInstance();
 	
-	public static long groupOfBlk(long blk) {
-		return (blk - superblock.getFirstDataBlock()) /
-			superblock.getBlocksPerGroup();
+	public static int groupOfBlk(long blk) {
+		return (int)((blk - superblock.getFirstDataBlock()) /
+			superblock.getBlocksPerGroup());
 	}
 
-	public static long groupOfIno(long ino) {
-		return (ino - 1) / superblock.getInodesPerGroup();
+	public static int groupOfIno(long ino) {
+		return (int)((ino - 1) / superblock.getInodesPerGroup());
 	}
 
-	public static long localInodeIndex(long ino) {
-		return (ino - 1) % superblock.getInodesPerGroup();
+	public static int localInodeIndex(long ino) {
+		return (int)((ino - 1) % superblock.getInodesPerGroup());
 	}
 
-	public static long localInodeOffset(long ino) {
-		return ((ino - 1) % superblock.getInodesPerGroup()) *
-			superblock.getInodeSize();
+	public static int localInodeOffset(long ino) {
+		return (int)(((ino - 1) % superblock.getInodesPerGroup()) *
+			superblock.getInodeSize());
 	}
 
-	public static int blockPerInodeTable() {
+	public static int blocksPerInodeTable() {
 		return (int)(superblock.getInodesPerGroup() / superblock.getInodeSize());
 	}
 	

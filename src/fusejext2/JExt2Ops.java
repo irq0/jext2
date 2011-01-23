@@ -43,7 +43,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		
 	}
 	
-	private Stat getStat(Inode inode, int ino) {
+	private Stat getStat(Inode inode, long ino) {
 		Stat s = new Stat();
 		s.setUid(inode.getUidLow());
 		s.setGid(inode.getGidLow());
@@ -71,7 +71,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 
 	public void open(FuseReq req, long ino, FileInfo fi) {
 		try {
-			Inode inode = InodeAccess.readByIno((int)ino);
+			Inode inode = InodeAccess.readByIno(ino);
 			if (inode == null) { 
 				Reply.err(req, Errno.ENOSYS);
 				return;
@@ -93,7 +93,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		RegularInode inode = openInodes.get((int)fi.getFh());
 
 		try {
-			ByteBuffer buf = inode.readData((int)size, (int)off);
+			ByteBuffer buf = inode.readData(size, off);
 			Reply.byteBuffer(req, buf, 0, size);
 		} catch (IOException e) {
 			Reply.err(req, Errno.EIO);
@@ -124,7 +124,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 	
 	public void readlink(FuseReq req, long ino) {
 		try {
-			Inode inode = InodeAccess.readByIno((int)ino);
+			Inode inode = InodeAccess.readByIno(ino);
 			if (inode == null) { 
 				Reply.err(req, Errno.ENOSYS);
 				return;
@@ -148,13 +148,13 @@ public class JExt2Ops extends AbstractLowlevelOps {
 	public void getattr(FuseReq req, long ino, FileInfo fi) {
 		if (ino == 1) ino = Constants.EXT2_ROOT_INO;
 		try {
-			Inode inode = InodeAccess.readByIno((int)ino);
+			Inode inode = InodeAccess.readByIno(ino);
 			if (inode == null) { 
 				Reply.err(req, Errno.ENOENT);
 				return;
 			}
 			
-			Stat stat = getStat(inode, (int)ino);
+			Stat stat = getStat(inode, ino);
 			Reply.attr(req, stat, 0.0);
 			
 		} catch (IOException e) {
@@ -167,7 +167,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
         if (ino == 1) ino = Constants.EXT2_ROOT_INO;
         
         try {
-            Inode inode = InodeAccess.readByIno((int)ino);
+            Inode inode = InodeAccess.readByIno(ino);
             if (inode == null) {
                 Reply.err(req, Errno.ENOENT);
                 return;
@@ -184,7 +184,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 	public void lookup(FuseReq req, long ino, String name) {
 		if (ino == 1) ino = Constants.EXT2_ROOT_INO;
 		try {			
-			Inode parent = InodeAccess.readByIno((int)ino);
+			Inode parent = InodeAccess.readByIno(ino);
 			if (parent == null) {
 				Reply.err(req, Errno.ENOENT);
 				return;
@@ -218,7 +218,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 	public void opendir(FuseReq req, long ino, FileInfo fi) {
 		if (ino == 1) ino = Constants.EXT2_ROOT_INO;
 		try {
-			Inode inode = InodeAccess.readByIno((int)ino);
+			Inode inode = InodeAccess.readByIno(ino);
 			if (inode == null) { 
 				Reply.err(req, Errno.ENOENT);
 				return;
@@ -261,7 +261,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
     public void mkdir(FuseReq req, long parent, String name, short mode) {
         if (parent == 1) parent = Constants.EXT2_ROOT_INO;
         try {
-            Inode parentInode = InodeAccess.readByIno((int)parent);
+            Inode parentInode = InodeAccess.readByIno(parent);
             if (parentInode == null) { 
                 Reply.err(req, Errno.ENOENT);
                 return;
@@ -271,11 +271,11 @@ public class JExt2Ops extends AbstractLowlevelOps {
             }
            
             Inode inode = Inode.createEmpty();
-            inode.setMode((short)(mode | Constants.LINUX_S_IFDIR));
-            inode.setUidLow((short)0);
-            inode.setUidHigh((short)0);
-            inode.setGidLow((short)0);
-            inode.setGidHigh((short)0);
+            inode.setMode((mode | Constants.LINUX_S_IFDIR));
+            inode.setUidLow(0);
+            inode.setUidHigh(0);
+            inode.setGidLow(0);
+            inode.setGidHigh(0);
             InodeAlloc.registerInode(parentInode, inode);
             System.out.println(inode);
             inode.write();
@@ -283,16 +283,16 @@ public class JExt2Ops extends AbstractLowlevelOps {
             
             
             DirectoryEntry newDir = DirectoryEntry.create(name);
-            newDir.setIno((int)(inode.getIno()));
-            newDir.setFileType((byte)(Constants.EXT2_FT_DIR));
+            newDir.setIno(inode.getIno());
+            newDir.setFileType(Constants.EXT2_FT_DIR);
             
             ((DirectoryInode)parentInode).addLink(newDir);
-            parentInode.setLinksCount((short)(parentInode.getLinksCount() + 1));
+            parentInode.setLinksCount(parentInode.getLinksCount() + 1);
             
             parentInode.write();
             
             EntryParam e = new EntryParam();
-            e.setAttr(getStat((Inode)inode, (int)(inode.getIno())));
+            e.setAttr(getStat((Inode)inode, inode.getIno()));
             e.setGeneration(inode.getGeneration());
             e.setAttr_timeout(0.0);
             e.setEntry_timeout(0.0);

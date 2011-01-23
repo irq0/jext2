@@ -18,7 +18,7 @@ public class BlockGroupDescriptor extends Block {
 	private int freeInodesCount;
 	private int usedDirsCount;
 
-	private long blockGroup = -1;
+	private int blockGroup = -1;
 	
 	public final long getBlockBitmapPointer() {
 		return this.blockBitmap;
@@ -38,10 +38,10 @@ public class BlockGroupDescriptor extends Block {
 	public final int getUsedDirsCount() {
 		return this.usedDirsCount;
 	}
-	public final long getBlockGroup() {
+	public final int getBlockGroup() {
 		return this.blockGroup;
 	}
-	void setBlockGroup(long blockGroup) {
+	void setBlockGroup(int blockGroup) {
 		this.blockGroup = blockGroup;
 	}
 	public void setFreeBlocksCount(int freeBlocksCount) {
@@ -119,12 +119,12 @@ public class BlockGroupDescriptor extends Block {
 	}
 		 
 	
-	public static long firstBlock(long group) {
+	public static long firstBlock(int group) {
 		return superblock.getFirstDataBlock() +
 			(group * superblock.getBlocksPerGroup());
 	}
 
-	public static boolean hasSuperblock(long group) {
+	public static boolean hasSuperblock(int group) {
 		if (Feature.sparseSuper()) {
 			return isSparse(group);
 		} else {
@@ -132,14 +132,14 @@ public class BlockGroupDescriptor extends Block {
 		}
 	}
 	
-	private static boolean isSparse(long group) {
+	private static boolean isSparse(int group) {
 		return ((group <= 1) ||
 				test_root(group, 3) || 
 				test_root(group, 5) ||
 				test_root(group, 7));
 	}
 	
-	private static boolean test_root(long a, long b) {
+	private static boolean test_root(int a, int b) {
 		long num = b;
 		
 		while (a > num)

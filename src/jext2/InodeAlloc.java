@@ -2,10 +2,11 @@ package jext2;
 
 import java.io.IOException;
 
-/** Inode allocation and deallocation routines 
- * Adapted to jext2 from the linux kernel impl. 
- * 
- * */
+/** 
+ * Inode allocation and deallocation routines 
+ * Adapted from the linux kernel implementation. The long comments on 
+ * funcionality are mostly copied from linux or e2fsprogs   
+ */
 public class InodeAlloc {
 	private static Superblock superblock = Superblock.getInstance();
 	private static BlockGroupAccess blockGroups = BlockGroupAccess.getInstance();
@@ -31,7 +32,7 @@ public class InodeAlloc {
 	 */
 	public static int findGroupDir(Inode parent) {
 		int groupsCount = superblock.getGroupsCount();
-		int averageFreeInodes = (int)(countFreeInodes() / groupsCount);
+		long averageFreeInodes = countFreeInodes() / groupsCount;
 		BlockGroupDescriptor bestGroup = null;
 		int bestNr = -1;
 
@@ -74,7 +75,7 @@ public class InodeAlloc {
 		 *
 		 * So add our directory's i_ino into the starting point for the hash.
 		 */
-		group = (group + parent.getIno()) % groupsCount;
+		group = (int)((group + parent.getIno()) % groupsCount);
 		
 		/*
 		 * Use a quadratic hash to find a group with a free inode and some

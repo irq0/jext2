@@ -31,7 +31,7 @@ public class Inode extends Block {
 	private int gidHigh;
 
 	// in memory data (ext2_inode_info)
-	private long blockGroup = -1;
+	private int blockGroup = -1;
 	private long ino = -1;
 	
 	
@@ -59,7 +59,7 @@ public class Inode extends Block {
 	public final Date getDeletionTime() {
 		return this.deletionTime;
 	}
-	public final long getLinksCount() {
+	public final int getLinksCount() {
 		return this.linksCount;
 	}
 	public final long getBlocks() {
@@ -98,10 +98,10 @@ public class Inode extends Block {
 		return this.gidLow + (16 << this.gidHigh);
 	}
 
-	public final long getBlockGroup() {
+	public final int getBlockGroup() {
 		return this.blockGroup;
 	}
-	public void setBlockGroup(long blockGroup) {
+	public void setBlockGroup(int blockGroup) {
 		this.blockGroup = blockGroup;
 	}
 	public final long getIno() {
@@ -150,10 +150,10 @@ public class Inode extends Block {
 	public final void setGeneration(long generation) {
 		this.generation = generation;
 	}
-	public final void setUidHigh(short uidHigh) {
+	public final void setUidHigh(int uidHigh) {
 		this.uidHigh = uidHigh;
 	}
-	public final void setGidHigh(short gidHigh) {
+	public final void setGidHigh(int gidHigh) {
 		this.gidHigh = gidHigh;
 	}
 	
@@ -243,7 +243,6 @@ public class Inode extends Block {
 		inode.deletionTime = new Date(0);
 		inode.blocks = 0;
 		inode.block = new long[Constants.EXT2_N_BLOCKS];
-		
 		
 		return inode;
 	}

@@ -35,21 +35,21 @@ public class SymlinkInode extends DataInode {
 			
 			symlink = sb.toString();
 		}
-		
-		
 	}
 	
-	
+	/**
+	 * Check if inode is a fast symlink. A fast symlink stores the link in the
+	 * data block pointers instead of data blocks itself
+	 * 
+	 * @return true if Inode is fast symlink; false otherwise.
+	 */
 	public boolean isFastSymlink() {
 	    return (getBlocks() == 0);
 	}
-	
-	
+		
 	public static SymlinkInode fromByteBuffer(ByteBuffer buf, int offset) throws IOException {
 		SymlinkInode inode = new SymlinkInode(-1, offset);
 		inode.read(buf);
 		return inode;
-	}
-
-	
+	}	
 }

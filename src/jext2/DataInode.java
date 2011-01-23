@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 import java.util.LinkedList;
 
 /**
- * Base class for inodes with a data area. Like Symlinks, Directories, Regular Files
+ * Base class for inodes with data blocks. Like Symlinks, Directories, Regular Files
  */
 public class DataInode extends Inode {
     Superblock superblock = Superblock.getInstance();
@@ -21,11 +21,6 @@ public class DataInode extends Inode {
             dataAccess = DataBlockAccess.fromInode(this);
         return dataAccess;
     }
-    
-    
-    
-    
-    
     
     /**
      * Read Inode data 

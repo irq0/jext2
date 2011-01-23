@@ -3,6 +3,9 @@ package jext2;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+/**
+ * Inode for regular files. 
+ */
 public class RegularInode extends DataInode {
     protected RegularInode(long blockNr, int offset) throws IOException {
         super(blockNr, offset);

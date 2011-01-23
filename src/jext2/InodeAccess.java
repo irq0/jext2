@@ -28,12 +28,12 @@ public class InodeAccess {
 		}
 	}
 
-	public static Inode readByIno(int ino) throws IOException {
+	public static Inode readByIno(long ino) throws IOException {
 		if (ino == 0 || ino > superblock.getInodesCount()) {
 			return null;
 		}
 		
-		long group = Calculations.groupOfIno(ino);
+		int group = Calculations.groupOfIno(ino);
 		int offset = Calculations.localInodeOffset(ino);
 		int tblBlock = offset / superblock.getBlocksize();
 	
@@ -60,8 +60,4 @@ public class InodeAccess {
 	public static Inode readRootInode() throws IOException {
 		return readByIno(Constants.EXT2_ROOT_INO);
 	}
-
-
-
 }
-

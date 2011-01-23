@@ -7,7 +7,10 @@ import java.util.Date;
 import java.util.UUID;
 
 /**
- * Datatypes used by ext2fs in its on disk format
+ * Read/Write EXT2 related on disk data types to/from ByteBuffer
+ * 
+ * There are signed and unsigned variants. The unsigned variant uses a type
+ * larger than the real one because java lacks unsigned types. 
  */
 
 public class Ext2fsDataTypes {

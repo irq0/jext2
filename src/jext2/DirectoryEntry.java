@@ -7,39 +7,40 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
-/* Directory entry structure for linked list directories 
+/**
+ * Directory entry structure for linked list directories. 
  */
 
 public class DirectoryEntry {
 
-	private int ino;
-	private short recLen;
-	private byte nameLen = 0;
-	private byte fileType;
+	private long ino;
+	private int recLen;
+	private short nameLen = 0;
+	private short fileType;
 	private String name;
 
-	public final int getIno() {
+	public final long getIno() {
 		return this.ino;
 	}
-	public final short getRecLen() {
+	public final int getRecLen() {
 		return this.recLen;
 	}
-	public final byte getNameLen() {
+	public final short getNameLen() {
 		return this.nameLen;
 	}
-	public final byte getFileType() {
+	public final short getFileType() {
 		return this.fileType;
 	}
 	public final String getName() {
 		return this.name;
 	}
-	public final void setIno(int ino) {
+	public final void setIno(long ino) {
         this.ino = ino;
     }
-    public final void setFileType(byte fileType) {
+    public final void setFileType(short fileType) {
         this.fileType = fileType;
     }	
-    public final void setRecLen(short recLen) {
+    public final void setRecLen(int recLen) {
         this.recLen = recLen;
     }
     public final boolean isUnused() {
@@ -47,10 +48,10 @@ public class DirectoryEntry {
     }
     
 	protected void read(ByteBuffer buf, int offset) throws IOException {
-		this.ino = Ext2fsDataTypes.getLE32(buf, 0 + offset);
-		this.recLen = Ext2fsDataTypes.getLE16(buf, 4 + offset);
-		this.nameLen = Ext2fsDataTypes.getLE8(buf, 6 + offset);
-		this.fileType = Ext2fsDataTypes.getLE8(buf, 7 + offset);
+		this.ino = Ext2fsDataTypes.getLE32U(buf, 0 + offset);
+		this.recLen = Ext2fsDataTypes.getLE16U(buf, 4 + offset);
+		this.nameLen = Ext2fsDataTypes.getLE8U(buf, 6 + offset);
+		this.fileType = Ext2fsDataTypes.getLE8U(buf, 7 + offset);
 		this.name = Ext2fsDataTypes.getString(buf, 8 + offset, this.nameLen);
 	}
 
@@ -70,10 +71,10 @@ public class DirectoryEntry {
 	    
 	    DirectoryEntry dir = new DirectoryEntry();
 	    
-	    dir.nameLen = (byte)(name.length() + ((-1*name.length()) % 4)); 	    
+	    dir.nameLen = (short)(name.length() + ((-1*name.length()) % 4)); 	    
 	    String namePadded = StringUtils.rightPad(name, dir.nameLen, '\0'); 	    
 	    dir.name = namePadded;
-	    dir.recLen = (byte)(8 + dir.nameLen);
+	    dir.recLen = (short)(8 + dir.nameLen);
 	    return dir;
 	}
 
@@ -98,14 +99,17 @@ public class DirectoryEntry {
 	    return recLen;
 	}
 	
-	
+	/**
+	 * Export data structure to ByteBuffer which in turn can be written
+	 * to disk
+	 */
     public ByteBuffer toByteBuffer() throws IOException {
         ByteBuffer buf = ByteBuffer.allocate(4 + 2 + 1 + 1 + this.nameLen);
         
-        Ext2fsDataTypes.putLE32(buf, this.ino, 0);
-        Ext2fsDataTypes.putLE16(buf, this.recLen, 4);
-        Ext2fsDataTypes.putLE8(buf, this.nameLen, 6);
-        Ext2fsDataTypes.putLE8(buf, this.fileType, 7);
+        Ext2fsDataTypes.putLE32U(buf, this.ino, 0);
+        Ext2fsDataTypes.putLE16U(buf, this.recLen, 4);
+        Ext2fsDataTypes.putLE8U(buf, this.nameLen, 6);
+        Ext2fsDataTypes.putLE8U(buf, this.fileType, 7);
         Ext2fsDataTypes.putString(buf, this.name, this.nameLen, 8);
         
         return buf;

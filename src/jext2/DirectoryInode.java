@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 import java.util.Iterator;
 
 
-/** Extends Inode with directory access methods */
+/** Inode for directories */
 public class DirectoryInode extends DataInode {
 	private static BlockAccess blocks = BlockAccess.getInstance();
 	private static Superblock superblock = Superblock.getInstance();
@@ -15,7 +15,7 @@ public class DirectoryInode extends DataInode {
 	}
 	
 	/**
-	 * blockwise iterates data for directory entries 
+	 * iterates directory entries.
 	 */
 	public class DirectoryIterator implements Iterator<DirectoryEntry>, Iterable<DirectoryEntry> {
 		private ByteBuffer block;
@@ -112,7 +112,7 @@ public class DirectoryInode extends DataInode {
                    currentEntry.getRecLen() >= newEntry.getRecLen()) {
                    
                    newEntry.setRecLen(currentEntry.getRecLen());                   
-                   blocks.writePartial((int)blockNr, offset, newEntry.toByteBuffer());
+                   blocks.writePartial(blockNr, offset, newEntry.toByteBuffer());
                    
                    return;
                }
@@ -124,17 +124,17 @@ public class DirectoryInode extends DataInode {
                if (currentEntry.getRecLen() >= 
                       8 + currentEntry.getNameLen() + newEntry.getRecLen()) {
                    
-                   short spaceFreed = (short)(currentEntry.getRecLen() - 
+                   int spaceFreed = (currentEntry.getRecLen() - 
                            (8 + currentEntry.getNameLen()));
                    
                    /* truncate the old one */
-                   currentEntry.setRecLen((short)(8 + currentEntry.getNameLen()));
-                   blocks.writePartial((int)blockNr, offset, currentEntry.toByteBuffer());
+                   currentEntry.setRecLen(8 + currentEntry.getNameLen());
+                   blocks.writePartial(blockNr, offset, currentEntry.toByteBuffer());
                    offset += currentEntry.getRecLen();
                    
                    /* fill in the new one */
                    newEntry.setRecLen(spaceFreed);
-                   blocks.writePartial((int)blockNr, offset, newEntry.toByteBuffer());
+                   blocks.writePartial(blockNr, offset, newEntry.toByteBuffer());
 
                    return;
                }
@@ -148,10 +148,16 @@ public class DirectoryInode extends DataInode {
         * Allocate next block
         */
        long blockNr = accessData().getBlocksAllocate(getBlocks()+1, 1).getFirst();
-       blocks.writePartial((int)blockNr, 0, newEntry.toByteBuffer());
+       blocks.writePartial(blockNr, 0, newEntry.toByteBuffer());
        
 	}
-	
+
+	/** 
+	 * Lookup name in directory. This is done by iterating each entry and
+	 * compareing the names. 
+	 * 
+	 * @return     DirectoryEntry or null in case its not found
+	 */
 	public DirectoryEntry lookup(String name) {
 		for (DirectoryEntry dir : iterateDirectory()) {
 			if (name.equals(dir.getName())) {

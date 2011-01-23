@@ -186,7 +186,7 @@ public class Superblock extends Block {
 	}
 	
 	public int getAddressesPerBlock() {
-		return (int)(this.blocksize / 4);
+		return this.blocksize / 4;
 	}
 	
 	public int getAddressesPerBlockBits() {
@@ -308,7 +308,11 @@ public class Superblock extends Block {
 	protected Superblock(long blockNr, int offset) {
 		super(blockNr, offset);
 	}
-	
+
+	/**
+	 * Read superblock using a BlockAccess Object. Use this for filesystem
+	 * initialization.
+	 */
 	public static Superblock fromBlockAccess(BlockAccess blocks) throws IOException {
 		Superblock sb = new Superblock(1, 0);
 		ByteBuffer buf = blocks.read(1);
@@ -318,6 +322,10 @@ public class Superblock extends Block {
 		return sb;
 	}		
 	
+	/**
+	 * Read superblock using a FileChannel. This is intended for testing and code
+	 * that just needs the superblock not any file system access.  
+	 */
 	public static Superblock fromFileChannel(FileChannel chan) throws IOException {
 		
 		Superblock sb = new Superblock(-1, -1);
@@ -335,7 +343,3 @@ public class Superblock extends Block {
 		                                          ToStringStyle.MULTI_LINE_STYLE);
 	}
 }
-
-
-
-
