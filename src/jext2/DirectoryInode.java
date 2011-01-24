@@ -240,7 +240,7 @@ public class DirectoryInode extends DataInode {
 	    inode.setAccessTime(now);
 	    inode.setChangeTime(now);
 	    inode.setDeletionTime(new Date(0));
-        inode.setMode(Constants.LINUX_S_IFDIR);
+        inode.setMode(Mode.IFDIR);
         inode.setBlock(new long[Constants.EXT2_N_BLOCKS]);
 	    
 	    return inode;

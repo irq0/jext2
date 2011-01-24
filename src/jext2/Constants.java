@@ -134,38 +134,6 @@ public class Constants {
 	public static final int EXT2_MAX_BLOCK_SIZE = 4096;
 
 
-	/* ext2fs.h (e2fsprogs):
-	 * Ext2/linux mode flags.  We define them here so that we don't need
-	 * to depend on the OS's sys/stat.h, since we may be compiling on a
-	 * non-Linux system.
-	 */
-	public static final int LINUX_S_IFMT  = 00170000;
-	public static final int LINUX_S_IFSOC = 0140000;
-	public static final int LINUX_S_IFLNK = 0120000;
-	public static final int LINUX_S_IFREG = 0100000;
-	public static final int LINUX_S_IFBLK = 0060000;
-	public static final int LINUX_S_IFDIR = 0040000;
-	public static final int LINUX_S_IFCHR = 0020000;
-	public static final int LINUX_S_IFIFO = 0010000;
-	public static final int LINUX_S_ISUID = 0004000;
-	public static final int LINUX_S_ISGID = 0002000;
-	public static final int LINUX_S_ISVTX = 0001000;
-	
-	public static final int LINUX_S_IRWXU = 00700;
-	public static final int LINUX_S_IRUSR = 00400;
-	public static final int LINUX_S_IWUSR = 00200;
-	public static final int LINUX_S_IXUSR = 00100;
-	public static final int LINUX_S_IRWXG = 00070;
-	public static final int LINUX_S_IRGRP = 00040;
-	public static final int LINUX_S_IWGRP = 00020;
-	public static final int LINUX_S_IXGRP = 00010;
-	
-	public static final int LINUX_S_IRWXO = 00007;
-	public static final int LINUX_S_IROTH = 00004;
-	public static final int LINUX_S_IWOTH = 00002;
-	public static final int LINUX_S_IXOTH = 00001;
-
-
 	/*
 	 * Inode flags (GETFLAGS/SETFLAGS)
 	 */

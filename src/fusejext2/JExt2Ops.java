@@ -75,7 +75,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 			if (inode == null) { 
 				Reply.err(req, Errno.ENOSYS);
 				return;
-			} else if (!(inode instanceof RegularInode)) { 
+			} else if (! (inode instanceof RegularInode)) { 
 				Reply.err(req, Errno.EPERM);
 				return;
 			}
@@ -255,7 +255,48 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		Reply.err(req, 0);		
 	}
 
+    public void mknod(FuseReq req, long parent, String name, short mode, short rdev) {
+        Reply.err(req, Errno.ENOSYS);
+        if (parent == 1) parent = Constants.EXT2_ROOT_INO;
+        try {
+            Inode parentInode = InodeAccess.readByIno(parent);
+            if (parentInode == null) { 
+                Reply.err(req, Errno.ENOENT);
+                return;
+            } else if (!(parentInode instanceof DirectoryInode)) {
+                Reply.err(req, Errno.ENOTDIR);
+                return;
+            }
+            
+           
+            DirectoryInode inode = 
+                DirectoryInode.createEmpty((DirectoryInode)parentInode);            
+            inode.orMode(mode);
+            inode.setUidLow(0);
+            inode.setUidHigh(0);
+            inode.setGidLow(0);
+            inode.setGidHigh(0);
+            InodeAlloc.registerInode(parentInode, inode);
+            inode.addDotLinks((DirectoryInode)parentInode);
+            inode.write();
+            
+            ((DirectoryInode)parentInode).addLink(inode, name);
+            
+            EntryParam e = new EntryParam();
+            e.setAttr(getStat((Inode)inode, inode.getIno()));
+            e.setGeneration(inode.getGeneration());
+            e.setAttr_timeout(0.0);
+            e.setEntry_timeout(0.0);
+            e.setIno(inode.getIno());
+            
+            Reply.entry(req, e);    
+        } catch (IOException e) {
+            Reply.err(req, Errno.EIO);
+        } catch (FileExistsException e) {
+            Reply.err(req, Errno.EEXIST);
+        }
 	
+    }	
     public void mkdir(FuseReq req, long parent, String name, short mode) {
         if (parent == 1) parent = Constants.EXT2_ROOT_INO;
         try {

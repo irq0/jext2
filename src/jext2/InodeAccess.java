@@ -6,20 +6,16 @@ public class InodeAccess {
 	private static BlockAccess blocks = BlockAccess.getInstance();
 	private static BlockGroupAccess blockGroups = BlockGroupAccess.getInstance();
 	
-	public static boolean mask(int mode, int mask) {
-		return (mode & Constants.LINUX_S_IFMT) == mask;
-	}	
-	
 	public static Inode readFromByteBuffer(ByteBuffer buf, int offset) throws IOException {
 		int mode = Ext2fsDataTypes.getLE16(buf, offset);
 
-		if (mask(mode, Constants.LINUX_S_IFDIR)) {
+		if (Mode.isDirectory(mode)) {
 			DirectoryInode inode = DirectoryInode.fromByteBuffer(buf, offset);
 			return inode;
-		} else if (mask(mode, Constants.LINUX_S_IFREG)) {
+		} else if (Mode.isRegular(mode)) {
 			RegularInode inode = RegularInode.fromByteBuffer(buf, offset);
 			return inode;
-		} else if (mask(mode, Constants.LINUX_S_IFLNK)) {
+		} else if (Mode.isSymlink(mode)) {
 			SymlinkInode inode = SymlinkInode.fromByteBuffer(buf, offset);
 			return inode;
 		} else {

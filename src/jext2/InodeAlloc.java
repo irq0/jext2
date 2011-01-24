@@ -147,7 +147,7 @@ public class InodeAlloc {
 		/* find best suitable block group */
 		int group;
 		
-		if (InodeAccess.mask(inode.getMode(), Constants.LINUX_S_IFDIR)) {
+		if (Mode.isDirectory(inode.getMode())) {
 			group = InodeAlloc.findGroupDir(dir);
 		} else {
 			group = InodeAlloc.findGroupOther(dir);
@@ -191,7 +191,7 @@ public class InodeAlloc {
 		superblock.setFreeInodesCount(superblock.getFreeInodesCount() - 1);
 		descr.setFreeInodesCount(descr.getFreeInodesCount() - 1);
 
-		if (InodeAccess.mask(inode.getMode(), Constants.LINUX_S_IFDIR)) { 
+		if (Mode.isDirectory(inode.getMode())) { 
 			superblock.setDirsCount(superblock.getDirsCount() + 1);
 			descr.setUsedDirsCount(descr.getUsedDirsCount() + 1);
 		}
