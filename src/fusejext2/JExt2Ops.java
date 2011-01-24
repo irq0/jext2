@@ -105,7 +105,6 @@ public class JExt2Ops extends AbstractLowlevelOps {
 	    RegularInode inode = openInodes.get((int)fi.getFh());
 	    
 	    try {
-	        System.out.println("WRITE");
 	        int count = inode.writeData(buf, off);
 	        if (count < 1) 
 	            throw new IOException();
@@ -240,8 +239,6 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		DirectoryInode inode = openDirectories.get((int)fi.getFh());
 		Dirbuf buf = new Dirbuf();
 
-		System.out.println(inode);
-		
 		for (DirectoryEntry d : inode.iterateDirectory()) {
 			FuseExtra.dirbufAdd(req, 
 					buf,
