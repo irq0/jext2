@@ -136,7 +136,7 @@ public class DataInode extends Inode {
         return bufOffset;
     }
     
-    protected DataInode(long blockNr, int offset) throws IOException {
+    protected DataInode(long blockNr, int offset) {
         super(blockNr, offset);
     }
 

@@ -73,7 +73,7 @@ public class DataBlockAccess {
 
 		public boolean hasNext() {
 		    fetchNext();
-		    return (remaining > 0);
+		    return ((remaining > 0) || ((blocks != null) && (blocks.size() > 0)));
 		}
 		
 		private void fetchNext() {		    
@@ -449,6 +449,9 @@ public class DataBlockAccess {
 		int count = depth - existDepth;
 
 		LinkedList<Long> newBlockNrs = allocBranch(count, goal, offsets, blockNrs);
+		if (newBlockNrs.size() == 0)
+		    throw new IOException();
+		
 		spliceBranch(fileBlockNr, offsets, blockNrs, newBlockNrs);
 		
 		result.add(newBlockNrs.getLast());

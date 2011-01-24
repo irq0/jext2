@@ -93,6 +93,20 @@ public class DirectoryEntry {
 	    return dir;
 	}
 	
+	/**
+	 * Create the dummy directory entry which occupies the unused part of a 
+	 * block.
+	 */
+	public static DirectoryEntry createRestDummy(DirectoryEntry last) {
+	    DirectoryEntry dir = new DirectoryEntry();
+	    dir.fileType = (short)0;
+	    dir.ino = 0;
+	    dir.nameLen = 0;
+	    dir.recLen = Superblock.getInstance().getBlocksize() - last.getRecLen();       
+	    
+	    return dir;
+	}
+	
 	public static int numPadBytes(int nameLen) {
 	    return 4 - (nameLen % 4);
 	}

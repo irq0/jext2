@@ -7,28 +7,28 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class Inode extends Block {
-	private int mode;
-	private int gidLow;
-	private int uidLow;
-	private long size;
+	private int mode = 0;
+	private int gidLow = 0;
+	private int uidLow = 0;
+	private long size = 0;
 	private Date accessTime;
 	private Date changeTime;
 	private Date modificationTime;
 	private Date deletionTime;
-	private int linksCount;
-	private long blocks;
-	private	long flags;
+	private int linksCount = 0;
+	private long blocks = 0;
+	private	long flags = 0;
 	private long[] block;
-	private	long generation;
-	private	long fileAcl;
-	private	long dirAcl;
-	private	long fragmentAddress;
+	private	long generation = 0;
+	private	long fileAcl = 0;
+	private	long dirAcl = 0;
+	private	long fragmentAddress = 0;
 
 	// Linux OS dependent values
 	//private int frag = 0;
 	//private int fsize = 0;
-	private int uidHigh;
-	private int gidHigh;
+	private int uidHigh = 0;
+	private int gidHigh = 0;
 
 	// in memory data (ext2_inode_info)
 	private int blockGroup = -1;
@@ -110,7 +110,11 @@ public class Inode extends Block {
 	public void setIno(long ino) {
 		this.ino = ino;
 	}
-
+	
+	/** OR mode onto */
+	public final void orMode(int mode) {
+	    this.mode |=  mode;
+	}
 	public final void setMode(int mode) {
 		this.mode = mode;
 	}
@@ -232,6 +236,9 @@ public class Inode extends Block {
 		return inode;
 	}
 
+	/**
+	 * Create empty Inode. Initialize *Times, block array.
+	 */
 	public static Inode createEmpty() {
 		Inode inode = new Inode(-1, -1);
 		Date now = new Date();

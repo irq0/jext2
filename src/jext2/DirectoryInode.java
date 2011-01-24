@@ -2,7 +2,9 @@ package jext2;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 
 /** Inode for directories */
@@ -114,6 +116,7 @@ public class DirectoryInode extends DataInode {
                    newEntry.setRecLen(currentEntry.getRecLen());                   
                    blocks.writePartial(blockNr, offset, newEntry.toByteBuffer());
                    
+                   setLinksCount(getLinksCount() + 1);            
                    return;
                }
                
@@ -137,6 +140,7 @@ public class DirectoryInode extends DataInode {
                    newEntry.setRecLen(spaceFreed);
                    blocks.writePartial(blockNr, offset, newEntry.toByteBuffer());
 
+                   setLinksCount(getLinksCount() + 1);            
                    return;
                }
                
@@ -146,11 +150,21 @@ public class DirectoryInode extends DataInode {
        }
        
        /* We checked every block but didn't find any free space. 
-        * Allocate next block
+        * Allocate next block add two entries:
+        *   (1) the new one
+        *   (2) the dummy "rest" entry
         */
-       long blockNr = accessData().getBlocksAllocate(getBlocks()+1, 1).getFirst();
+       LinkedList<Long> allocBlocks = 
+           accessData().getBlocksAllocate(getBlocks(), 1);       
+       
+       if (allocBlocks.size() == 0) 
+           throw new IOException();       
+       long blockNr = allocBlocks.getFirst();
+       
        blocks.writePartial(blockNr, 0, newEntry.toByteBuffer());
        
+       DirectoryEntry rest = DirectoryEntry.createRestDummy(newEntry);
+       blocks.writePartial(blockNr, newEntry.getRecLen(), rest.toByteBuffer());
 	}
 
 	/** 
@@ -181,7 +195,7 @@ public class DirectoryInode extends DataInode {
 		return sb.toString();
 	}
 
-	protected DirectoryInode(long blockNr, int offset) throws IOException {
+	protected DirectoryInode(long blockNr, int offset) {
 		super(blockNr, offset);
 	}
 
@@ -191,5 +205,33 @@ public class DirectoryInode extends DataInode {
 		return inode;
 	}
 
-	
+	public void addDotLinks(DirectoryInode parent) throws IOException, FileExistsException {
+        DirectoryEntry dot = DirectoryEntry.create(".");
+        DirectoryEntry dotdot = DirectoryEntry.create("..");
+        
+        dot.setFileType(Constants.EXT2_FT_DIR);
+        dot.setIno(this.getIno());
+        
+        dotdot.setFileType(Constants.EXT2_FT_DIR);
+        dotdot.setIno(parent.getIno());
+
+        this.addLink(dot);
+        this.addLink(dotdot);
+	}
+	/**
+	 *  Create new empty directory. Also add . and .. Entries
+	 */
+	public static DirectoryInode createEmpty(DirectoryInode parent) throws IOException {
+	    DirectoryInode inode = new DirectoryInode(-1, -1);
+	    Date now = new Date();
+	        
+	    inode.setModificationTime(now);
+	    inode.setAccessTime(now);
+	    inode.setChangeTime(now);
+	    inode.setDeletionTime(new Date(0));
+        inode.setMode(Constants.LINUX_S_IFDIR);
+        inode.setBlock(new long[Constants.EXT2_N_BLOCKS]);
+	    
+	    return inode;
+	}
 }
