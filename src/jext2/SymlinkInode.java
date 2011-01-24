@@ -54,6 +54,6 @@ public class SymlinkInode extends DataInode {
 	}	
 	
 	public short getFileType() {
-	    return FILETYPE_SYMLINK;
+	    return DirectoryEntry.FILETYPE_SYMLINK;
 	}
 }

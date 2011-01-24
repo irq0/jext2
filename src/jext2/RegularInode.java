@@ -18,6 +18,6 @@ public class RegularInode extends DataInode {
 	}
 	
 	public short getFileType() {
-	    return FILETYPE_REG_FILE;
+	    return DirectoryEntry.FILETYPE_REG_FILE;
 	}
 }	

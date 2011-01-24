@@ -18,6 +18,15 @@ public class DirectoryEntry {
 	private short nameLen = 0;
 	private short fileType;
 	private String name;
+    public static final short   FILETYPE_UNKNOWN  = 0;
+    public static final short   FILETYPE_REG_FILE = 1;
+    public static final short   FILETYPE_DIR      = 2;
+    public static final short   FILETYPE_CHRDEV   = 3;
+    public static final short   FILETYPE_BLKDEV   = 4;
+    public static final short   FILETYPE_FIFO     = 5;
+    public static final short   FILETYPE_SOCK     = 6;
+    public static final short   FILETYPE_SYMLINK  = 7;
+    public static final short   FILETYPE_MAX      = 8;
 
 	public final long getIno() {
 		return this.ino;

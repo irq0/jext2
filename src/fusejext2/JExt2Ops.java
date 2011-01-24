@@ -268,7 +268,8 @@ public class JExt2Ops extends AbstractLowlevelOps {
                 return;
             }
            
-            DirectoryInode inode = DirectoryInode.createEmpty((DirectoryInode)parentInode);            
+            DirectoryInode inode = 
+                DirectoryInode.createEmpty((DirectoryInode)parentInode);            
             inode.orMode(mode);
             inode.setUidLow(0);
             inode.setUidHigh(0);
@@ -293,7 +294,6 @@ public class JExt2Ops extends AbstractLowlevelOps {
         } catch (FileExistsException e) {
             Reply.err(req, Errno.EEXIST);
         }
-        
     }
 	
 	

@@ -135,18 +135,6 @@ public class Constants {
 	public static final int EXT2_DIR_PAD     = 4;
 	public static final int EXT2_DIR_ROUND   = (EXT2_DIR_PAD - 1);
 	public static final int EXT2_MAX_REC_LEN = ((1<<16)-1);
-
-	//Ext2 directory file types.  Only the low 3 bits are used.  The
-	//other bits are reserved for now.
-	public static final short	EXT2_FT_UNKNOWN	 = 0;
-	public static final short	EXT2_FT_REG_FILE = 1;
-	public static final short	EXT2_FT_DIR      = 2;
-	public static final short	EXT2_FT_CHRDEV	 = 3;
-	public static final short	EXT2_FT_BLKDEV	 = 4;
-	public static final short	EXT2_FT_FIFO	 = 5;
-	public static final short	EXT2_FT_SOCK	 = 6;
-	public static final short	EXT2_FT_SYMLINK	 = 7;
-	public static final short	EXT2_FT_MAX      = 8;
 	
 	// Structure of a directory entry
 	public static final int EXT2_NAME_LEN = 255;

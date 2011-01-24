@@ -220,10 +220,10 @@ public class DirectoryInode extends DataInode {
         DirectoryEntry dot = DirectoryEntry.create(".");
         DirectoryEntry dotdot = DirectoryEntry.create("..");
         
-        dot.setFileType(Constants.EXT2_FT_DIR);
+        dot.setFileType(DirectoryEntry.FILETYPE_DIR);
         dot.setIno(this.getIno());
         
-        dotdot.setFileType(Constants.EXT2_FT_DIR);
+        dotdot.setFileType(DirectoryEntry.FILETYPE_DIR);
         dotdot.setIno(parent.getIno());
 
         this.addLink(dot);
@@ -247,6 +247,6 @@ public class DirectoryInode extends DataInode {
 	}
 	
 	public short getFileType() {
-	    return FILETYPE_DIR;
+	    return DirectoryEntry.FILETYPE_DIR;
 	}
 }
