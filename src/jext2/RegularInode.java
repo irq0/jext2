@@ -16,4 +16,8 @@ public class RegularInode extends DataInode {
 		inode.read(buf);
 		return inode;
 	}
+	
+	public short getFileType() {
+	    return FILETYPE_REG_FILE;
+	}
 }	

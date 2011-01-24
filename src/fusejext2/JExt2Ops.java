@@ -268,8 +268,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
                 return;
             }
            
-            DirectoryInode inode = DirectoryInode.createEmpty((DirectoryInode)parentInode);
-            
+            DirectoryInode inode = DirectoryInode.createEmpty((DirectoryInode)parentInode);            
             inode.orMode(mode);
             inode.setUidLow(0);
             inode.setUidHigh(0);
@@ -278,16 +277,8 @@ public class JExt2Ops extends AbstractLowlevelOps {
             InodeAlloc.registerInode(parentInode, inode);
             inode.addDotLinks((DirectoryInode)parentInode);
             inode.write();
-
-            System.out.println(inode);
             
-            
-            DirectoryEntry newDir = DirectoryEntry.create(name);
-            newDir.setIno(inode.getIno());
-            newDir.setFileType(Constants.EXT2_FT_DIR);
-            
-            ((DirectoryInode)parentInode).addLink(newDir);
-            parentInode.write();
+            ((DirectoryInode)parentInode).addLink(inode, name);
             
             EntryParam e = new EntryParam();
             e.setAttr(getStat((Inode)inode, inode.getIno()));

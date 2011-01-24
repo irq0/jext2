@@ -52,4 +52,8 @@ public class SymlinkInode extends DataInode {
 		inode.read(buf);
 		return inode;
 	}	
+	
+	public short getFileType() {
+	    return FILETYPE_SYMLINK;
+	}
 }

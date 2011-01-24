@@ -7,6 +7,16 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class Inode extends Block {
+    public static final short   FILETYPE_UNKNOWN  = 0;
+    public static final short   FILETYPE_REG_FILE = 1;
+    public static final short   FILETYPE_DIR      = 2;
+    public static final short   FILETYPE_CHRDEV   = 3;
+    public static final short   FILETYPE_BLKDEV   = 4;
+    public static final short   FILETYPE_FIFO     = 5;
+    public static final short   FILETYPE_SOCK     = 6;
+    public static final short   FILETYPE_SYMLINK  = 7;
+    public static final short   FILETYPE_MAX      = 8;
+    
 	private int mode = 0;
 	private int gidLow = 0;
 	private int uidLow = 0;
@@ -273,6 +283,10 @@ public class Inode extends Block {
 	public void write() throws IOException {
 		ByteBuffer buf = allocateByteBuffer();
 		write(buf);
+	}
+	
+	public short getFileType() {
+	    return FILETYPE_UNKNOWN;
 	}
 	
 }

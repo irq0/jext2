@@ -83,6 +83,17 @@ public class DirectoryInode extends DataInode {
         private static final long serialVersionUID = 1L;
 	}
 	
+	/**
+	 * Add directory entry for given inode and name.
+	 * @see addLink(DirectoryEntry newEntry) 
+	 */
+	public void addLink(Inode inode, String name) throws IOException, FileExistsException {
+        DirectoryEntry newDir = DirectoryEntry.create(name);
+        newDir.setIno(inode.getIno());
+        newDir.setFileType(inode.getFileType());
+
+        addLink(newDir);
+	}
 	
 	/**
 	 * Add directory entry. Iterate over data blocks and check for entries with
@@ -233,5 +244,9 @@ public class DirectoryInode extends DataInode {
         inode.setBlock(new long[Constants.EXT2_N_BLOCKS]);
 	    
 	    return inode;
+	}
+	
+	public short getFileType() {
+	    return FILETYPE_DIR;
 	}
 }
