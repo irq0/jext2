@@ -130,15 +130,6 @@ public class Constants {
 	public static final int EXT3_DEFM_JMODE_ORDERED = 0x0040;
 	public static final int EXT3_DEFM_JMODE_WBACK   = 0x0060;
 
-	// EXT2_DIR_PAD defines the directory entries boundaries
-	// NOTE: It must be a multiple of 4
-	public static final int EXT2_DIR_PAD     = 4;
-	public static final int EXT2_DIR_ROUND   = (EXT2_DIR_PAD - 1);
-	public static final int EXT2_MAX_REC_LEN = ((1<<16)-1);
-	
-	// Structure of a directory entry
-	public static final int EXT2_NAME_LEN = 255;
-
 	public static final int EXT2_MIN_BLOCK_SIZE = 1024;
 	public static final int EXT2_MAX_BLOCK_SIZE = 4096;
 

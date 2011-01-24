@@ -18,16 +18,24 @@ public class DirectoryEntry {
 	private short nameLen = 0;
 	private short fileType;
 	private String name;
-    public static final short   FILETYPE_UNKNOWN  = 0;
-    public static final short   FILETYPE_REG_FILE = 1;
-    public static final short   FILETYPE_DIR      = 2;
-    public static final short   FILETYPE_CHRDEV   = 3;
-    public static final short   FILETYPE_BLKDEV   = 4;
-    public static final short   FILETYPE_FIFO     = 5;
-    public static final short   FILETYPE_SOCK     = 6;
-    public static final short   FILETYPE_SYMLINK  = 7;
-    public static final short   FILETYPE_MAX      = 8;
 
+	public static final int MAX_NAME_LEN = 255;
+	public static final short FILETYPE_UNKNOWN  = 0;
+    public static final short FILETYPE_REG_FILE = 1;
+    public static final short FILETYPE_DIR      = 2;
+    public static final short FILETYPE_CHRDEV   = 3;
+    public static final short FILETYPE_BLKDEV   = 4;
+    public static final short FILETYPE_FIFO     = 5;
+    public static final short FILETYPE_SOCK     = 6;
+    public static final short FILETYPE_SYMLINK  = 7;
+    public static final short FILETYPE_MAX      = 8;
+
+    // EXT2_DIR_PAD defines the directory entries boundaries
+    // NOTE: It must be a multiple of 4
+    public static final int DIR_PAD     = 4;
+    public static final int DIR_ROUND   = (DIR_PAD - 1);
+    public static final int MAX_REC_LEN = ((1<<16)-1);
+    
 	public final long getIno() {
 		return this.ino;
 	}
@@ -80,7 +88,7 @@ public class DirectoryEntry {
 	 * it dictates the record length on disk
 	 */
 	public static DirectoryEntry create(String name) {
-	    if (name.length() > Constants.EXT2_NAME_LEN) {
+	    if (name.length() > MAX_NAME_LEN) {
 	        throw new RuntimeException("dirname to long");
 	    }
 	    
@@ -91,13 +99,16 @@ public class DirectoryEntry {
 	     * gets zero padded
 	     */
 	    short nameLen = (short)(name.length());
-	    short padNameLen = (short)(nameLen + (4 - (nameLen % 4))); 	    
+	    short padNameLen = (short)(nameLen + (DIR_PAD - (nameLen % DIR_PAD))); 	    
 
 	    String namePadded = StringUtils.rightPad(name, padNameLen, (char)(0x00)); 	    
 	    
 	    dir.recLen = (short)(8 + padNameLen);
 	    dir.nameLen = nameLen;
 	    dir.name = namePadded;
+
+	    if (dir.recLen > MAX_REC_LEN)
+	        throw new RuntimeException("MAX_REC_LEN");
 	    
 	    return dir;
 	}

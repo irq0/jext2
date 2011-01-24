@@ -312,7 +312,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
         	s.setBavail(0);
         s.setFiles(superblock.getInodesCount());
         s.setFfree(superblock.getFreeInodesCount());
-        s.setNamemax(Constants.EXT2_NAME_LEN);
+        s.setNamemax(DirectoryEntry.MAX_NAME_LEN);
 
         // Note: This is not the same as the Linux kernel writes there.. 
         UUID uuid = superblock.getUuid();
