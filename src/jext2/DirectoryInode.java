@@ -121,14 +121,15 @@ public class DirectoryInode extends DataInode {
                 * If entry is used, see if we can split the directory entry
                 * to make room for the new one
                 */
-               if (currentEntry.getRecLen() >= 
-                      8 + currentEntry.getNameLen() + newEntry.getRecLen()) {
+               if (currentEntry.getRecLen() >= newEntry.getRecLen() +
+                     DirectoryEntry.minSizeNeeded(currentEntry.getNameLen())) {
                    
-                   int spaceFreed = (currentEntry.getRecLen() - 
-                           (8 + currentEntry.getNameLen()));
-                   
+                   int spaceFreed = currentEntry.getRecLen() -
+                           DirectoryEntry.minSizeNeeded(currentEntry.getNameLen());
+                                              
                    /* truncate the old one */
-                   currentEntry.setRecLen(8 + currentEntry.getNameLen());
+                   currentEntry.truncateRecord();
+                   
                    blocks.writePartial(blockNr, offset, currentEntry.toByteBuffer());
                    offset += currentEntry.getRecLen();
                    
@@ -154,7 +155,7 @@ public class DirectoryInode extends DataInode {
 
 	/** 
 	 * Lookup name in directory. This is done by iterating each entry and
-	 * compareing the names. 
+	 * comparing the names. 
 	 * 
 	 * @return     DirectoryEntry or null in case its not found
 	 */
@@ -170,14 +171,12 @@ public class DirectoryInode extends DataInode {
 	public String toString() {
 		StringBuffer sb = new StringBuffer(super.toString());
 
-		sb.append(" DIRECTORY={");		
+		sb.append(" DIRECTORY=[");		
 		for (DirectoryEntry dir : iterateDirectory()) {
-			sb.append("   ");
-			sb.append(dir.getName());
-			sb.append(",");
+			sb.append(dir.toString());
 			sb.append("\n");
 		}
-		sb.append("}");
+		sb.append("]");
 
 		return sb.toString();
 	}

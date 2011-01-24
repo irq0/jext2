@@ -43,6 +43,12 @@ public class DirectoryEntry {
     public final void setRecLen(int recLen) {
         this.recLen = recLen;
     }
+    /** set entry length to minimum required */ 
+    public final void truncateRecord() {
+        this.recLen = minSizeNeeded(this.nameLen);
+    }
+    
+    
     public final boolean isUnused() {
         return (this.ino == 0);
     }
@@ -71,11 +77,31 @@ public class DirectoryEntry {
 	    
 	    DirectoryEntry dir = new DirectoryEntry();
 	    
-	    dir.nameLen = (short)(name.length() + ((-1*name.length()) % 4)); 	    
-	    String namePadded = StringUtils.rightPad(name, dir.nameLen, '\0'); 	    
+	    /*
+	     * The directory entry must be divisible by 4, so the name 
+	     * gets zero padded
+	     */
+	    short nameLen = (short)(name.length());
+	    short padNameLen = (short)(nameLen + (4 - (nameLen % 4))); 	    
+
+	    String namePadded = StringUtils.rightPad(name, padNameLen, (char)(0x00)); 	    
+	    
+	    dir.recLen = (short)(8 + padNameLen);
+	    dir.nameLen = nameLen;
 	    dir.name = namePadded;
-	    dir.recLen = (short)(8 + dir.nameLen);
+	    
 	    return dir;
+	}
+	
+	public static int numPadBytes(int nameLen) {
+	    return 4 - (nameLen % 4);
+	}
+	
+	/**
+	 * Return entry size based on name length
+	 */
+	public static int minSizeNeeded(int nameLen) {
+	    return 8 + nameLen + numPadBytes(nameLen);
 	}
 
 	public static DirectoryEntry fromByteBuffer(ByteBuffer buf, int offset) {				
@@ -97,7 +123,7 @@ public class DirectoryEntry {
 	        recLen = 0;
 	    }	    
 	    return recLen;
-	}
+	}		
 	
 	/**
 	 * Export data structure to ByteBuffer which in turn can be written
@@ -114,7 +140,6 @@ public class DirectoryEntry {
         
         return buf;
     }
-
 }
 	
 	

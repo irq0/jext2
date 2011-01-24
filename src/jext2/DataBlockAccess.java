@@ -12,8 +12,8 @@ public class DataBlockAccess {
 	protected static BlockAccess blocks = BlockAccess.getInstance();
 	protected static BlockGroupAccess blockGroups = BlockGroupAccess.getInstance();
 	protected Inode inode = null;
-	
-	// XXX are this two just needed for regular inodes?
+
+	// used by findGoal 
     private long lastAllocLogicalBlock = 0; 
     private long lastAllocPhysicalBlock = 0;
 	

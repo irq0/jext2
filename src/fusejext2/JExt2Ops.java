@@ -200,7 +200,6 @@ public class JExt2Ops extends AbstractLowlevelOps {
 			}
 
 			Inode child = InodeAccess.readByIno(entry.getIno());
-			System.out.println(child);
 			EntryParam e = new EntryParam();
 			e.setAttr(getStat(child, entry.getIno()));
 			e.setGeneration(child.getGeneration());
@@ -241,6 +240,8 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		DirectoryInode inode = openDirectories.get((int)fi.getFh());
 		Dirbuf buf = new Dirbuf();
 
+		System.out.println(inode);
+		
 		for (DirectoryEntry d : inode.iterateDirectory()) {
 			FuseExtra.dirbufAdd(req, 
 					buf,
@@ -277,10 +278,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
             inode.setGidLow(0);
             inode.setGidHigh(0);
             InodeAlloc.registerInode(parentInode, inode);
-            System.out.println(inode);
             inode.write();
-
-            
             
             DirectoryEntry newDir = DirectoryEntry.create(name);
             newDir.setIno(inode.getIno());
