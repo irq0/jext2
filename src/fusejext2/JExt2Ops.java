@@ -3,6 +3,7 @@ package fusejext2;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.Vector;
@@ -163,6 +164,14 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		}
 	}
 
+	private boolean checkToSet(int to_set, int attr) {
+	    return ((to_set & attr) != 0);
+	}
+	
+	private Date timespecToDate(Timespec time) {
+        Date date = new Date(time.getSec()*1000 + time.getNsec()/1000); 
+        return date;
+	}
 	
     public void setattr(FuseReq req, long ino, Stat attr, int to_set, FileInfo fi) {
         if (ino == 1) ino = Constants.EXT2_ROOT_INO;
@@ -174,8 +183,35 @@ public class JExt2Ops extends AbstractLowlevelOps {
                 return;
             }
 
-        
-            Reply.attr(req, attr, 0.0);
+            if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_ATIME)) {
+                inode.setAccessTime(timespecToDate(attr.getAtim()));
+            } 
+            if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_ATIME_NOW)) {
+                inode.setAccessTime(new Date());
+            }
+            if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_GID)) {
+                inode.setGid(attr.getGid());
+            }            
+            if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_MODE)) {
+                inode.setMode((int)attr.getMode());
+            }            
+            if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_MTIME)) {
+                inode.setModificationTime(timespecToDate(attr.getMtim()));
+            }            
+            if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_MTIME_NOW)) {
+                inode.setModificationTime(new Date());
+            }            
+            if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_SIZE)) {
+                
+            }            
+            if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_UID)) {
+                inode.setUid(attr.getUid());
+            }            
+            
+            inode.write();
+            
+            Stat s = getStat(inode);
+            Reply.attr(req, s, 0.0);
         } catch (IOException e) {
             Reply.err(req, Errno.EIO);
         }

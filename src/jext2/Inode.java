@@ -111,6 +111,16 @@ public class Inode extends Block {
 		this.ino = ino;
 	}
 	
+	public void setUid(long uid) {
+	    this.uidLow = (int)(uid & 0xFFFFFFFF);
+	    this.uidHigh = (int)((uid >> Integer.SIZE) & 0xFFFFFFFF);
+	}
+	
+	public void setGid(long gid) {
+	    this.gidLow = (int)(gid & 0xFFFFFFFF);
+	    this.gidHigh = (int)((gid >> Integer.SIZE) & 0xFFFFFFFF);
+	}
+	
 	/** OR mode onto */
 	public final void orMode(int mode) {
 	    this.mode |=  mode;
