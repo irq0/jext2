@@ -64,7 +64,7 @@ public class DataBlockAccess {
 		DataBlockIterator(Inode inode, long start) {
 			this.inode = inode;
 			this.current = start;
-			this.remaining = inode.getBlocks();
+			this.remaining = inode.getBlocks()/(superblock.getBlocksize()/512);
 		}
 			
 		DataBlockIterator(Inode inode) {
@@ -348,7 +348,8 @@ public class DataBlockAccess {
 	    lastAllocLogicalBlock = logicalBlock;
 	    lastAllocPhysicalBlock = newBlockNrs.getLast().intValue();
 	    
-	    inode.setBlocks(inode.getBlocks() + newBlockNrs.size());
+	    inode.setBlocks(inode.getBlocks() + 
+	            newBlockNrs.size() * (superblock.getBlocksize()/ 512));
 	    inode.setChangeTime(new Date());
 	    inode.write();
 	}
@@ -449,7 +450,7 @@ public class DataBlockAccess {
 		int count = depth - existDepth;
 
 		LinkedList<Long> newBlockNrs = allocBranch(count, goal, offsets, blockNrs);
-		if (newBlockNrs.size() == 0)
+		if (newBlockNrs == null || newBlockNrs.size() == 0)
 		    throw new IOException();
 		
 		spliceBranch(fileBlockNr, offsets, blockNrs, newBlockNrs);

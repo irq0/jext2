@@ -166,7 +166,7 @@ public class DirectoryInode extends DataInode {
         *   (2) the dummy "rest" entry
         */
        LinkedList<Long> allocBlocks = 
-           accessData().getBlocksAllocate(getBlocks(), 1);       
+           accessData().getBlocksAllocate(getBlocks()/(superblock.getBlocksize()/512), 1);       
        
        if (allocBlocks.size() == 0) 
            throw new IOException();       

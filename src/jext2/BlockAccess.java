@@ -41,6 +41,11 @@ public class BlockAccess {
 	   buf.order(ByteOrder.BIG_ENDIAN);
 	   blockdev.read(buf, position);
 	}
+	
+	public void writeFromBuffer(long position, ByteBuffer buf) throws IOException {
+	    buf.order(ByteOrder.BIG_ENDIAN);
+	    blockdev.write(buf, position);
+	}
 
 	/** Write a whole block to the logical address nr on disk */
 	public void write(long nr, ByteBuffer buf) throws IOException {
@@ -52,7 +57,7 @@ public class BlockAccess {
 	
 	
 	@SuppressWarnings("unused")
-    private void dumpByteBuffer(ByteBuffer buf) {
+    public void dumpByteBuffer(ByteBuffer buf) {
 	    try {
 	    while (buf.hasRemaining()) {
 	        for (int i=0; i<8; i++) {

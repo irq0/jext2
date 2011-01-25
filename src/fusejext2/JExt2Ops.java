@@ -105,11 +105,13 @@ public class JExt2Ops extends AbstractLowlevelOps {
 	    RegularInode inode = openInodes.get((int)fi.getFh());
 	    
 	    try {
+	        buf.rewind();
 	        int count = inode.writeData(buf, off);
+	        
 	        if (count < 1) 
 	            throw new IOException();
-	        else
-	            Reply.write(req, count);
+	        
+	        Reply.write(req, count);
 	    
 	    } catch (IOException e) {
 	        Reply.err(req, Errno.EIO);

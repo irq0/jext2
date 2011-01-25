@@ -33,21 +33,24 @@ public class DataInode extends Inode {
     
         int blocksize = superblock.getBlocksize();
         int start = offset / blocksize;
-        int max = size / blocksize + start;
-        offset = offset % blocksize;        
+        int max = Math.min(size / blocksize + start,
+                           (int)(getBlocks()/(blocksize/512)));
+        int bufOffset = offset % blocksize;        
     
         while (start < max) { 
             LinkedList<Long> b = accessData().getBlocks(start, max-start);
     
-            // getBlocks returns null in case create=false and the block does not exist. FUSE can
-            // and will request not existing blocks. 
+            // getBlocks returns null in case create=false and the block 
+            // does not exist. FUSE can and will request not existing blocks. 
             if (b == null) {
                 break;
             }
     
             int count = b.size();
             result.limit(result.position() + count * blocksize);
-            blocks.readToBuffer((((long)(b.getFirst() & 0xffffffff)) * blocksize) + offset, result);
+            blocks.readToBuffer(
+                    (((long)(b.getFirst() & 0xffffffff)) * blocksize)
+                    + bufOffset, result);
             start += b.size();          
             offset = 0;
         }
@@ -57,7 +60,8 @@ public class DataInode extends Inode {
     }
 
     /**
-     * Old implementation of readData. Dont use this. Its just for reference how not to do it
+     * Old implementation of readData. Dont use this. Its just for reference how 
+     * not to do it
      */
     public ByteBuffer readDataSlow(int size, int offset) throws IOException {
         ByteBuffer result = ByteBuffer.allocateDirect(size);
@@ -70,8 +74,8 @@ public class DataInode extends Inode {
         while (start < max) { 
             LinkedList<Long> b = accessData().getBlocks(start, max-start);
             
-            // getBlocks returns null in case create=false and the block does not exist. FUSE can
-            // and will request not existing blocks. 
+            // getBlocks returns null in case create=false and the block 
+            // does not exist. FUSE can and will request not existing blocks. 
             if (b == null) {
                 break;
             }
@@ -95,7 +99,47 @@ public class DataInode extends Inode {
         return result;
     }
 
+    /**
+     * Write data in buffer to disk. May trigger an write() when data size 
+     * grows.
+     */    
     public int writeData(ByteBuffer buf, int offset) throws IOException {
+        int blocksize = superblock.getBlocksize();
+        int start = offset / blocksize;
+        int max = buf.limit() / blocksize + start + 1;
+        int bufOffset = offset % blocksize;        
+
+        while (start < max) { 
+            LinkedList<Long> b = accessData().getBlocksAllocate(start, max-start);
+        
+            if (b == null) {
+                throw new IOException();
+            }
+        
+            int count = b.size();
+            buf.limit(Math.min(buf.position() + count * blocksize,
+                               buf.capacity()));
+            blocks.writeFromBuffer(
+                    (((long)(b.getFirst() & 0xffffffff)) * blocksize) + bufOffset,
+                    buf);
+            
+            start += b.size();          
+            bufOffset = 0;
+        }
+        
+        int written = buf.position();
+        
+        /* increase inode.size if we grew the file */
+        if (offset + written > getSize()) { /* file grew */
+            setSize(offset + written);
+            write();
+        } 
+        
+        return buf.position();
+    }
+    
+    
+    public int writeDataStupid(ByteBuffer buf, int offset) throws IOException {
         System.out.println("WRITE DATA: " + buf + " AT: " + offset);
         
         int start = offset / superblock.getBlocksize();
