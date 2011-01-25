@@ -236,24 +236,6 @@ public class Inode extends Block {
 		return inode;
 	}
 
-	/**
-	 * Create empty Inode. Initialize *Times, block array.
-	 */
-	public static Inode createEmpty() {
-		Inode inode = new Inode(-1, -1);
-		Date now = new Date();
-		
-		inode.modificationTime = now;
-		inode.accessTime = now;
-		inode.changeTime = now;
-		inode.fragmentAddress = 0;
-		inode.deletionTime = new Date(0);
-		inode.blocks = 0;
-		inode.block = new long[Constants.EXT2_N_BLOCKS];
-		
-		return inode;
-	}
-	
 	public boolean equals(Inode other) {
 		return (this.blockNr == other.blockNr) &&
 			(this.offset == other.offset);

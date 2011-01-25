@@ -230,9 +230,9 @@ public class DirectoryInode extends DataInode {
         this.addLink(dotdot);
 	}
 	/**
-	 *  Create new empty directory. Also add . and .. Entries
+	 *  Create new empty directory. Don not add ., .. entries. Use addDotLinks()
 	 */
-	public static DirectoryInode createEmpty(DirectoryInode parent) throws IOException {
+	public static DirectoryInode createEmpty() throws IOException {
 	    DirectoryInode inode = new DirectoryInode(-1, -1);
 	    Date now = new Date();
 	        
