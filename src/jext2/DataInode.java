@@ -138,47 +138,7 @@ public class DataInode extends Inode {
         } 
         
         return buf.position();
-    }
-    
-    
-    public int writeDataStupid(ByteBuffer buf, int offset) throws IOException {
-        System.out.println("WRITE DATA: " + buf + " AT: " + offset);
-        
-        int start = offset / superblock.getBlocksize();
-        int max = buf.capacity() / superblock.getBlocksize() + start + 1;
-        buf.rewind();
-    
-        LinkedList<Long> blockNrs = new LinkedList<Long>();
-        
-        /* get all the blocks needed to hold buf */
-        while (start < max) {
-            LinkedList<Long> b = accessData().getBlocksAllocate(start, max-start);
-            
-            if (b == null) 
-                break;
-            
-            start += b.size();
-            blockNrs.addAll(b);
-        }
-    
-        /* iterate blocks and write buf */
-        int blocksize = superblock.getBlocksize();
-        int blockOffset = offset % blocksize;
-        int bufOffset = 0;
-        int remaining = buf.capacity();
-        for (long nr : blockNrs) {
-            int bytesToWrite = remaining;
-            if (bytesToWrite > blocksize)
-                bytesToWrite = blocksize - blockOffset;
-            
-            blocks.writePartial((int) nr, blockOffset, buf, bufOffset, bytesToWrite); 
-            
-            remaining -= bytesToWrite;
-            bufOffset += bytesToWrite;
-            blockOffset = 0;
-        }
-        return bufOffset;
-    }
+    }  
     
     protected DataInode(long blockNr, int offset) {
         super(blockNr, offset);

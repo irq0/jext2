@@ -6,6 +6,9 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import jext2.exceptions.DirectoryNotEmpty;
+import jext2.exceptions.FileExists;
+
 
 /** Inode for directories */
 public class DirectoryInode extends DataInode {
@@ -21,6 +24,7 @@ public class DirectoryInode extends DataInode {
 	 */
 	public class DirectoryIterator implements Iterator<DirectoryEntry>, Iterable<DirectoryEntry> {
 		private ByteBuffer block;
+		private long blockNr;
 		private DirectoryEntry entry;
 		private int offset = 0;
 
@@ -38,8 +42,9 @@ public class DirectoryInode extends DataInode {
 		private DirectoryEntry fetchNextEntry(DirectoryEntry last) {
 			try {
 			    if (last == null && block == null) {
-			        block = blocks.read(blockIter.next());
-			        return DirectoryEntry.fromByteBuffer(block, 0);
+			        blockNr = blockIter.next();
+			        block = blocks.read(blockNr);
+			        return DirectoryEntry.fromByteBuffer(block, blockNr, 0);
 			    }
 			    
 				if (last.getRecLen() != 0) {
@@ -50,15 +55,17 @@ public class DirectoryInode extends DataInode {
 				*/
 				// entry was last in this block
 				if (offset >= superblock.getBlocksize()) {
-				    if (blockIter.hasNext())
-				        block = blocks.read(blockIter.next());
-				    else
-				        return null;			    
+				    if (blockIter.hasNext()) {
+				        blockNr = blockIter.next();
+				        block = blocks.read(blockNr);
+				    } else {
+				        return null;
+				    }
 					offset = 0;
 				}
 				
 				// fetch next entry from block
-				return DirectoryEntry.fromByteBuffer(block, offset);
+				return DirectoryEntry.fromByteBuffer(block, blockNr, offset);
 			} catch (IOException e) {
 				return null;
 			}
@@ -79,15 +86,11 @@ public class DirectoryInode extends DataInode {
 		
 	}
 
-	public class FileExistsException extends Exception {
-        private static final long serialVersionUID = 1L;
-	}
-	
 	/**
 	 * Add directory entry for given inode and name.
 	 * @see addLink(DirectoryEntry newEntry) 
 	 */
-	public void addLink(Inode inode, String name) throws IOException, FileExistsException {
+	public void addLink(Inode inode, String name) throws IOException, FileExists {
         DirectoryEntry newDir = DirectoryEntry.create(name);
         newDir.setIno(inode.getIno());
         newDir.setFileType(inode.getFileType());
@@ -101,7 +104,8 @@ public class DirectoryInode extends DataInode {
 	 * @throws FileExistsException 
 	 * 
 	 */
-	public void addLink(DirectoryEntry newEntry) throws IOException, FileExistsException {
+	// TODO rewrite addLink to use the directory iterator
+	public void addLink(DirectoryEntry newEntry) throws IOException, FileExists {
        ByteBuffer block;
        int offset = 0;
        
@@ -109,10 +113,10 @@ public class DirectoryInode extends DataInode {
            block = blocks.read(blockNr);
 
            while (offset + 8 <= block.limit()) { /* space for minimum of one entry */
-               DirectoryEntry currentEntry = DirectoryEntry.fromByteBuffer(block, offset);
+               DirectoryEntry currentEntry = DirectoryEntry.fromByteBuffer(block, blockNr, offset);
                
                if (currentEntry.getName().equals(newEntry.getName())) 
-                   throw new FileExistsException();
+                   throw new FileExists();
                
                if (currentEntry.getRecLen() == 0)
                    throw new IOException("zero-length directory entry");
@@ -178,6 +182,18 @@ public class DirectoryInode extends DataInode {
        blocks.writePartial(blockNr, newEntry.getRecLen(), rest.toByteBuffer());
 	}
 
+	
+	public boolean isEmptyDirectory() {
+	    int count = 0;
+	    for (DirectoryEntry dir : iterateDirectory()) {
+	        count += 1;
+	        if (count >= 3) 
+	            return false;
+	    }
+	    return true;
+	}
+	
+	
 	/** 
 	 * Lookup name in directory. This is done by iterating each entry and
 	 * comparing the names. 
@@ -216,7 +232,7 @@ public class DirectoryInode extends DataInode {
 		return inode;
 	}
 
-	public void addDotLinks(DirectoryInode parent) throws IOException, FileExistsException {
+	public void addDotLinks(DirectoryInode parent) throws IOException, FileExists {
         DirectoryEntry dot = DirectoryEntry.create(".");
         DirectoryEntry dotdot = DirectoryEntry.create("..");
         
@@ -248,5 +264,58 @@ public class DirectoryInode extends DataInode {
 	
 	public short getFileType() {
 	    return DirectoryEntry.FILETYPE_DIR;
+	}
+	
+	/**
+	 * Unlink inode from directory. May cause inode destruction
+	 */ 
+	public void unLinkOther(Inode inode, String name) throws IOException {
+        if (inode instanceof DirectoryInode)
+            throw new IllegalArgumentException("Use unLinkDir for directories");
+        unlink(inode, name);
+	}
+	
+	/**
+	 * Remove a subdirectory inode from directory. May cause indoe destruction 
+	 */
+	public void unLinkDir(DirectoryInode inode, String name) throws IOException, DirectoryNotEmpty {
+	    if (!inode.isEmptyDirectory())
+	        throw new DirectoryNotEmpty();
+	    unlink(inode, name);
+	}
+	
+	/**
+	 * Unlink Inode from this directory. May cause freeInode() if link count
+	 * reaches zero. 
+	 */
+	private void unlink(Inode inode, String name) throws IOException {
+	    removeLink(name);
+	    inode.setLinksCount(inode.getLinksCount() - 1);
+	    
+	    if (inode.getLinksCount() == 0) {
+	        InodeAlloc.freeInode(inode);
+	    }
+	    
+	}
+	
+	/**
+	 * Remove a directory entry. This is probably not what you want. We don't 
+	 * update the inode.linksCount here.
+	 */
+	private void removeLink(String name) throws IOException {
+	    /* First: Find the entry and its predecessor */
+	    DirectoryEntry last = null;
+	    DirectoryEntry toDelete = null;
+	    for (DirectoryEntry current : iterateDirectory()) {
+	        if (name.equals(current.getName())) {
+	            toDelete = current;
+	            break;
+	        }
+	        last = current;
+	    }
+
+	    /* set the record length of the predecessor to skipe  toDelete the entry */ 
+	    last.setRecLen(last.getRecLen() + toDelete.getRecLen());
+	    last.write();
 	}
 }

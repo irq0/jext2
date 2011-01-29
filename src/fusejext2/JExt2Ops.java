@@ -7,7 +7,7 @@ import java.util.Date;
 import java.util.UUID;
 
 import jext2.*;
-import jext2.DirectoryInode.FileExistsException;
+import jext2.exceptions.JExt2Exception;
 import fuse.*;
 import jlowfuse.*;
 import fuse.StatVFS;
@@ -83,7 +83,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 			Reply.open(req, fi);
 		} catch (IOException e) {
 			Reply.err(req, Errno.EIO);
-		}
+		} 
 	}
 	
 	public void read(FuseReq req, long ino, int size, int off, FileInfo fi) {
@@ -340,8 +340,8 @@ public class JExt2Ops extends AbstractLowlevelOps {
             Reply.entry(req, e);    
         } catch (IOException e) {
             Reply.err(req, Errno.EIO);
-        } catch (FileExistsException e) {
-            Reply.err(req, Errno.EEXIST);
+        } catch (JExt2Exception e) {
+            Reply.err(req, e.getErrno());
         }
 	
     }	
@@ -379,8 +379,8 @@ public class JExt2Ops extends AbstractLowlevelOps {
             Reply.entry(req, e);    
         } catch (IOException e) {
             Reply.err(req, Errno.EIO);
-        } catch (FileExistsException e) {
-            Reply.err(req, Errno.EEXIST);
+        } catch (JExt2Exception e) {
+            Reply.err(req, e.getErrno());
         }
     }
 	

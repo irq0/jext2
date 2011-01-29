@@ -114,7 +114,7 @@ public class BlockGroupDescriptor extends PartialBlock {
 	
 	/**
 	 * do not use this method. it is just for later improvement here. It does
-	 * not take into account that sparse block groups have not descrptor table
+	 * not take into account that sparse block groups have not descriptor table
 	 */ 
 	public static long descriptorLocation(int group) {
 		 int hasSuper = hasSuperblock(group) ? 1 : 0;

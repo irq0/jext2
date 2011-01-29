@@ -11,7 +11,7 @@ import org.apache.commons.lang.builder.ToStringStyle;
  * Directory entry structure for linked list directories. 
  */
 
-public class DirectoryEntry {
+public class DirectoryEntry extends PartialBlock {
 
 	private long ino;
 	private int recLen;
@@ -36,7 +36,14 @@ public class DirectoryEntry {
     public static final int DIR_ROUND   = (DIR_PAD - 1);
     public static final int MAX_REC_LEN = ((1<<16)-1);
     
-	public final long getIno() {
+	public DirectoryEntry(long blockNr, int offset) {
+	    super(blockNr, offset);
+    }
+	public DirectoryEntry() {
+	    this(-1,-1);
+	}
+
+    public final long getIno() {
 		return this.ino;
 	}
 	public final int getRecLen() {
@@ -70,7 +77,7 @@ public class DirectoryEntry {
         return (this.ino == 0);
     }
     
-	protected void read(ByteBuffer buf, int offset) throws IOException {
+	protected void read(ByteBuffer buf) throws IOException {
 		this.ino = Ext2fsDataTypes.getLE32U(buf, 0 + offset);
 		this.recLen = Ext2fsDataTypes.getLE16U(buf, 4 + offset);
 		this.nameLen = Ext2fsDataTypes.getLE8U(buf, 6 + offset);
@@ -138,10 +145,10 @@ public class DirectoryEntry {
 	    return 8 + nameLen + numPadBytes(nameLen);
 	}
 
-	public static DirectoryEntry fromByteBuffer(ByteBuffer buf, int offset) {				
-		DirectoryEntry dir = new DirectoryEntry();
+	public static DirectoryEntry fromByteBuffer(ByteBuffer buf, long blockNr, int offset) {				
+		DirectoryEntry dir = new DirectoryEntry(blockNr, offset);
 		try {
-			dir.read(buf, offset);
+			dir.read(buf);
 			return dir;
 		} catch (IOException e) {
 			// XXX don't ignore
@@ -174,6 +181,13 @@ public class DirectoryEntry {
         
         return buf;
     }
+
+    @Override
+    public void write() throws IOException {
+        // TODO Auto-generated method stub
+        
+    }
+
 }
 	
 	

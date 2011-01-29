@@ -5,8 +5,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.nio.ByteOrder;
-import java.io.IOException;
 import java.util.Iterator;
+import java.io.IOException;
 
 public class DataBlockAccess {
 	protected static Superblock superblock = Superblock.getInstance();
@@ -80,7 +80,7 @@ public class DataBlockAccess {
 		return block;
 	}
 
-	public static long  readTripleIndirect(long tind, int nr) throws IOException{
+	public static long  readTripleIndirect(long tind, int nr) throws IOException {
 		long dind = readDoubleIndirect(tind, (int)(nr / ptrs));
 		long block = readIndirect(dind, (int)(nr % ptrs));
 		return block;

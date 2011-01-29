@@ -1,6 +1,7 @@
 package jext2;
 
 import java.io.IOException;
+import java.util.Date;
 
 /** 
  * Inode allocation and deallocation routines 
@@ -139,6 +140,50 @@ public class InodeAlloc {
 		return -1;
 	}
 
+	/**
+	 * Free Inode: Remove data blocks and set bit to 0
+	 */
+	public static void freeInode(Inode inode) throws IOException {
+	    if (inode.getLinksCount() > 0)
+	        return;
+	    	    
+	    inode.setDeletionTime(new Date());
+	    inode.setSize(0);
+        if (inode instanceof DataInode) {
+            ((DataInode)inode).accessData().truncate();
+        }
+	    
+        inode.write();
+
+        long ino = inode.getIno();
+        
+        if (ino < superblock.getFirstIno() ||
+                ino > superblock.getInodesCount()) {
+            throw new RuntimeException("reserved or nonexistent inode " + ino);
+        }
+        
+        BlockGroupDescriptor groupDescr = 
+            blockGroups.getGroupDescriptor(Calculations.groupOfIno(ino));
+        Bitmap bitmap = blockGroups.readInodeBitmapOf(groupDescr);
+        int bit = Calculations.localInodeIndex(ino);
+        
+        if (!bitmap.isSet(bit)) {
+            throw new RuntimeException("Bit allready cleared for inode " + ino);
+        } else {
+            bitmap.setBit(bit, false);
+            bitmap.write();
+        }
+        
+        groupDescr.setFreeBlocksCount(groupDescr.getFreeInodesCount() + 1);
+        
+        if (inode instanceof DirectoryInode) {
+            groupDescr.setUsedDirsCount(groupDescr.getUsedDirsCount() - 1);
+            superblock.setDirsCount(superblock.getDirsCount() - 1);
+            
+            groupDescr.write();
+            superblock.write();
+        }
+	}
 	
 	/** Register Inode on disk. Find suitable position an reserve this position
 	 * for the Inode. Finally set location data in Inode
