@@ -36,8 +36,9 @@ public class DataInode extends Inode {
         int start = offset / blocksize;
         int max = Math.min(size / blocksize + start,
                            (int)(getBlocks()/(blocksize/512)));
-        int bufOffset = offset % blocksize;        
-    
+        offset = offset % blocksize;
+        int firstInBuffer = offset;
+        
         while (start < max) { 
             LinkedList<Long> b = accessData().getBlocks(start, max-start);
     
@@ -51,12 +52,12 @@ public class DataInode extends Inode {
             result.limit(result.position() + count * blocksize);
             blocks.readToBuffer(
                     (((long)(b.getFirst() & 0xffffffff)) * blocksize)
-                    + bufOffset, result);
+                    + offset, result);
             start += b.size();          
             offset = 0;
         }
     
-        result.position(offset);
+        result.position(firstInBuffer);
         return result;
     }
 
@@ -107,7 +108,7 @@ public class DataInode extends Inode {
     public int writeData(ByteBuffer buf, int offset) throws IOException {
         int blocksize = superblock.getBlocksize();
         int start = offset / blocksize;
-        int max = buf.limit() / blocksize + start + 1;
+        int max = buf.limit() / blocksize + start;
         int bufOffset = offset % blocksize;        
 
         while (start < max) { 
@@ -147,8 +148,6 @@ public class DataInode extends Inode {
         int max = buf.capacity() / superblock.getBlocksize() + start + 1;
         buf.rewind();
     
-        System.out.println("START: " + start + " MAX: " + max);
-        
         LinkedList<Long> blockNrs = new LinkedList<Long>();
         
         /* get all the blocks needed to hold buf */
