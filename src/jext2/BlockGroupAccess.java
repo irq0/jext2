@@ -20,8 +20,8 @@ public class BlockGroupAccess {
 	}
 		
 	/* 
-	 * read descriptos from first block group but set blockNr to the 'real' 
-	 * location afterwards
+	 * Read descriptors from first block group. Initialize the write-back parameters
+	 * to the first descriptor table. The backup tables will therefore no be updated. 
 	 */
 	public void readDescriptors() throws IOException {
 		int blockCount = (superblock.getGroupsCount() + 
@@ -39,7 +39,6 @@ public class BlockGroupAccess {
 			for (int i=0; i<Math.min(groupCount, groupsPerBlock); i++) {				
 				descriptors[group] = BlockGroupDescriptor.fromByteBuffer(buf, nr, i*32);
 				descriptors[group].setBlockGroup(group);
-				descriptors[group].setBlockNr(BlockGroupDescriptor.descriptorLocation(group));
 				group++;
 			}
 			

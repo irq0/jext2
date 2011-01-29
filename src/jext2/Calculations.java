@@ -8,6 +8,12 @@ public class Calculations {
 			superblock.getBlocksPerGroup());
 	}
 
+	public static int groupIndexOfBlk(long blk) {
+	    return (int)((blk - superblock.getFirstDataBlock()) %
+	        superblock.getBlocksPerGroup());
+	}
+
+
 	public static int groupOfIno(long ino) {
 		return (int)((ino - 1) / superblock.getInodesPerGroup());
 	}

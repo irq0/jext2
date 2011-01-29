@@ -12,6 +12,17 @@ public class DataInode extends Inode {
     BlockAccess blocks = BlockAccess.getInstance();
     DataBlockAccess dataAccess = null;
 
+    
+    /**
+     * Set size and truncate.
+     * @param   size    new size
+     */
+    public void setSizeAndTruncate(long size) throws IOException {
+        setSize(size);
+        accessData().truncate();
+    }
+    
+    
     /**
      * Get the data access provider to read and write to the data area of this
      * inode

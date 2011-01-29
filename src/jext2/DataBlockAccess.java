@@ -29,11 +29,42 @@ public class DataBlockAccess {
     /** number of triple indirect blocks */
     public static final long trippleBlocks = ptrs*ptrs*ptrs;
 		
-	public static long readBlockNumberFromBlock(long dataBlock, int index) throws IOException{
-		ByteBuffer buffer = blocks.read(dataBlock);
-		buffer.order(ByteOrder.LITTLE_ENDIAN);
-		long nr = Ext2fsDataTypes.getLE32U(buffer, index*4);
-		return nr;
+    
+    /**
+     * Read block pointers from block. 
+     * Note: Zero pointers are not skipped
+     * @param   dataBlock   physical block number
+     * @param   start       index of first pointer to retrieve
+     * @param   end         index of last pointer to retrieve
+     */
+    public static long[] readBlockNrsFromBlock(long dataBlock, int start, int end) throws IOException {
+        long[] result = new long[(end-start)+1];
+        
+        ByteBuffer buffer = blocks.read(dataBlock);
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        
+        for (int i=start; i<=end; i++) {
+            result[i] = Ext2fsDataTypes.getLE32U(buffer, i*4);
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Read all block pointers from block.
+     * @param   dataBlock   physical block number
+     */
+    public static long[] readAllBlockNumbersFromBlock(long dataBlock) throws IOException {
+        return readBlockNrsFromBlock(dataBlock, 0, ptrs-1);
+    }
+    
+    /**
+     * Read single block pointer from block.
+     * @param   dataBlock   physical block number
+     * @param   index       index of block number to retrieve
+     */
+	public static long readBlockNumberFromBlock(long dataBlock, int index) throws IOException {
+	    return (readBlockNrsFromBlock(dataBlock, index, index))[0];
 	}
 	
 	public static long readIndirect(long ind, int nr) throws IOException {
@@ -42,16 +73,14 @@ public class DataBlockAccess {
 	}
 
 	public static long readDoubleIndirect(long dint, int nr) throws IOException {
-		long addrPerBlock = superblock.getBlocksize()/4;
-		long ind = readIndirect(dint, (int)(nr / addrPerBlock));
-		long block = readIndirect(ind, (int)(nr % addrPerBlock));
+		long ind = readIndirect(dint, (int)(nr / ptrs));
+		long block = readIndirect(ind, (int)(nr % ptrs));
 		return block;
 	}
 
 	public static long  readTripleIndirect(long tind, int nr) throws IOException{
-		long addrPerBlock = superblock.getBlocksize()/4;
-		long dind = readDoubleIndirect(tind, (int)(nr / addrPerBlock));
-		long block = readIndirect(dind, (int)(nr % addrPerBlock));
+		long dind = readDoubleIndirect(tind, (int)(nr / ptrs));
+		long block = readIndirect(dind, (int)(nr % ptrs));
 		return block;
 	}
 
@@ -118,7 +147,7 @@ public class DataBlockAccess {
 	 * get the logical block number of file block *
 	 * This is actually more or less the same as getBlocks except 
 	 * that only one blockNr is returned. I wrote this first and kind of 
-	 * like it ;) 
+	 * like the simplicity. But you should really use getBlocks()
 	 */
 	public static long getDataBlockNr(Inode inode, long fileBlockNumber) throws IOException {
 		long[] directBlocks = inode.getBlock();
@@ -476,13 +505,13 @@ public class DataBlockAccess {
                 goal >= superblock.getBlocksCount())
             goal = superblock.getFirstDataBlock();
     
-        long groupNr = Calculations.groupOfBlk((int)goal);
+        long groupNr = Calculations.groupOfBlk(goal);
         BlockGroupDescriptor groupDescr = blockGroups.getGroupDescriptor((int)groupNr);
         Bitmap bitmap = Bitmap.fromByteBuffer(blocks.read(groupDescr.getBlockBitmapPointer()),
                                               groupDescr.getBlockBitmapPointer());
         
         long allocatedBlock = -1;
-        do { /* uargh... */
+        do { /* uargh... original code uses goto a lot*/
         if (groupDescr.getFreeBlocksCount() > 0) {
             int localGoal = (int) ((goal - superblock.getFirstDataBlock()) %
                             superblock.getBlocksPerGroup());
@@ -567,9 +596,211 @@ public class DataBlockAccess {
 	    return access;
 	}
     
-
-
+	/**
+	 * Free single data block. Update inode.blocks.
+	 * @param  blockNr physical block to free
+	 */
+	public void freeDataBlock(long blockNr) throws IOException {
+	    freeDataBlocksContiguous(blockNr, 1);
+	    
+	}
 	
+	/**
+	 * Free count blocks. Update inode.blocks.
+	 * @param  blockNr   start physical block to free
+	 * @param  count   number of blocks to free
+	 * @throws IOException 
+	 */
+	public void freeDataBlocksContiguous(long blockNr, long count) throws IOException {
+	    /* counter to set {superblock|blockgroup}.freeBlocksCount */
+	    int groupFreed = 0; 
+	    int freed = 0;
+	                        
+	    if (blockNr < superblock.getFirstDataBlock() ||
+	        blockNr + count < blockNr ||
+	        blockNr + count > superblock.getBlocksCount()) {
+	        throw new RuntimeException("Free blocks not in datazone");
+	    }
+	    
+	    long overflow; 
+	    do {
+	        overflow = 0;
+	        int groupNr = Calculations.groupOfBlk(blockNr);
+	        int groupIndex = Calculations.groupIndexOfBlk(blockNr);
+	        BlockGroupDescriptor groupDescr = blockGroups.getGroupDescriptor(groupNr);
+	   
+	        /* Check to see if we are freeing blocks across a group boundary. */
+	        if (groupIndex + count > superblock.getBlocksPerGroup()) {
+	            overflow = groupIndex + count - superblock.getBlocksPerGroup();
+	            count -= overflow;
+	        }
+	   
+	        Bitmap bitmap = Bitmap.fromByteBuffer(
+	                blocks.read(groupDescr.getBlockBitmapPointer()),
+	                groupDescr.getBlockBitmapPointer());
+	   
+	        /* Check to see if we are trying to free a system block */
+	        if ( (groupDescr.getBlockBitmapPointer() >= blockNr && 
+	              groupDescr.getBlockBitmapPointer() < blockNr + count) ||
+	             (groupDescr.getInodeBitmapPointer() >= blockNr &&
+	              groupDescr.getInodeBitmapPointer() < blockNr + count) ||
+	             (blockNr >= groupDescr.getInodeTablePointer() &&
+	              blockNr < groupDescr.getInodeTablePointer() + 
+	                        superblock.getInodesPerGroup()) ||
+	             (blockNr+count-1 >= groupDescr.getInodeTablePointer() &&
+	              blockNr+count-1 < groupDescr.getInodeTablePointer() + 
+	                                superblock.getInodesPerGroup())) {
+	       
+	            throw new RuntimeException("Freeing blocks in system zones");
+	        }  
+	    
+	        /* Set block bits to "free" */
+	        groupFreed = 0;
+	        for (int i=0; i<count; i++) {
+	            if (bitmap.isSet(groupIndex + i)) {
+	                throw new RuntimeException("Bit allready cleared for block");
+	            } else if (groupIndex + i > superblock.getBlocksPerGroup()) {
+	                groupFreed++;
+	            } else {
+	                bitmap.setBit(groupIndex + i, false);
+	            }
+	        }
+	        bitmap.write();
+	    
+	        groupDescr.setFreeBlocksCount(groupDescr.getFreeBlocksCount() + groupFreed);
+	        groupDescr.write();
+	        freed += groupFreed;
+	        
+	        blockNr += count;
+	        count = overflow;
+	    } while (overflow > 0);
+	    
+	    
+	    inode.setBlocks(inode.getBlocks() - freed * (superblock.getBlocksize()/ 512));
+	    
+	    superblock.setFreeBlocksCount(superblock.getFreeBlocksCount() + freed);
+	    superblock.write();
+	}
+	
+	/**
+	 * Free array of data blocks and update inode.blocks appropriately. 
+	 * @param  blockNrs       array of block numbers
+	 */
+	public void freeBlocks(long[] blockNrs) throws IOException {
+	    long blockToFree = 0;
+	    long count = 0;
+	    
+	    for (long nr : blockNrs) {
+	        if (nr > 0) {
+	            if (count == 0) {
+	                blockToFree = nr;
+	                count = 1;
+	            } else if (blockToFree == nr - count) {
+	                count++;
+	            } else {
+	                freeDataBlocksContiguous(blockToFree, count);
+	                blockToFree = nr;
+	                count = 1;
+	            }
+	        }
+	    }
+
+	    if (count > 0) {
+	        freeDataBlocksContiguous(blockToFree, count);
+	    }
+	}
+	
+	
+	
+	/**
+	 * Free branches starting at the blocks in blockNrs.
+	 * @param  depth   depth of the free recursion
+	 * @param  blockNrs    blockNrs to start
+	 * 
+	 */
+	private void freeBranches(int depth, long[] blockNrs) throws IOException {	    
+	    if (depth > 0) { /* indirection exists -> got down */
+	        depth -= 1;
+	        for (long nr : blockNrs) {
+	            if (nr == 0) continue;
+	            
+	            long[] nextBlockNrs = readAllBlockNumbersFromBlock(nr);
+	            
+	            freeBranches(depth, nextBlockNrs);
+	            freeDataBlock(nr);
+	        }
+	    } else { /* just data pointers left */
+	        freeBlocks(blockNrs);
+	    }
+	}
+	
+
+	/**
+	 * Truncate data blocks to inode.size
+	 * @throws IOException 
+	 */
+	public void truncate() throws IOException {
+	    if (inode instanceof SymlinkInode && 
+	            ((SymlinkInode)inode).isFastSymlink())
+	        return;
+	    // TODO check inode flags for append or immutable 
+	    
+	    int blocksize = superblock.getBlocksize();
+	    long blockToKill = (inode.getSize() + blocksize-1) / blocksize;
+	    
+	    int[] offsets = blockToPath(blockToKill);
+        int depth = offsets.length;
+        	    
+        /* kill direct blocks - easy */
+	    if (depth == 1) { 
+	        long[] blocksToFree = new long[Constants.EXT2_NDIR_BLOCKS - offsets[0]];
+	        long[] directBlocks = inode.getBlock();
+	        for (int i=offsets[0]; i<Constants.EXT2_NDIR_BLOCKS; i++) {
+	            blocksToFree[i-offsets[0]] = directBlocks[i];
+	        }
+	        freeBlocks(blocksToFree);
+	    }
+	    
+	    /* kill partial branches */
+	    long[] branchNrs = getBranch(offsets);
+	    int existDepth = branchNrs.length;
+	    
+	    for (int i=existDepth; i>=0; i++) {
+	        long nr = branchNrs[i];
+	        int start = offsets[i];
+	        
+	        long[] blockNrs = readBlockNrsFromBlock(nr, start, ptrs-1);
+	        
+	        freeBranches(depth, blockNrs);
+	    }
+	        
+	    /* kill the remaining (whole) subtrees */
+	    long[] blocks = inode.getBlock();
+	    long nr = -1;
+	    
+	    switch(offsets[0]) {
+	    default:
+	        nr = blocks[Constants.EXT2_IND_BLOCK];
+	        if (nr > 0) {
+	            blocks[Constants.EXT2_IND_BLOCK] = 0;
+	            freeBranches(1, new long[] {nr});
+	        }
+	    case Constants.EXT2_IND_BLOCK:
+            nr = blocks[Constants.EXT2_DIND_BLOCK];
+            if (nr > 0) {
+                blocks[Constants.EXT2_DIND_BLOCK] = 0;
+                freeBranches(2, new long[] {nr});
+            }	        
+	    case Constants.EXT2_DIND_BLOCK:
+            nr = blocks[Constants.EXT2_TIND_BLOCK];
+            if (nr > 0) {
+                blocks[Constants.EXT2_TIND_BLOCK] = 0;
+                freeBranches(3, new long[] {nr});
+            }
+	    case Constants.EXT2_TIND_BLOCK:
+	        ;
+	    }
+	}
 }
 
 

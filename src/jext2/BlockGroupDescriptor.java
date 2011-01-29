@@ -112,24 +112,56 @@ public class BlockGroupDescriptor extends Block {
 		                                          ToStringStyle.MULTI_LINE_STYLE);
 	}
 	
+	/**
+	 * do not use this method. it is just for later improvement here. It does
+	 * not take into account that sparse block groups have not descrptor table
+	 */ 
 	public static long descriptorLocation(int group) {
 		 int hasSuper = hasSuperblock(group) ? 1 : 0;
 		 
 		 return firstBlock(group) + hasSuper;	 
 	}
 		 
-	
+	/**
+	 * Return first block number in group
+	 */
 	public static long firstBlock(int group) {
 		return superblock.getFirstDataBlock() +
 			(group * superblock.getBlocksPerGroup());
 	}
-
+	
+	/**
+	 * Return first block number in this group
+	 */
+	public long firstBlock() {
+	    return firstBlock(this.blockGroup);
+	}
+	
+	/**
+	 * Return true if group contains a descriptor table (eg. is not sparse)
+	 */
+	public static boolean hasDescriptorTable(int group) {
+	    return hasSuperblock(group);
+	}
+	
+	public boolean hasDescrptiorTable() {
+	    return hasDescriptorTable(this.blockGroup);
+	}
+	
+	/**
+	 * Check if group contains a superblock. Depends on the sparse super 
+	 * feature.
+	 */
 	public static boolean hasSuperblock(int group) {
 		if (Feature.sparseSuper()) {
 			return isSparse(group);
 		} else {
 			return true;
 		}
+	}
+	    
+	public boolean hasSuperblock() {
+	    return hasSuperblock(this.blockGroup);
 	}
 	
 	private static boolean isSparse(int group) {
