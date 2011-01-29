@@ -33,8 +33,6 @@ public class Bitmap extends Block {
 		
 		while(bmap.hasRemaining() && numBytes > 0) {
 			if (chunk == 0) { /* is zero */
-		         System.out.println("==0");
-
 			    pos = (bmap.position()-1) * 8;
 			    break;
 			} else if (chunk != (byte)0xFF) { /* has at least one zero bit */

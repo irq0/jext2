@@ -43,9 +43,10 @@ public class DataBlockAccess {
         
         ByteBuffer buffer = blocks.read(dataBlock);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
+        buffer.limit((end+1) * 4);
         
-        for (int i=start; i<=end; i++) {
-            result[i] = Ext2fsDataTypes.getLE32U(buffer, i*4);
+        for (int i=0; i<=(end-start); i++) {
+            result[i] = Ext2fsDataTypes.getLE32U(buffer, (start+i)*4);
         }
         
         return result;
@@ -326,7 +327,7 @@ public class DataBlockAccess {
 	    LinkedList<Long> result = new LinkedList<Long>();
         ByteBuffer buf = ByteBuffer.allocate(superblock.getBlocksize());
 	    
-	    long parent = newBlock(goal);
+	    long parent = newBlock(goal); 
 	    result.addLast(parent);
 	    
 	    if (parent > 0) {
@@ -526,7 +527,8 @@ public class DataBlockAccess {
             
             /* the goal was occupied; search forward for a free block 
              * within the next XX blocks. */
-            int end = 64/8 + 1;
+            /*
+            int end = 64;
             localGoal = bitmap.getNextZeroBitPos(localGoal, end);
             if (localGoal < end) {
                 bitmap.setBit(localGoal, true);
@@ -534,7 +536,7 @@ public class DataBlockAccess {
                 allocatedBlock = Calculations.blockNrOfLocal(localGoal, groupNr);
                 break;
             }
-            
+            */
             
             /* There has been no free block found in the near vicinity of the goal:
              * do a search forward through the block groups */
