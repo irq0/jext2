@@ -246,7 +246,8 @@ public class InodeAlloc {
 		
 		/* set location metadata of inode */
 		int offset = (ino * superblock.getInodeSize()) % superblock.getBlocksize();
-		long block = descr.getInodeTablePointer() + (ino * superblock.getInodeSize()) / superblock.getBlocksize();
+		long block = descr.getInodeTablePointer() + 
+		    (ino * superblock.getInodeSize()) / superblock.getBlocksize();
 		
 		inode.setBlockGroup(group);
 		inode.setBlockNr(block);		

@@ -8,6 +8,8 @@ import java.nio.ByteOrder;
 import java.util.Iterator;
 import java.io.IOException;
 
+import jext2.exceptions.NoSpaceLeftOnDevice;
+
 public class DataBlockAccess {
 	protected static Superblock superblock = Superblock.getInstance();
 	protected static BlockAccess blocks = BlockAccess.getInstance();
@@ -314,45 +316,51 @@ public class DataBlockAccess {
 	 * @param  goal    gloal block
 	 * @param  offsets offsets in the indirection chain
 	 * @param  blockNrs    chain of allready allocated blocks
+	 * @throws NoSpaceLeftOnDevice 
 	 * 
 	 * This function allocates num blocks, zeros out all but the last one, links 
 	 * them into a chain and writes them to disk.
 	 */
 	public LinkedList<Long> allocBranch(int num, long goal, 
 	                                    int[] offsets, long[] blockNrs) 
-	                                           throws IOException {
+	                                           throws IOException, NoSpaceLeftOnDevice {
 
 	    int n = 0;
 	    
 	    LinkedList<Long> result = new LinkedList<Long>();
         ByteBuffer buf = ByteBuffer.allocate(superblock.getBlocksize());
-	    
-	    long parent = newBlock(goal); 
-	    result.addLast(parent);
-	    
-	    if (parent > 0) {
-	        for (n=1; n < num; n++) {
-	            /* allocate the next block */
-	            long nr = newBlock(parent);
-	            if (nr > 0) {
-	                result.addLast(nr);
-	                buf.clear();
-	                Ext2fsDataTypes.putLE32U(buf, nr, offsets[n]);
-	                blocks.write(parent, buf);	        
-	            } else {	                
-	                break;
-	            }
-	            
-	            parent = nr;
-	        }
-	    }
+
+        try {
+            long parent = newBlock(goal); 
+            result.addLast(parent);
+
+            if (parent > 0) {
+                for (n=1; n < num; n++) {
+                    /* allocate the next block */
+                    long nr = newBlock(parent);
+                    if (nr > 0) {
+                        result.addLast(nr);
+                        buf.clear();
+                        Ext2fsDataTypes.putLE32U(buf, nr, offsets[n]);
+                        blocks.write(parent, buf);	        
+                    } else {	                
+                        break;
+                    }
+
+                    parent = nr;
+                }
+            }
+        } catch (NoSpaceLeftOnDevice e) {
+            for (long nr : result) {
+                freeBlocks(new long[] {nr});
+            }
+        }
 	    
 	    if (num == n) 
 	        return result;
 	            
 	    /* Allocation failed, free what we already allocated */
-	    // TODO implement free_blocks
-	    return null;
+	    throw new NoSpaceLeftOnDevice();
 	}
 	
 	
@@ -394,7 +402,11 @@ public class DataBlockAccess {
 	 * @return list of block nrs or null if logical block not found
 	 */
 	public LinkedList<Long> getBlocks(long fileBlockNr, long maxBlocks) throws IOException {
-	    return getBlocks(fileBlockNr, maxBlocks, false);
+	    try {
+	        return getBlocks(fileBlockNr, maxBlocks, false);
+	    } catch (NoSpaceLeftOnDevice e) {
+	        throw new RuntimeException("should not happen");
+	    }
 	}
 
 	/** 
@@ -404,8 +416,9 @@ public class DataBlockAccess {
      * @param  fileBlockNr  logical block address
      * @param  maxBlocks    maximum blocks returned
      * @return list of block nrs
+	 * @throws NoSpaceLeftOnDevice 
      */
-    public LinkedList<Long> getBlocksAllocate(long fileBlockNr, long maxBlocks) throws IOException {
+    public LinkedList<Long> getBlocksAllocate(long fileBlockNr, long maxBlocks) throws IOException, NoSpaceLeftOnDevice {
         return getBlocks(fileBlockNr, maxBlocks, true);
     }	
 
@@ -418,8 +431,11 @@ public class DataBlockAccess {
 	 * @param maxBlocks    maximum blocks returned
 	 * @param create       true: create blocks if nesseccary; false: just read
 	 * @return             list of block nrs; if create=false null is returned if block does not exist
+	 * @throws NoSpaceLeftOnDevice 
 	 */
-	private LinkedList<Long> getBlocks(long fileBlockNr, long maxBlocks, boolean create) throws IOException {
+	private LinkedList<Long> getBlocks(long fileBlockNr, long maxBlocks, boolean create) 
+	    throws IOException, NoSpaceLeftOnDevice {
+	    
 		if (fileBlockNr < 0 || maxBlocks < 1) 
 			throw new IllegalArgumentException();
 		
@@ -496,11 +512,12 @@ public class DataBlockAccess {
      * allocated. Otherwise a forward search is made for a free block.
      * @param  goal    the goal block
      * @return     pointer to allocated block
+	 * @throws NoSpaceLeftOnDevice 
      */
-    public static long newBlock(long goal) throws IOException {
+    public static long newBlock(long goal) throws IOException, NoSpaceLeftOnDevice {
         
         if (! superblock.hasFreeBlocks()) {
-            return -1;
+            throw new NoSpaceLeftOnDevice();
         }
         	    
         if (goal < superblock.getFirstDataBlock() ||
@@ -583,7 +600,7 @@ public class DataBlockAccess {
             
             return allocatedBlock;
         } else {
-            return -1;
+            throw new NoSpaceLeftOnDevice();
         }
     }
 

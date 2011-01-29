@@ -182,10 +182,8 @@ public class DirectoryEntry extends PartialBlock {
         return buf;
     }
 
-    @Override
     public void write() throws IOException {
-        // TODO Auto-generated method stub
-        
+        super.write(this.toByteBuffer());
     }
 
 }

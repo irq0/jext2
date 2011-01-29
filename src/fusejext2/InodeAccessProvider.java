@@ -19,9 +19,9 @@ public class InodeAccessProvider {
         }               
     }
 
-    Inode getOpen(long ino) throws InodeNotOpenException {
+    Inode getOpen(long ino)  {
         if (!openInodes.containsKey(ino))
-            throw new InodeNotOpenException("Inode must be opened before use " + ino);
+            throw new RuntimeException("should not happen");
         else
             return openInodes.get(ino);
     }

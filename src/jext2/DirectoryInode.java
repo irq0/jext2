@@ -8,6 +8,8 @@ import java.util.LinkedList;
 
 import jext2.exceptions.DirectoryNotEmpty;
 import jext2.exceptions.FileExists;
+import jext2.exceptions.InvalidArgument;
+import jext2.exceptions.NoSpaceLeftOnDevice;
 
 
 /** Inode for directories */
@@ -88,9 +90,11 @@ public class DirectoryInode extends DataInode {
 
 	/**
 	 * Add directory entry for given inode and name.
+	 * @throws InvalidArgument 
+	 * @throws NoSpaceLeftOnDevice 
 	 * @see addLink(DirectoryEntry newEntry) 
 	 */
-	public void addLink(Inode inode, String name) throws IOException, FileExists {
+	public void addLink(Inode inode, String name) throws IOException, FileExists, InvalidArgument, NoSpaceLeftOnDevice {
         DirectoryEntry newDir = DirectoryEntry.create(name);
         newDir.setIno(inode.getIno());
         newDir.setFileType(inode.getFileType());
@@ -101,11 +105,12 @@ public class DirectoryInode extends DataInode {
 	/**
 	 * Add directory entry. Iterate over data blocks and check for entries with
 	 * the same name on the way. 
-	 * @throws FileExistsException 
-	 * 
+	 * @throws InvalidArgument     When we find a corrupt entry 
+	 * @throws NoSpaceLeftOnDevice 
+	 * @throws FileExistsException      When we find an entry with same name
 	 */
 	// TODO rewrite addLink to use the directory iterator
-	public void addLink(DirectoryEntry newEntry) throws IOException, FileExists {
+	public void addLink(DirectoryEntry newEntry) throws IOException, FileExists, InvalidArgument, NoSpaceLeftOnDevice {
        ByteBuffer block;
        int offset = 0;
        
@@ -118,8 +123,11 @@ public class DirectoryInode extends DataInode {
                if (currentEntry.getName().equals(newEntry.getName())) 
                    throw new FileExists();
                
-               if (currentEntry.getRecLen() == 0)
-                   throw new IOException("zero-length directory entry");
+               if (currentEntry.getRecLen() == 0 ||
+                       currentEntry.getRecLen() > superblock.getBlocksize() ||
+                       (currentEntry.getRecLen() & 3) == 0) {
+                   throw new InvalidArgument();
+               }
                
                /* 
                 * See if current directory entry is unused; if so, 
@@ -232,7 +240,7 @@ public class DirectoryInode extends DataInode {
 		return inode;
 	}
 
-	public void addDotLinks(DirectoryInode parent) throws IOException, FileExists {
+	public void addDotLinks(DirectoryInode parent) throws IOException, FileExists, InvalidArgument, NoSpaceLeftOnDevice {
         DirectoryEntry dot = DirectoryEntry.create(".");
         DirectoryEntry dotdot = DirectoryEntry.create("..");
         
@@ -304,18 +312,18 @@ public class DirectoryInode extends DataInode {
 	 */
 	private void removeLink(String name) throws IOException {
 	    /* First: Find the entry and its predecessor */
-	    DirectoryEntry last = null;
+	    DirectoryEntry prev = null;
 	    DirectoryEntry toDelete = null;
 	    for (DirectoryEntry current : iterateDirectory()) {
 	        if (name.equals(current.getName())) {
 	            toDelete = current;
 	            break;
 	        }
-	        last = current;
+	        prev = current;
 	    }
 
-	    /* set the record length of the predecessor to skipe  toDelete the entry */ 
-	    last.setRecLen(last.getRecLen() + toDelete.getRecLen());
-	    last.write();
+	    /* set the record length of the predecessor to skip the toDelete entry */ 
+	    prev.setRecLen(prev.getRecLen() + toDelete.getRecLen());
+	    prev.write();
 	}
 }

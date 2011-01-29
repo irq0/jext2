@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 
+import jext2.exceptions.NoSpaceLeftOnDevice;
+
 /**
  * Base class for inodes with data blocks. Like Symlinks, Directories, Regular Files
  */
@@ -104,8 +106,9 @@ public class DataInode extends Inode {
     /**
      * Write data in buffer to disk. May trigger an write() when data size 
      * grows.
+     * @throws NoSpaceLeftOnDevice 
      */    
-    public int writeData(ByteBuffer buf, int offset) throws IOException {
+    public int writeData(ByteBuffer buf, int offset) throws IOException, NoSpaceLeftOnDevice {
         int blocksize = superblock.getBlocksize();
         int start = offset / blocksize;
         int max = buf.limit() / blocksize + start;

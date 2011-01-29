@@ -11,7 +11,6 @@ import jext2.exceptions.JExt2Exception;
 import fuse.*;
 import jlowfuse.*;
 import fuse.StatVFS;
-import fusejext2.InodeAccessProvider.InodeNotOpenException;
 
 public class JExt2Ops extends AbstractLowlevelOps {
 
@@ -93,8 +92,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 			Reply.byteBuffer(req, buf, 0, size);
 		} catch (IOException e) {
 			Reply.err(req, Errno.EIO);
-		} catch (InodeNotOpenException e) {
-		}
+		} 
 	}
 	
 	
@@ -111,7 +109,8 @@ public class JExt2Ops extends AbstractLowlevelOps {
 	    
 	    } catch (IOException e) {
 	        Reply.err(req, Errno.EIO);
-	    } catch (InodeNotOpenException e) {
+	    } catch (JExt2Exception e) {
+	        Reply.err(req, e.getErrno());
 	    }
 	    
 	}
@@ -275,13 +274,8 @@ public class JExt2Ops extends AbstractLowlevelOps {
 	public void readdir(FuseReq req, long ino, int size, int off, FileInfo fi) {
 	    if (ino == 1) ino = Constants.EXT2_ROOT_INO;
 
-        DirectoryInode inode;
-        try {
-            inode = (DirectoryInode)(inodes.getOpen(ino));
-        } catch (InodeNotOpenException e) {
-            e.printStackTrace();
-            return;
-        }
+        DirectoryInode inode = (DirectoryInode)(inodes.getOpen(ino));
+        
 		Dirbuf buf = new Dirbuf();
 
 		for (DirectoryEntry d : inode.iterateDirectory()) {
@@ -414,8 +408,64 @@ public class JExt2Ops extends AbstractLowlevelOps {
      * Allow everything. If you want permissions use -o default_permissions
      */
     public void access(FuseReq req, long ino, int mask) {
-            Reply.err(req, 0);
+        Reply.err(req, 0);
     }
 
-	
+    public void rmdir(FuseReq req, long parent, String name) {
+        if (name.equals(".") || name.equals("..")) {
+            Reply.err(req, Errno.EINVAL);
+            return;
+        }
+        
+        if (parent == 1) { 
+            parent = Constants.EXT2_ROOT_INO;
+        }
+        
+        try {
+            DirectoryInode parentInode = (DirectoryInode)(inodes.get(parent));
+            if (parentInode == null) { 
+                Reply.err(req, Errno.ENOENT);
+                return;
+            } 
+            
+            DirectoryInode child = 
+                (DirectoryInode)inodes.get(parentInode.lookup(name).getIno());
+            
+            parentInode.unLinkDir(child, name);
+            
+            Reply.err(req, 0);
+        } catch (IOException e) {
+            Reply.err(req, Errno.EIO);
+        } catch (JExt2Exception e) {
+            Reply.err(req, e.getErrno());
+        }    
+    }
+
+    public void unlink(FuseReq req, long parent, String name) {
+        if (name.equals(".") || name.equals("..")) {
+            Reply.err(req, Errno.EINVAL);
+            return;
+        }
+        
+        if (parent == 1) { 
+            parent = Constants.EXT2_ROOT_INO;
+        }
+            
+        try {
+            DirectoryInode parentInode = (DirectoryInode)(inodes.get(parent));
+            if (parentInode == null) { 
+                Reply.err(req, Errno.ENOENT);
+                return;
+            } 
+                
+            Inode child = 
+                    inodes.get(parentInode.lookup(name).getIno());
+                
+            parentInode.unLinkOther(child, name);
+                
+            Reply.err(req, 0);
+        } catch (IOException e) {
+            Reply.err(req, Errno.EIO);
+        }    
+    }
 }
