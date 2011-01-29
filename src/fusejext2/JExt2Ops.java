@@ -53,6 +53,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		s.setNlink(inode.getLinksCount());
 		s.setSize(inode.getSize());
 		
+		
 		Timespec atim = new Timespec();
 		atim.setSec((int)(inode.getAccessTime().getTime() / 1000));			
 		s.setAtim(atim);
@@ -318,13 +319,12 @@ public class JExt2Ops extends AbstractLowlevelOps {
                 Reply.err(req, Errno.ENOTDIR);
                 return;
             }
-           
+            
+            FuseContext context = req.getContext();           
             RegularInode inode = RegularInode.createEmpty();            
-            inode.orMode(mode);
-            inode.setUidLow(0);
-            inode.setUidHigh(0);
-            inode.setGidLow(0);
-            inode.setGidHigh(0);
+            inode.setMode(Mode.IFREG | (mode & ~context.getUmask()));
+            inode.setUid(context.getUid());
+            inode.setGid(context.getGid());
             InodeAlloc.registerInode(parentInode, inode);
             inode.write();
             
@@ -357,15 +357,12 @@ public class JExt2Ops extends AbstractLowlevelOps {
                 return;
             }
 
-            System.out.println(req);
-            
+            FuseContext context = req.getContext();            
             DirectoryInode inode = 
                 DirectoryInode.createEmpty();            
-            inode.orMode(mode);
-            inode.setUidLow(0);
-            inode.setUidHigh(0);
-            inode.setGidLow(0);
-            inode.setGidHigh(0);
+            inode.setMode(Mode.IFDIR | (mode & ~context.getUmask()));
+            inode.setUid(context.getUid());
+            inode.setGid(context.getGid());
             InodeAlloc.registerInode(parentInode, inode);
             inode.addDotLinks((DirectoryInode)parentInode);
             inode.write();
@@ -411,6 +408,13 @@ public class JExt2Ops extends AbstractLowlevelOps {
         			uuid.getMostSignificantBits();
         s.setFsid(fsid); 
         Reply.statfs(req, s);
+    }
+
+    /*
+     * Allow everything. If you want permissions use -o default_permissions
+     */
+    public void access(FuseReq req, long ino, int mask) {
+            Reply.err(req, 0);
     }
 
 	
