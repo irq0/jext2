@@ -202,7 +202,9 @@ public class JExt2Ops extends AbstractLowlevelOps {
                 inode.setModificationTime(new Date());
             }            
             if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_SIZE)) {
-                
+                if (inode instanceof RegularInode) {
+                    ((RegularInode) inode).setSizeAndTruncate(attr.getSize());
+                }
             }            
             if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_UID)) {
                 inode.setUid(attr.getUid());

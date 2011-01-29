@@ -23,6 +23,15 @@ public class RegularInode extends DataInode {
 	}
 
     /**
+     * Set size and truncate.
+     * @param   size    new size
+     */
+    public void setSizeAndTruncate(long size) throws IOException {
+        setSize(size);
+        accessData().truncate();
+    }
+
+    /**
      * Create empty Inode. Initialize *Times, block array.
      */
     public static RegularInode createEmpty() throws IOException {

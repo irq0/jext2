@@ -46,10 +46,7 @@ public class Bitmap extends Block {
 			numBytes--;
 		}
 		
-		if (pos == -1) 
-		    return -1;
-		else
-		    return pos;
+		return pos;
 	}		
 
 	public int getNextZeroBitPos(int start) {
@@ -187,7 +184,7 @@ public class Bitmap extends Block {
 	    sb.append("  bitmap=\n");
 	    
 	    bmap.rewind();
-	    for (int i=0; i<bmap.limit()/Integer.SIZE; i++) {
+	    for (int i=0; i<bmap.limit()/(Integer.SIZE/8); i++) {
 	        sb.append(String.format("%1$#32s", Integer.toBinaryString(bmap.getInt())).replace(' ', '0'));
 	        sb.append("\n");
 	    }

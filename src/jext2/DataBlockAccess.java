@@ -1,6 +1,7 @@
 package jext2;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.nio.ByteOrder;
@@ -657,11 +658,12 @@ public class DataBlockAccess {
 	        /* Set block bits to "free" */
 	        groupFreed = 0;
 	        for (int i=0; i<count; i++) {
-	            if (bitmap.isSet(groupIndex + i)) {
+	            if (!bitmap.isSet(groupIndex + i)) {
 	                throw new RuntimeException("Bit allready cleared for block");
 	            } else if (groupIndex + i > superblock.getBlocksPerGroup()) {
 	                groupFreed++;
 	            } else {
+	                groupFreed++;
 	                bitmap.setBit(groupIndex + i, false);
 	            }
 	        }
@@ -744,6 +746,8 @@ public class DataBlockAccess {
 	            ((SymlinkInode)inode).isFastSymlink())
 	        return;
 	    // TODO check inode flags for append or immutable 
+
+        long[] directBlocks = inode.getBlock();
 	    
 	    int blocksize = superblock.getBlocksize();
 	    long blockToKill = (inode.getSize() + blocksize-1) / blocksize;
@@ -751,12 +755,13 @@ public class DataBlockAccess {
 	    int[] offsets = blockToPath(blockToKill);
         int depth = offsets.length;
         	    
-        /* kill direct blocks - easy */
+        /* kill direct blocks */
 	    if (depth == 1) { 
-	        long[] blocksToFree = new long[Constants.EXT2_NDIR_BLOCKS - offsets[0]];
-	        long[] directBlocks = inode.getBlock();
+	        long[] blocksToFree = Arrays.copyOfRange(directBlocks, 
+	                offsets[0], Constants.EXT2_NDIR_BLOCKS); 
+	        
 	        for (int i=offsets[0]; i<Constants.EXT2_NDIR_BLOCKS; i++) {
-	            blocksToFree[i-offsets[0]] = directBlocks[i];
+	            directBlocks[i] = 0;
 	        }
 	        freeBlocks(blocksToFree);
 	    }
@@ -765,41 +770,42 @@ public class DataBlockAccess {
 	    long[] branchNrs = getBranch(offsets);
 	    int existDepth = branchNrs.length;
 	    
-	    for (int i=existDepth; i>=0; i++) {
+	    for (int i=existDepth-1; i>=0; i++) {
 	        long nr = branchNrs[i];
 	        int start = offsets[i];
 	        
 	        long[] blockNrs = readBlockNrsFromBlock(nr, start, ptrs-1);
-	        
+	        blocks.zeroOut(nr, start*4, (ptrs-1)*4);
 	        freeBranches(depth, blockNrs);
 	    }
 	        
 	    /* kill the remaining (whole) subtrees */
-	    long[] blocks = inode.getBlock();
 	    long nr = -1;
 	    
 	    switch(offsets[0]) {
 	    default:
-	        nr = blocks[Constants.EXT2_IND_BLOCK];
+	        nr = directBlocks[Constants.EXT2_IND_BLOCK];
 	        if (nr > 0) {
-	            blocks[Constants.EXT2_IND_BLOCK] = 0;
+	            directBlocks[Constants.EXT2_IND_BLOCK] = 0;
 	            freeBranches(1, new long[] {nr});
 	        }
 	    case Constants.EXT2_IND_BLOCK:
-            nr = blocks[Constants.EXT2_DIND_BLOCK];
+            nr = directBlocks[Constants.EXT2_DIND_BLOCK];
             if (nr > 0) {
-                blocks[Constants.EXT2_DIND_BLOCK] = 0;
+                directBlocks[Constants.EXT2_DIND_BLOCK] = 0;
                 freeBranches(2, new long[] {nr});
             }	        
 	    case Constants.EXT2_DIND_BLOCK:
-            nr = blocks[Constants.EXT2_TIND_BLOCK];
+            nr = directBlocks[Constants.EXT2_TIND_BLOCK];
             if (nr > 0) {
-                blocks[Constants.EXT2_TIND_BLOCK] = 0;
+                directBlocks[Constants.EXT2_TIND_BLOCK] = 0;
                 freeBranches(3, new long[] {nr});
             }
 	    case Constants.EXT2_TIND_BLOCK:
 	        ;
 	    }
+	    
+	    inode.write();
 	}
 }
 

@@ -46,6 +46,16 @@ public class BlockAccess {
 	    buf.order(ByteOrder.BIG_ENDIAN);
 	    blockdev.write(buf, position);
 	}
+	
+	/**
+	 * Zero out part of a block
+	 * @throws IOException 
+	 */
+	public void zeroOut(long nr, int start, int end) throws IOException {
+	    ByteBuffer zeros = ByteBuffer.allocate((end-start)+1);
+	    
+	    writePartial(nr, start, zeros);
+	}
 
 	/** Write a whole block to the logical address nr on disk */
 	public void write(long nr, ByteBuffer buf) throws IOException {

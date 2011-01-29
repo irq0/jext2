@@ -56,9 +56,8 @@ public class Superblock extends Block {
 	private int blocksize;
 	private int groupDescrPerBlock;
 	private int groupsCount;
-
-	// sb_info fields
 	private long dirsCount;
+    private int groupDescrBlocks;
 
 	public final long getInodesCount() {
         return inodesCount;
@@ -168,6 +167,9 @@ public class Superblock extends Block {
     public final int getGroupDescrPerBlock() {
         return groupDescrPerBlock;
     }
+    public final int getGroupDescrBlocks() {
+        return groupDescrBlocks;
+    }
     public final int getGroupsCount() {
         return groupsCount;
     }
@@ -246,6 +248,8 @@ public class Superblock extends Block {
 		this.groupDescrPerBlock = this.blocksize / 32; // 32 = sizeof (struct ext2_group_desc);
 		this.groupsCount = (int)( ((this.blocksCount - this.firstDataBlock) - 1) /
 						   this.blocksPerGroup);
+		this.groupDescrBlocks = (this.groupsCount + this.groupDescrPerBlock -1) / 
+		                         this.groupDescrPerBlock;
 	}
 
 	
