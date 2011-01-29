@@ -6,7 +6,7 @@ import java.io.IOException;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
-public class BlockGroupDescriptor extends Block {
+public class BlockGroupDescriptor extends PartialBlock {
 	private static Superblock superblock = Superblock.getInstance();
 	
 	private long blockBitmap;

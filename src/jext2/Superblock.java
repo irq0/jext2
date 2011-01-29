@@ -309,8 +309,8 @@ public class Superblock extends Block {
 
 	}
 	
-	protected Superblock(long blockNr, int offset) {
-		super(blockNr, offset);
+	protected Superblock(long blockNr) {
+		super(blockNr);
 	}
 
 	/**
@@ -318,7 +318,7 @@ public class Superblock extends Block {
 	 * initialization.
 	 */
 	public static Superblock fromBlockAccess(BlockAccess blocks) throws IOException {
-		Superblock sb = new Superblock(1, 0);
+		Superblock sb = new Superblock(1);
 		ByteBuffer buf = blocks.read(1);
 		sb.read(buf);
 
@@ -332,7 +332,7 @@ public class Superblock extends Block {
 	 */
 	public static Superblock fromFileChannel(FileChannel chan) throws IOException {
 		
-		Superblock sb = new Superblock(-1, -1);
+		Superblock sb = new Superblock(-1);
 		ByteBuffer buf = ByteBuffer.allocate(Constants.EXT2_MIN_BLOCK_SIZE);
 		chan.position(1024);
 		chan.read(buf);

@@ -97,12 +97,12 @@ public class Bitmap extends Block {
 		return -1;
 	}
 
-	protected Bitmap(long blockNr, int offset) {
-		super(blockNr, offset);
+	protected Bitmap(long blockNr) {
+		super(blockNr);
 	}
 	
 	public static Bitmap fromByteBuffer(ByteBuffer buf, long blockNr) throws IOException {
-		Bitmap bmap = new Bitmap(blockNr, 0);
+		Bitmap bmap = new Bitmap(blockNr);
 		bmap.read(buf);
 		return bmap;
 	}
@@ -178,7 +178,6 @@ public class Bitmap extends Block {
 	    sb.append(this.getClass());
 	    sb.append("[\n");
 	    sb.append("  blockNr=" + getBlockNr() + "\n");
-	    sb.append("  offset=" + getOffset() + "\n");
 	    sb.append("  bitmap=\n");
 	    
 	    bmap.rewind();

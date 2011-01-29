@@ -6,7 +6,7 @@ import java.util.Date;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public class Inode extends Block {
+public class Inode extends PartialBlock {
     private int mode = 0;
 	private int gidLow = 0;
 	private int uidLow = 0;
