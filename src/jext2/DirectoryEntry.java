@@ -3,6 +3,8 @@ package jext2;
 import java.nio.ByteBuffer;
 import java.io.IOException;
 
+import jext2.exceptions.FileNameTooLong;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
@@ -94,9 +96,9 @@ public class DirectoryEntry extends PartialBlock {
 	 * Create a new directory entry. Note that the name is mandatory because
 	 * it dictates the record length on disk
 	 */
-	public static DirectoryEntry create(String name) {
+	public static DirectoryEntry create(String name) throws FileNameTooLong {
 	    if (name.length() > MAX_NAME_LEN) {
-	        throw new RuntimeException("dirname to long");
+	        throw new FileNameTooLong();
 	    }
 	    
 	    DirectoryEntry dir = new DirectoryEntry();

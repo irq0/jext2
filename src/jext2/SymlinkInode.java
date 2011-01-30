@@ -126,7 +126,7 @@ public class SymlinkInode extends DataInode {
         
         inode.setModificationTime(now);
         inode.setAccessTime(now);
-        inode.setChangeTime(now);
+        inode.setCreateTime(now);
         inode.setDeletionTime(new Date(0));
         inode.setMode(Mode.IFLNK | 0777);
         inode.setBlock(new long[Constants.EXT2_N_BLOCKS]);

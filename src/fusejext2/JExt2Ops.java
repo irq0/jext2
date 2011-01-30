@@ -41,6 +41,18 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		
 	}
 	
+	private Date timespecToDate(Timespec time) {
+	    Date date = new Date(time.getSec()*1000 + time.getNsec()/1000); 
+	    return date;
+	}
+	
+	private Timespec dateToTimespec(Date date) {
+	    Timespec tim = new Timespec();
+	    tim.setSec((int)(date.getTime() / 1000));
+	    tim.setNsec(0);
+	    return tim;
+	}    
+	    
 	private EntryParam makeEntryParam(Inode inode) {
         EntryParam e = new EntryParam();
         e.setAttr(makeStat(inode));
@@ -66,17 +78,9 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		else 
 		    s.setBlocks(0);
 		
-		Timespec atim = new Timespec();
-		atim.setSec((int)(inode.getAccessTime().getTime() / 1000));			
-		s.setAtim(atim);
-		
-		Timespec ctim = new Timespec();
-		ctim.setSec((int)(inode.getChangeTime().getTime() / 1000));			
-		s.setCtim(ctim);
-		
-		Timespec mtim = new Timespec();
-		mtim.setSec((int)(inode.getAccessTime().getTime() / 1000));			
-		s.setMtim(mtim);
+		s.setAtim(dateToTimespec(inode.getAccessTime()));
+		s.setCtim(dateToTimespec(inode.getCreateTime()));
+		s.setMtim(dateToTimespec(inode.getModificationTime()));
 		
 		return s;
 	}		
@@ -173,11 +177,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 	    return ((to_set & attr) != 0);
 	}
 	
-	private Date timespecToDate(Timespec time) {
-        Date date = new Date(time.getSec()*1000 + time.getNsec()/1000); 
-        return date;
-	}
-	
+
     public void setattr(FuseReq req, long ino, Stat attr, int to_set, FileInfo fi) {
         if (ino == 1) ino = Constants.EXT2_ROOT_INO;
         
@@ -203,8 +203,6 @@ public class JExt2Ops extends AbstractLowlevelOps {
                 inode.setModificationTime(new Date());
             }            
             if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_SIZE)) {
-                
-                
                 if (inode instanceof RegularInode) {
                     ((RegularInode) inode).setSizeAndTruncate(attr.getSize());
                 }
@@ -295,6 +293,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
             /* Only support regular files */
             if (! Mode.isRegular(mode)) {
                 Reply.err(req, Errno.ENOSYS);
+                return;
             }
 
             Inode parentInode = inodes.get(parent);

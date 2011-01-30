@@ -389,7 +389,7 @@ public class DataBlockAccess {
 	    
 	    inode.setBlocks(inode.getBlocks() + 
 	            newBlockNrs.size() * (superblock.getBlocksize()/ 512));
-	    inode.setChangeTime(new Date());
+	    inode.setModificationTime(new Date());
 	    inode.write();
 	}
 	

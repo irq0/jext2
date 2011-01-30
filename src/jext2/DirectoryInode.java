@@ -8,6 +8,7 @@ import java.util.LinkedList;
 
 import jext2.exceptions.DirectoryNotEmpty;
 import jext2.exceptions.FileExists;
+import jext2.exceptions.FileNameTooLong;
 import jext2.exceptions.InvalidArgument;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 import jext2.exceptions.NoSuchFileOrDirectory;
@@ -45,6 +46,9 @@ public class DirectoryInode extends DataInode {
 		private DirectoryEntry fetchNextEntry(DirectoryEntry last) {
 			try {
 			    if (last == null && block == null) {
+			        if (!blockIter.hasNext()) 
+			            throw new RuntimeException("DirectoryInode whithout data blocks!");
+			        
 			        blockNr = blockIter.next();
 			        block = blocks.read(blockNr);
 			        return DirectoryEntry.fromByteBuffer(block, blockNr, 0);
@@ -93,9 +97,10 @@ public class DirectoryInode extends DataInode {
 	 * Add directory entry for given inode and name.
 	 * @throws InvalidArgument 
 	 * @throws NoSpaceLeftOnDevice 
+	 * @throws FileNameTooLong 
 	 * @see addLink(DirectoryEntry newEntry) 
 	 */
-	public void addLink(Inode inode, String name) throws IOException, FileExists, InvalidArgument, NoSpaceLeftOnDevice {
+	public void addLink(Inode inode, String name) throws IOException, FileExists, InvalidArgument, NoSpaceLeftOnDevice, FileNameTooLong {
         DirectoryEntry newDir = DirectoryEntry.create(name);
         newDir.setIno(inode.getIno());
         newDir.setFileType(inode.getFileType());
@@ -208,8 +213,12 @@ public class DirectoryInode extends DataInode {
 	 * 
 	 * @return     DirectoryEntry or null in case its not found
 	 * @throws NoSuchFileOrDirectory 
+	 * @throws FileNameTooLong 
 	 */
-	public DirectoryEntry lookup(String name) throws NoSuchFileOrDirectory {
+	public DirectoryEntry lookup(String name) throws NoSuchFileOrDirectory, FileNameTooLong {
+	    if (name.length() > DirectoryEntry.MAX_NAME_LEN)
+	        throw new FileNameTooLong();
+	    
 		for (DirectoryEntry dir : iterateDirectory()) {
 			if (name.equals(dir.getName())) {
 				return dir;
@@ -241,18 +250,22 @@ public class DirectoryInode extends DataInode {
 		return inode;
 	}
 
-	public void addDotLinks(DirectoryInode parent) throws IOException, FileExists, InvalidArgument, NoSpaceLeftOnDevice {
-        DirectoryEntry dot = DirectoryEntry.create(".");
-        DirectoryEntry dotdot = DirectoryEntry.create("..");
-        
-        dot.setFileType(DirectoryEntry.FILETYPE_DIR);
-        dot.setIno(this.getIno());
-        
-        dotdot.setFileType(DirectoryEntry.FILETYPE_DIR);
-        dotdot.setIno(parent.getIno());
+	public void addDotLinks(DirectoryInode parent) throws IOException, FileExists, InvalidArgument, NoSpaceLeftOnDevice {        
+	    try {
+	        DirectoryEntry dot = DirectoryEntry.create(".");
+	        DirectoryEntry dotdot = DirectoryEntry.create("..");
+	        dot.setFileType(DirectoryEntry.FILETYPE_DIR);
+	        dot.setIno(this.getIno());
+	        
+	        dotdot.setFileType(DirectoryEntry.FILETYPE_DIR);
+	        dotdot.setIno(parent.getIno());
 
-        this.addLink(dot);
-        this.addLink(dotdot);
+	        this.addLink(dot);
+	        this.addLink(dotdot);
+	    } catch (FileNameTooLong e) {
+	        throw new RuntimeException("should not happen");
+	    }
+        
 	}
 	/**
 	 *  Create new empty directory. Don not add ., .. entries. Use addDotLinks()
@@ -263,7 +276,7 @@ public class DirectoryInode extends DataInode {
 	        
 	    inode.setModificationTime(now);
 	    inode.setAccessTime(now);
-	    inode.setChangeTime(now);
+	    inode.setCreateTime(now);
 	    inode.setDeletionTime(new Date(0));
         inode.setMode(Mode.IFDIR);
         inode.setBlock(new long[Constants.EXT2_N_BLOCKS]);

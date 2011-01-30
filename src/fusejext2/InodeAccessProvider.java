@@ -6,6 +6,7 @@ import java.util.Hashtable;
 import jext2.Inode;
 import jext2.InodeAccess;
 import jext2.exceptions.InvalidArgument;
+import jext2.exceptions.NoSuchFileOrDirectory;
 
 /**
  * Kind of inode table, that enshures that there are no inodes in memory
@@ -27,9 +28,15 @@ public class InodeAccessProvider {
             return openInodes.get(ino);
     }
     
-    Inode get(long ino) throws IOException, InvalidArgument { 
+    Inode get(long ino) throws IOException, InvalidArgument, NoSuchFileOrDirectory { 
         if (openInodes.containsKey(ino)) {
-            return openInodes.get(ino);
+            Inode inode = openInodes.get(ino);
+            if (inode.isDeleted()) {
+                openInodes.remove(ino);
+                throw new NoSuchFileOrDirectory();
+            } else {
+                return openInodes.get(ino);
+            }
         } else {
             Inode inode = InodeAccess.readByIno(ino);
             openInodes.put(ino, inode);

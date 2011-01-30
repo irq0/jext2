@@ -6,13 +6,15 @@ import java.util.Date;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import javax.xml.crypto.Data;
+
 public class Inode extends PartialBlock {
     private int mode = 0;
 	private int gidLow = 0;
 	private int uidLow = 0;
 	private long size = 0;
 	private Date accessTime;
-	private Date changeTime;
+	private Date createTime;
 	private Date modificationTime;
 	private Date deletionTime;
 	private int linksCount = 0;
@@ -48,8 +50,8 @@ public class Inode extends PartialBlock {
 	public final Date getAccessTime() {
 		return this.accessTime;
 	}
-	public final Date getChangeTime() {
-		return this.changeTime;
+	public final Date getCreateTime() {
+		return this.createTime;
 	}
 	public final Date getModificationTime() {
 		return this.modificationTime;
@@ -132,9 +134,9 @@ public class Inode extends PartialBlock {
 	public final void setAccessTime(Date accessTime) {
 		this.accessTime = accessTime;
 	}
-	public final void setChangeTime(Date changeTime) {
-		this.changeTime = changeTime;
-	}
+    public final void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }	
 	public final void setModificationTime(Date modificationTime) {
 		this.modificationTime = modificationTime;
 	}
@@ -157,12 +159,16 @@ public class Inode extends PartialBlock {
 		this.gidHigh = gidHigh;
 	}
 	
+	public final boolean isDeleted() {
+	    return (this.deletionTime.after(new Date(0))); 
+	}
+	
     protected void write(ByteBuffer buf) throws IOException {
 		Ext2fsDataTypes.putLE16U(buf, this.mode, 0);
 		Ext2fsDataTypes.putLE16U(buf, this.uidLow, 2);
 		Ext2fsDataTypes.putLE32U(buf, this.size, 4);
 		Ext2fsDataTypes.putDate(buf, this.accessTime, 8);
-		Ext2fsDataTypes.putDate(buf, this.changeTime, 12);
+		Ext2fsDataTypes.putDate(buf, this.createTime, 12);
 		Ext2fsDataTypes.putDate(buf, this.modificationTime, 16);
 		Ext2fsDataTypes.putDate(buf, this.deletionTime, 20);
 		Ext2fsDataTypes.putLE16U(buf, this.gidLow, 24);
@@ -183,7 +189,7 @@ public class Inode extends PartialBlock {
 		this.uidLow = Ext2fsDataTypes.getLE16U(buf, 2 + offset);
 		this.size = Ext2fsDataTypes.getLE32U(buf, 4 + offset);
 		this.accessTime = Ext2fsDataTypes.getDate(buf, 8 + offset);
-		this.changeTime = Ext2fsDataTypes.getDate(buf, 12 + offset);
+		this.createTime = Ext2fsDataTypes.getDate(buf, 12 + offset);
 		this.modificationTime = Ext2fsDataTypes.getDate(buf, 16 + offset);
 		this.deletionTime = Ext2fsDataTypes.getDate(buf, 20 + offset);
 		this.gidLow = Ext2fsDataTypes.getLE16U(buf, 24 + offset);
