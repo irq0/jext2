@@ -1,6 +1,7 @@
 package fusejext2;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
@@ -55,6 +56,10 @@ public class FuseJExt2 {
 		                  .hasArg()
 		                  .withArgName("CHARSET")
 		                  .create("c"));
+		options.addOption(OptionBuilder.withDescription("log to file")
+		                  .hasArg()
+		                  .withArgName("FILENAME")
+		                  .create("l"));
 		try {
 			CommandLine cmd = parser.parse(options, args);
 
@@ -73,7 +78,15 @@ public class FuseJExt2 {
 			                "\n Supported charsets:\n\n" + Charset.availableCharsets());
 			    }
 			}
-
+			if (cmd.hasOption("l")) {
+			    String filename = cmd.getOptionValue("l");
+			    try {
+			        Filesystem.initializeLoggingToFile(filename);
+			    } catch (IOException e) {
+			        throw new ParseException("Can't open file for logging");
+			    }
+			}
+			
 			String[] leftover = cmd.getArgs();
 			if (leftover.length != 2) {
 				throw new ParseException("No <block device> and/or <mountpoint> given!");
