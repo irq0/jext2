@@ -59,6 +59,10 @@ public class BlockGroupAccess {
 	implements Iterator<BlockGroupDescriptor>, Iterable<BlockGroupDescriptor> {
 		private int current = 0;
 		
+		public BlockGroupDescriptorIterator(int start) {
+		    current = start;
+		}
+		
 		public boolean hasNext() {
 			return (current < superblock.getGroupsCount());
 		}
@@ -76,9 +80,13 @@ public class BlockGroupAccess {
 	}
 			
 	public BlockGroupDescriptorIterator iterateBlockGroups() {
-		return new BlockGroupDescriptorIterator();
+		return new BlockGroupDescriptorIterator(0);
 	}
-		
+    public BlockGroupDescriptorIterator iterateBlockGroups(int start) {
+        return new BlockGroupDescriptorIterator(start);
+    }
+	
+	
 	
 	private Bitmap readBitmapAtBlock(long nr) throws IOException {
 		ByteBuffer buf = blocks.read(nr);

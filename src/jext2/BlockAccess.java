@@ -62,7 +62,6 @@ public class BlockAccess {
 		buf.rewind();
 		blockdev.position(((long)(nr & 0xffffffff)) * blocksize);
 		blockdev.write(buf);
-        blockdev.force(true);
 	}	
 	
 	
@@ -93,21 +92,8 @@ public class BlockAccess {
 
 	    buf.rewind();
 	    blockdev.write(buf, ((((long)(nr & 0xffffffff)) * blocksize) + offset));
-	    blockdev.force(true);
 	}
-	
-	public void writePartial(long nr, long offset, ByteBuffer buf, int bufOffset, int bufLength) throws IOException {
-		if (offset + bufLength > blocksize)
-			throw new IllegalArgumentException("attempt to write over block boundries" + buf + ", " + offset);
-
-		ByteBuffer partial = ByteBuffer.allocate(bufLength);
-		buf.position(bufOffset);
-		for (int i=0; i<bufLength; i++) 
-		    partial.put(buf.get());
-		blockdev.write(partial, (((long)(nr & 0xffffffff)) * blocksize) + offset);
-		blockdev.force(true);
-	}
-		
+			
 	public void setBlocksize(int blocksize) {
 		this.blocksize = blocksize;
 	}

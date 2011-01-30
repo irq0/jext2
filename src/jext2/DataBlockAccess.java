@@ -331,13 +331,13 @@ public class DataBlockAccess {
         ByteBuffer buf = ByteBuffer.allocate(superblock.getBlocksize());
 
         try {
-            long parent = newBlock(goal); 
+            long parent = allocateBlock(goal); 
             result.addLast(parent);
 
             if (parent > 0) {
                 for (n=1; n < num; n++) {
                     /* allocate the next block */
-                    long nr = newBlock(parent);
+                    long nr = allocateBlock(parent);
                     if (nr > 0) {
                         result.addLast(nr);
                         buf.clear();
@@ -503,16 +503,11 @@ public class DataBlockAccess {
 		return result;
 	}
 	
-	/** 
-     * Allocate a new block. Uses a goal block to assist allocation. If 
-     * the goal is free, or there is a free block within 32 blocks of the gloal, that block is
-     * allocated. Otherwise a forward search is made for a free block.
-     * @param  goal    the goal block
-     * @return     pointer to allocated block
-	 * @throws NoSpaceLeftOnDevice 
-     */
-    public static long newBlock(long goal) throws IOException, NoSpaceLeftOnDevice {
-        
+	/**
+	 * Try to allocate a block by looping over block groups and calling 
+	 * newBlockInGroup
+	 */ 
+    private static long newBlock(long goal) throws IOException, NoSpaceLeftOnDevice {        
         if (! superblock.hasFreeBlocks()) {
             throw new NoSpaceLeftOnDevice();
         }
@@ -521,90 +516,91 @@ public class DataBlockAccess {
                 goal >= superblock.getBlocksCount())
             goal = superblock.getFirstDataBlock();
     
-        long groupNr = Calculations.groupOfBlk(goal);
-        BlockGroupDescriptor groupDescr = blockGroups.getGroupDescriptor((int)groupNr);
-        Bitmap bitmap = Bitmap.fromByteBuffer(blocks.read(groupDescr.getBlockBitmapPointer()),
-                                              groupDescr.getBlockBitmapPointer());
+        int goalGroup = Calculations.groupOfBlk(goal);
+        int start = (int) ((goal - superblock.getFirstDataBlock()) %
+                superblock.getBlocksPerGroup());
+
+        /* start at the goalGroup and search forward for first free block */
+        for (BlockGroupDescriptor descr : blockGroups.iterateBlockGroups(goalGroup)) {
+            long blockNr =  newBlockInGroup(start, descr);
+            if (blockNr > 0) {
+                return blockNr;
+            }
+            start = 0;
+        }
+
+        /* start at first group and search the rest */
+        start = 0;
+        for (BlockGroupDescriptor descr : blockGroups.iterateBlockGroups(0)) {
+            long blockNr =  newBlockInGroup(start, descr);
+            if (blockNr > 0) {
+                return blockNr;
+            }
+        }
         
-        long allocatedBlock = -1;
-        do { /* uargh... original code uses goto a lot*/
-        if (groupDescr.getFreeBlocksCount() > 0) {
-            int localGoal = (int) ((goal - superblock.getFirstDataBlock()) %
-                            superblock.getBlocksPerGroup());
-            
-            if (!bitmap.isSet(localGoal)) { /* got goal block */
-                bitmap.setBit(localGoal, true);
-                bitmap.write();
-                allocatedBlock = Calculations.blockNrOfLocal(localGoal, groupNr);
-                break;
-            }
-            
-            /* the goal was occupied; search forward for a free block 
-             * within the next XX blocks. */
-            /*
-            int end = 64;
-            localGoal = bitmap.getNextZeroBitPos(localGoal, end);
-            if (localGoal < end) {
-                bitmap.setBit(localGoal, true);
-                bitmap.write();
-                allocatedBlock = Calculations.blockNrOfLocal(localGoal, groupNr);
-                break;
-            }
-            */
-            
-            /* There has been no free block found in the near vicinity of the goal:
-             * do a search forward through the block groups */
-            
-            /* Search first in the remainder of th current group */
-            localGoal = bitmap.getNextZeroBitPos(localGoal);
-            if (localGoal > 0) {
-                bitmap.setBit(localGoal, true);
-                bitmap.write();
-                allocatedBlock = Calculations.blockNrOfLocal(localGoal, groupNr);
-                break;
-            }
-        }
-        } while (false);
-    
-        if (allocatedBlock == -1) {
-            /* Now search the rest of the groups */
-            for (int k=0; k < superblock.getGroupsCount(); k++) {
-                groupNr = (groupNr + 1) % superblock.getGroupsCount();
-                groupDescr = blockGroups.getGroupDescriptor((int)groupNr);
-    
-                if (groupDescr.getFreeBlocksCount() > 0) 
-                    break;
-            }
-    
-            bitmap = Bitmap.fromByteBuffer(blocks.read(groupDescr.getBlockBitmapPointer()),
-                    groupDescr.getBlockBitmapPointer());
-    
-            int localGoal = bitmap.getNextZeroBitPos(0);
-            if (localGoal > 0) {
-                bitmap.setBit(localGoal, true);
-                bitmap.write();
-                allocatedBlock = Calculations.blockNrOfLocal(localGoal, groupNr);
-            }
-        }
-    
+        throw new NoSpaceLeftOnDevice();
+    }
+     
+    /** 
+     * Allocate a new block. Uses a goal block to assist allocation. If 
+     * the goal is free, or there is a free block within 32 blocks of the gloal, that block is
+     * allocated. Otherwise a forward search is made for a free block.
+     * @param  goal    the goal block
+     * @return     pointer to allocated block
+     * @throws IOException 
+     * @throws NoSpaceLeftOnDevice 
+     */    
+    public static long allocateBlock(long goal) throws NoSpaceLeftOnDevice, IOException {
+        long blockNr = newBlock(goal);
+        
         /* Finally return pointer to allocated block or an error */
-        if (allocatedBlock > 0) { /* block was allocated in group */
-            groupDescr.setFreeBlocksCount(groupDescr.getFreeBlocksCount() - 1);
-            superblock.setFreeBlocksCount(superblock.getFreeBlocksCount() - 1);
-    
-            groupDescr.write();
-            superblock.write();
+        superblock.setFreeBlocksCount(superblock.getFreeBlocksCount() - 1);
+        superblock.write();
             
-            return allocatedBlock;
-        } else {
-            throw new NoSpaceLeftOnDevice();
-        }
+        return blockNr;
     }
 
+    /**
+     * Find free block in single block group
+     * @param       start       bitmap index to begin (think of goal)
+     * @param       descr       group descriptor to search
+     * @return      block number or -1 
+     */
+    private static long newBlockInGroup(int start, BlockGroupDescriptor descr) throws IOException {
+        Bitmap bitmap = Bitmap.fromByteBuffer(blocks.read(descr.getBlockBitmapPointer()),
+                descr.getBlockBitmapPointer());
+
+        if (descr.getFreeBlocksCount() > 0) {
+
+            int freeIndex = bitmap.getNextZeroBitPos(start);
+            if (freeIndex > 0) {
+                long blockNr = Calculations.blockNrOfLocal(freeIndex, descr.getBlockGroup());
+                
+                /* Check to see if we are trying to allocate a system block */
+                if (!(descr.isValidDataBlockNr(blockNr))) {
+                    throw new RuntimeException("Trying to allocate in system zone" 
+                                            + " blockNr=" + blockNr + " group=" + descr.getBlockGroup());
+                }  
+                
+                bitmap.setBit(freeIndex, true);
+                bitmap.write();
+
+                descr.setFreeBlocksCount(descr.getFreeBlocksCount() - 1);
+                descr.write();            
+
+                return Calculations.blockNrOfLocal(freeIndex, descr.getBlockGroup());
+            } else {
+                start = 0;
+            }
+        }        
+        return -1;
+    }
+    
+
     private DataBlockAccess(DataInode inode) {
-	    this.inode = inode;
-	}
-	
+        this.inode = inode;
+    }
+
 	/** 
 	 * Create access provider to inode data 
 	 */ 
@@ -657,17 +653,8 @@ public class DataBlockAccess {
 	                groupDescr.getBlockBitmapPointer());
 	   
 	        /* Check to see if we are trying to free a system block */
-	        if ( (groupDescr.getBlockBitmapPointer() >= blockNr && 
-	              groupDescr.getBlockBitmapPointer() < blockNr + count) ||
-	             (groupDescr.getInodeBitmapPointer() >= blockNr &&
-	              groupDescr.getInodeBitmapPointer() < blockNr + count) ||
-	             (blockNr >= groupDescr.getInodeTablePointer() &&
-	              blockNr < groupDescr.getInodeTablePointer() + 
-	                        superblock.getInodesPerGroup()) ||
-	             (blockNr+count-1 >= groupDescr.getInodeTablePointer() &&
-	              blockNr+count-1 < groupDescr.getInodeTablePointer() + 
-	                                superblock.getInodesPerGroup())) {
-	       
+	        if (!(groupDescr.isValidDataBlockNr(blockNr) &&
+	              groupDescr.isValidDataBlockNr(blockNr + count-1))) {
 	            throw new RuntimeException("Freeing blocks in system zones");
 	        }  
 	    

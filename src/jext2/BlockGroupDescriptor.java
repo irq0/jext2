@@ -112,6 +112,18 @@ public class BlockGroupDescriptor extends PartialBlock {
 		                                          ToStringStyle.MULTI_LINE_STYLE);
 	}
 	
+	
+	/**
+	 * Check if block number is a valid data block in this block group 
+	 */
+	public boolean isValidDataBlockNr(long nr) {
+	    return ( getBlockBitmapPointer() != nr &&
+	             getInodeBitmapPointer() != nr &&
+	             nr >= firstBlock() &&
+	             (!(getInodeTablePointer() <= nr &&
+	               nr < getInodeTablePointer()+superblock.getInodeTableBlocksPerGroup())));
+	}
+
 	/**
 	 * do not use this method. it is just for later improvement here. It does
 	 * not take into account that sparse block groups have not descriptor table

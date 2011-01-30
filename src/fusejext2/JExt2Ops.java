@@ -87,10 +87,11 @@ public class JExt2Ops extends AbstractLowlevelOps {
 
 	public void open(FuseReq req, long ino, FileInfo fi) {
 		try {
+		    int flags = fi.getFlags();
+
 			Inode inode = inodes.get(ino);
-			if (! (inode instanceof RegularInode)) { 
-				Reply.err(req, Errno.EPERM);
-				return;
+			if (! (inode instanceof RegularInode)) {
+			    Reply.err(req, Errno.EPERM);
 			}
 			
 			Reply.open(req, fi);

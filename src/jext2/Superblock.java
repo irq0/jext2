@@ -58,6 +58,8 @@ public class Superblock extends Block {
 	private int groupsCount;
 	private long dirsCount;
     private int groupDescrBlocks;
+    private int inodeTableBlocksPerGroup;
+    private int inodesPerBlock;
 
 	public final long getInodesCount() {
         return inodesCount;
@@ -176,7 +178,12 @@ public class Superblock extends Block {
     public final long getDirsCount() {
         return dirsCount;
     }
-    
+    public final int getInodeTableBlocksPerGroup() {
+        return inodeTableBlocksPerGroup;
+    }
+    public final int getInodesPerBlock() {
+        return inodesPerBlock;
+    }
     public void setFreeBlocksCount(long freeBlocksCount) {
 		this.freeBlocksCount = freeBlocksCount;
 	}
@@ -250,6 +257,8 @@ public class Superblock extends Block {
 						   this.blocksPerGroup);
 		this.groupDescrBlocks = (this.groupsCount + this.groupDescrPerBlock -1) / 
 		                         this.groupDescrPerBlock;
+		this.inodesPerBlock = this.blocksize / this.inodeSize;
+		this.inodeTableBlocksPerGroup = (int)(this.inodesPerGroup) / this.inodesPerBlock;
 	}
 
 	

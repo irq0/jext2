@@ -220,12 +220,12 @@ public class Inode extends PartialBlock {
 	}
 
 	public boolean equals(Inode other) {
-		return (this.blockNr == other.blockNr) &&
+		return (this.nr == other.nr) &&
 			(this.offset == other.offset);
 	}
 
 	public int hashCode() {
-		return (int)(this.blockNr ^ this.offset);
+		return (int)(this.nr ^ this.offset);
 	}
 	
 	/** allocate a ByteBuffer big enaugh for a Inode */

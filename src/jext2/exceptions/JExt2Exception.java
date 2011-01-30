@@ -1,6 +1,5 @@
 package jext2.exceptions;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jext2.Filesystem;
