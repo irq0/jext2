@@ -31,10 +31,10 @@ public class SymlinkInode extends DataInode {
         return Ext2fsDataTypes.getString(buf, 0, buf.limit());
     }       
     private void writeSlowSymlink(String link) throws IOException, NoSpaceLeftOnDevice {
-        ByteBuffer buf = ByteBuffer.allocate(link.length());
-        CharBuffer cbuf = buf.asCharBuffer();
-        cbuf.put(link);
+        byte[] bytes = link.getBytes(Filesystem.getCharset());
         
+        ByteBuffer buf = ByteBuffer.allocate(bytes.length);
+        buf.put(bytes);
         writeData(buf, 0);        
     }
     
@@ -54,7 +54,7 @@ public class SymlinkInode extends DataInode {
 	 * data block pointer depending on the symlink length.
 	 */
 	public void setSymlink(String link) throws NoSpaceLeftOnDevice, IOException {
-	    int newSize = link.length();
+	    int newSize = Ext2fsDataTypes.getStringByteLength(link);
 	    
 	    setSize(0);
 
@@ -67,7 +67,7 @@ public class SymlinkInode extends DataInode {
 	            
 	    if (newSize < FAST_SYMLINK_MAX) { /* fast symlink */
 	        this.symlink = link;
-	        setSize(link.length());
+	        setSize(newSize);
 	        setBlocks(0);
 	        write();
 	    } else { /* slow symlink */
@@ -132,6 +132,7 @@ public class SymlinkInode extends DataInode {
         inode.setBlock(new long[Constants.EXT2_N_BLOCKS]);
         inode.setBlocks(0);
         inode.symlink = "";
+        inode.setSize(0);
         
         return inode;
     }

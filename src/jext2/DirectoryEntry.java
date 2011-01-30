@@ -97,7 +97,9 @@ public class DirectoryEntry extends PartialBlock {
 	 * it dictates the record length on disk
 	 */
 	public static DirectoryEntry create(String name) throws FileNameTooLong {
-	    if (name.length() > MAX_NAME_LEN) {
+	    int nameLen = Ext2fsDataTypes.getStringByteLength(name);
+	    
+	    if (nameLen > MAX_NAME_LEN) {
 	        throw new FileNameTooLong();
 	    }
 	    
@@ -107,13 +109,12 @@ public class DirectoryEntry extends PartialBlock {
 	     * The directory entry must be divisible by 4, so the name 
 	     * gets zero padded
 	     */
-	    short nameLen = (short)(name.length());
 	    short padNameLen = (short)(nameLen + (DIR_PAD - (nameLen % DIR_PAD))); 	    
 
 	    String namePadded = StringUtils.rightPad(name, padNameLen, (char)(0x00)); 	    
 	    
 	    dir.recLen = (short)(8 + padNameLen);
-	    dir.nameLen = nameLen;
+	    dir.nameLen = (short)nameLen;
 	    dir.name = namePadded;
 
 	    if (dir.recLen > MAX_REC_LEN)
@@ -174,7 +175,8 @@ public class DirectoryEntry extends PartialBlock {
         Ext2fsDataTypes.putLE16U(buf, this.recLen, 4);
         Ext2fsDataTypes.putLE8U(buf, this.nameLen, 6);
         Ext2fsDataTypes.putLE8U(buf, this.fileType, 7);
-        Ext2fsDataTypes.putString(buf, this.name, this.nameLen, 8);
+        if (this.nameLen > 0)
+            Ext2fsDataTypes.putString(buf, this.name, this.nameLen, 8);
         
         return buf;
     }

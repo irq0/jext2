@@ -4,6 +4,10 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CharsetEncoder;
+import java.nio.charset.CodingErrorAction;
 import java.util.Date;
 import java.util.UUID;
 
@@ -58,13 +62,17 @@ public class Ext2fsDataTypes {
 	}
 
 	public static String getString(ByteBuffer buffer, int offset, int len) throws IOException {
-		buffer.order(ByteOrder.LITTLE_ENDIAN);
-		buffer.position(offset);
-		StringBuffer result = new StringBuffer(len);
-		for (int i=0; i<len; i++) {
-			result.append((char)buffer.get());
-		}
-		return result.toString();
+	    buffer.order(ByteOrder.LITTLE_ENDIAN);
+
+	    CharsetDecoder decoder = Filesystem.getCharset().newDecoder();
+	    buffer.limit(offset+len);
+	    buffer.position(offset);
+	     
+	    CharBuffer cbuf = decoder.decode(buffer);
+	        
+	    buffer.limit(buffer.capacity());  
+	        
+		return cbuf.toString();
 	
 	}
 
@@ -90,12 +98,34 @@ public class Ext2fsDataTypes {
 		buffer.putInt(offset, unixTime);
 	}
 	
+	/**
+	 * Get the length of the java string as it would be encoded on disk.
+	 * Use this because string.length will return the length in characters, which
+	 * happen to be 16Bit unsigned.
+	 */
+	public static int getStringByteLength(String string) {
+	    CharsetEncoder encoder = Filesystem.getCharset().newEncoder();
+	    try {
+	        return encoder.encode(CharBuffer.wrap(string.toCharArray())).limit();
+	    } catch (CharacterCodingException e) {
+	        throw new RuntimeException(e);
+	    }
+	}
+	
 	public static void putString(ByteBuffer buffer, String value, int len, int offset) {
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
+
+		CharBuffer cbuf = CharBuffer.wrap(value.toCharArray());
+		CharsetEncoder encoder = Filesystem.getCharset().newEncoder();
+		encoder.onUnmappableCharacter(CodingErrorAction.REPLACE);
+		
+		cbuf.limit(Math.min(len, cbuf.limit()));
+		buffer.limit(offset+len);
 		buffer.position(offset);
-		for (int i=0; i<len; i++) {
-			buffer.put((byte)value.charAt(i));
-		}	
+		
+		encoder.encode(cbuf, buffer, true);
+		
+		buffer.limit(buffer.capacity());
 	}
 	
 	public static void putLE64(ByteBuffer buffer, long value, int offset) {
@@ -131,5 +161,5 @@ public class Ext2fsDataTypes {
 	public static void putLE8U(ByteBuffer buffer, short value, int offset) {
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         buffer.put(offset, (byte)(value & 0xff));
-    }
+    }	
 }

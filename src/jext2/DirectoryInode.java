@@ -216,7 +216,7 @@ public class DirectoryInode extends DataInode {
 	 * @throws FileNameTooLong 
 	 */
 	public DirectoryEntry lookup(String name) throws NoSuchFileOrDirectory, FileNameTooLong {
-	    if (name.length() > DirectoryEntry.MAX_NAME_LEN)
+	    if (Ext2fsDataTypes.getStringByteLength(name) > DirectoryEntry.MAX_NAME_LEN)
 	        throw new FileNameTooLong();
 	    
 		for (DirectoryEntry dir : iterateDirectory()) {
