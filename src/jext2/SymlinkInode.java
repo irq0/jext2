@@ -31,11 +31,10 @@ public class SymlinkInode extends DataInode {
         return Ext2fsDataTypes.getString(buf, 0, buf.limit());
     }       
     private void writeSlowSymlink(String link) throws IOException, NoSpaceLeftOnDevice {
-        byte[] bytes = link.getBytes(Filesystem.getCharset());
-        
-        ByteBuffer buf = ByteBuffer.allocate(bytes.length);
-        buf.put(bytes);
-        writeData(buf, 0);        
+        ByteBuffer buf = ByteBuffer.allocate(Ext2fsDataTypes.getStringByteLength(link));
+        Ext2fsDataTypes.putString(buf, link, buf.capacity(), 0);
+        buf.rewind();
+        writeData(buf, 0);
     }
     
     private String readFastSymlink(ByteBuffer buf) throws IOException {

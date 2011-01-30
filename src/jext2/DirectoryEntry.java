@@ -129,7 +129,7 @@ public class DirectoryEntry extends PartialBlock {
 	 */
 	public static DirectoryEntry createRestDummy(DirectoryEntry last) {
 	    DirectoryEntry dir = new DirectoryEntry();
-	    dir.fileType = (short)0;
+	    dir.fileType = FILETYPE_UNKNOWN;
 	    dir.ino = 0;
 	    dir.nameLen = 0;
 	    dir.recLen = Superblock.getInstance().getBlocksize() - last.getRecLen();       
