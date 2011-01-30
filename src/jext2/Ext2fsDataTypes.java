@@ -3,6 +3,7 @@ package jext2;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.CharBuffer;
 import java.util.Date;
 import java.util.UUID;
 
@@ -59,11 +60,10 @@ public class Ext2fsDataTypes {
 	public static String getString(ByteBuffer buffer, int offset, int len) throws IOException {
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
 		buffer.position(offset);
-		StringBuffer result = new StringBuffer();
+		StringBuffer result = new StringBuffer(len);
 		for (int i=0; i<len; i++) {
 			result.append((char)buffer.get());
 		}
-	
 		return result.toString();
 	
 	}

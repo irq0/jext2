@@ -55,7 +55,7 @@ class JExt2 {
 			System.out.println(InodeAccess.readByIno(14));
 			System.out.println(InodeAccess.readByIno(15));
 
-		} catch (java.io.IOException e) {
+		} catch (Exception e) {
 		}
 	}
 	

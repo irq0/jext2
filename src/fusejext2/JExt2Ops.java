@@ -41,17 +41,30 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		
 	}
 	
-	private Stat getStat(Inode inode) {
+	private EntryParam makeEntryParam(Inode inode) {
+        EntryParam e = new EntryParam();
+        e.setAttr(makeStat(inode));
+        e.setGeneration(inode.getGeneration());
+        e.setAttr_timeout(0.0);
+        e.setEntry_timeout(0.0);
+        e.setIno(inode.getIno());
+        return e;
+	}
+	
+	private Stat makeStat(Inode inode) {
 		Stat s = new Stat();
 		s.setUid(inode.getUidLow());
 		s.setGid(inode.getGidLow());
 		s.setIno(inode.getIno());
 		s.setMode(inode.getMode());
 		s.setBlksize(superblock.getBlocksize());
-		s.setBlocks(inode.getBlocks());
 		s.setNlink(inode.getLinksCount());
 		s.setSize(inode.getSize());
-		
+
+		if (inode instanceof DataInode) 
+		    s.setBlocks(((DataInode)inode).getBlocks());
+		else 
+		    s.setBlocks(0);
 		
 		Timespec atim = new Timespec();
 		atim.setSec((int)(inode.getAccessTime().getTime() / 1000));			
@@ -71,10 +84,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 	public void open(FuseReq req, long ino, FileInfo fi) {
 		try {
 			Inode inode = inodes.get(ino);
-			if (inode == null) { 
-				Reply.err(req, Errno.ENOSYS);
-				return;
-			} else if (! (inode instanceof RegularInode)) { 
+			if (! (inode instanceof RegularInode)) { 
 				Reply.err(req, Errno.EPERM);
 				return;
 			}
@@ -82,7 +92,9 @@ public class JExt2Ops extends AbstractLowlevelOps {
 			Reply.open(req, fi);
 		} catch (IOException e) {
 			Reply.err(req, Errno.EIO);
-		} 
+		} catch (JExt2Exception e) {
+            Reply.err(req, e.getErrno());
+        }
 	}
 	
 	public void read(FuseReq req, long ino, int size, int off, FileInfo fi) {
@@ -124,10 +136,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 	    if (ino == 1) ino = Constants.EXT2_ROOT_INO;
 		try {
 		    Inode inode = inodes.get(ino);
-			if (inode == null) { 
-				Reply.err(req, Errno.ENOSYS);
-				return;
-			} else if (!(inode instanceof SymlinkInode)) { 
+			if (!(inode instanceof SymlinkInode)) { 
 				Reply.err(req, Errno.EPERM);
 				return;
 			}
@@ -136,7 +145,9 @@ public class JExt2Ops extends AbstractLowlevelOps {
 			
 		} catch (IOException e) {
 			Reply.err(req, Errno.EIO);
-		}
+		} catch (JExt2Exception e) {
+            Reply.err(req, e.getErrno());
+        }
 		
 	}
 	
@@ -148,17 +159,14 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		if (ino == 1) ino = Constants.EXT2_ROOT_INO;
 		try {
 		    Inode inode = inodes.get(ino);
-			if (inode == null) { 
-				Reply.err(req, Errno.ENOENT);
-				return;
-			}
-			
-			Stat stat = getStat(inode);
+			Stat stat = makeStat(inode);
 			Reply.attr(req, stat, 0.0);
 			
 		} catch (IOException e) {
 			Reply.err(req, Errno.EIO);
-		}
+		} catch (JExt2Exception e) {
+            Reply.err(req, e.getErrno());
+        }
 	}
 
 	private boolean checkToSet(int to_set, int attr) {
@@ -175,10 +183,6 @@ public class JExt2Ops extends AbstractLowlevelOps {
         
         try {
             Inode inode = inodes.get(ino);
-            if (inode == null) {
-                Reply.err(req, Errno.ENOENT);
-                return;
-            }
 
             if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_ATIME)) {
                 inode.setAccessTime(timespecToDate(attr.getAtim()));
@@ -211,10 +215,12 @@ public class JExt2Ops extends AbstractLowlevelOps {
             
             inode.write();
             
-            Stat s = getStat(inode);
+            Stat s = makeStat(inode);
             Reply.attr(req, s, 0.0);
         } catch (IOException e) {
             Reply.err(req, Errno.EIO);
+        } catch (JExt2Exception e) {
+            Reply.err(req, e.getErrno());
         }
     }
 
@@ -223,32 +229,19 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		if (ino == 1) ino = Constants.EXT2_ROOT_INO;
 		try {		
 		    Inode parent = inodes.get(ino);
-			if (parent == null) {
-				Reply.err(req, Errno.ENOENT);
-				return;
-			} else if (!(parent instanceof DirectoryInode)) { 
+			if (!(parent instanceof DirectoryInode)) { 
 				Reply.err(req, Errno.ENOTDIR);
 				return;
 			}
 			
 			DirectoryEntry entry = ((DirectoryInode)parent).lookup(name);			
-			if (entry == null) {  
-				Reply.err(req, Errno.ENOENT);
-				return;
-			}
-
-			Inode child = inodes.get(entry.getIno());
-			EntryParam e = new EntryParam();
-			e.setAttr(getStat(child));
-			e.setGeneration(child.getGeneration());
-			e.setAttr_timeout(0.0);
-			e.setEntry_timeout(0.0);
-			e.setIno(entry.getIno());
-			
-			Reply.entry(req, e);			
+			Inode child = inodes.get(entry.getIno());			
+			Reply.entry(req, makeEntryParam(child));			
 		} catch (IOException e) {
 			Reply.err(req, Errno.EIO);
-		}				
+		} catch (JExt2Exception e) {
+            Reply.err(req, e.getErrno());
+        }			
 	}
 	
 	
@@ -256,10 +249,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		if (ino == 1) ino = Constants.EXT2_ROOT_INO;
 		try {
             Inode inode = inodes.get(ino);
-			if (inode == null) { 
-				Reply.err(req, Errno.ENOENT);
-				return;
-			} else if (!(inode instanceof DirectoryInode)) {
+			if (!(inode instanceof DirectoryInode)) {
 				Reply.err(req, Errno.ENOTDIR);
 				return;
 			}
@@ -267,7 +257,9 @@ public class JExt2Ops extends AbstractLowlevelOps {
 			Reply.open(req, fi);
 		} catch (IOException e) {
 			Reply.err(req, Errno.EIO);
-		}	
+		} catch (JExt2Exception e) {
+            Reply.err(req, e.getErrno());
+        }
 	}
 	
 	
@@ -306,10 +298,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
             }
 
             Inode parentInode = inodes.get(parent);
-            if (parentInode == null) { 
-                Reply.err(req, Errno.ENOENT);
-                return;
-            } else if (!(parentInode instanceof DirectoryInode)) {
+            if (!(parentInode instanceof DirectoryInode)) {
                 Reply.err(req, Errno.ENOTDIR);
                 return;
             }
@@ -322,16 +311,8 @@ public class JExt2Ops extends AbstractLowlevelOps {
             InodeAlloc.registerInode(parentInode, inode);
             inode.write();
             
-            ((DirectoryInode)parentInode).addLink(inode, name);
-            
-            EntryParam e = new EntryParam();
-            e.setAttr(getStat((Inode)inode));
-            e.setGeneration(inode.getGeneration());
-            e.setAttr_timeout(0.0);
-            e.setEntry_timeout(0.0);
-            e.setIno(inode.getIno());
-
-            Reply.entry(req, e);    
+            ((DirectoryInode)parentInode).addLink(inode, name);            
+            Reply.entry(req, makeEntryParam(inode));    
         } catch (IOException e) {
             Reply.err(req, Errno.EIO);
         } catch (JExt2Exception e) {
@@ -343,10 +324,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
         if (parent == 1) parent = Constants.EXT2_ROOT_INO;
         try {
             Inode parentInode = inodes.get(parent);
-            if (parentInode == null) { 
-                Reply.err(req, Errno.ENOENT);
-                return;
-            } else if (!(parentInode instanceof DirectoryInode)) {
+            if (!(parentInode instanceof DirectoryInode)) {
                 Reply.err(req, Errno.ENOTDIR);
                 return;
             }
@@ -362,15 +340,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
             inode.write();
             
             ((DirectoryInode)parentInode).addLink(inode, name);
-            
-            EntryParam e = new EntryParam();
-            e.setAttr(getStat((Inode)inode));
-            e.setGeneration(inode.getGeneration());
-            e.setAttr_timeout(0.0);
-            e.setEntry_timeout(0.0);
-            e.setIno(inode.getIno());
-            
-            Reply.entry(req, e);    
+            Reply.entry(req, makeEntryParam(inode));    
         } catch (IOException e) {
             Reply.err(req, Errno.EIO);
         } catch (JExt2Exception e) {
@@ -423,11 +393,6 @@ public class JExt2Ops extends AbstractLowlevelOps {
         
         try {
             DirectoryInode parentInode = (DirectoryInode)(inodes.get(parent));
-            if (parentInode == null) { 
-                Reply.err(req, Errno.ENOENT);
-                return;
-            } 
-            
             DirectoryInode child = 
                 (DirectoryInode)inodes.get(parentInode.lookup(name).getIno());
             
@@ -453,11 +418,6 @@ public class JExt2Ops extends AbstractLowlevelOps {
             
         try {
             DirectoryInode parentInode = (DirectoryInode)(inodes.get(parent));
-            if (parentInode == null) { 
-                Reply.err(req, Errno.ENOENT);
-                return;
-            } 
-                
             Inode child = 
                     inodes.get(parentInode.lookup(name).getIno());
                 
@@ -466,6 +426,35 @@ public class JExt2Ops extends AbstractLowlevelOps {
             Reply.err(req, 0);
         } catch (IOException e) {
             Reply.err(req, Errno.EIO);
-        }    
+        } catch (JExt2Exception e) {
+            Reply.err(req, e.getErrno());
+        }
     }
+
+    public void symlink(FuseReq req, String link, long parent, String name) {
+        if (parent == 1) parent = Constants.EXT2_ROOT_INO;
+        try {
+            DirectoryInode parentInode = (DirectoryInode)inodes.get(parent);
+
+            FuseContext context = req.getContext();           
+            SymlinkInode inode = SymlinkInode.createEmpty();            
+            inode.setUid(context.getUid());
+            inode.setGid(context.getGid());
+            InodeAlloc.registerInode(parentInode, inode);
+            inode.write();
+            
+            ((DirectoryInode)parentInode).addLink(inode, name);            
+            inode.setSymlink(link);
+            
+            Reply.entry(req, makeEntryParam(inode));    
+        } catch (IOException e) {
+            Reply.err(req, Errno.EIO);
+        } catch (JExt2Exception e) {
+            System.out.println(":)");
+            Reply.err(req, e.getErrno());
+        }
+        
+        
+    }
+
 }

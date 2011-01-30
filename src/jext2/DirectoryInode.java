@@ -10,6 +10,7 @@ import jext2.exceptions.DirectoryNotEmpty;
 import jext2.exceptions.FileExists;
 import jext2.exceptions.InvalidArgument;
 import jext2.exceptions.NoSpaceLeftOnDevice;
+import jext2.exceptions.NoSuchFileOrDirectory;
 
 
 /** Inode for directories */
@@ -124,8 +125,7 @@ public class DirectoryInode extends DataInode {
                    throw new FileExists();
                
                if (currentEntry.getRecLen() == 0 ||
-                       currentEntry.getRecLen() > superblock.getBlocksize() ||
-                       (currentEntry.getRecLen() & 3) == 0) {
+                       currentEntry.getRecLen() > superblock.getBlocksize()) {
                    throw new InvalidArgument();
                }
                
@@ -193,7 +193,7 @@ public class DirectoryInode extends DataInode {
 	
 	public boolean isEmptyDirectory() {
 	    int count = 0;
-	    for (DirectoryEntry dir : iterateDirectory()) {
+	    for (@SuppressWarnings("unused") DirectoryEntry dir : iterateDirectory()) {
 	        count += 1;
 	        if (count >= 3) 
 	            return false;
@@ -207,14 +207,15 @@ public class DirectoryInode extends DataInode {
 	 * comparing the names. 
 	 * 
 	 * @return     DirectoryEntry or null in case its not found
+	 * @throws NoSuchFileOrDirectory 
 	 */
-	public DirectoryEntry lookup(String name) {
+	public DirectoryEntry lookup(String name) throws NoSuchFileOrDirectory {
 		for (DirectoryEntry dir : iterateDirectory()) {
 			if (name.equals(dir.getName())) {
 				return dir;
 			}
 		}
-		return null;
+		throw new NoSuchFileOrDirectory();
 	}
 
 	public String toString() {

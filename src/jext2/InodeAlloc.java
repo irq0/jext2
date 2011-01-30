@@ -3,6 +3,8 @@ package jext2;
 import java.io.IOException;
 import java.util.Date;
 
+import jext2.exceptions.NoSpaceLeftOnDevice;
+
 /** 
  * Inode allocation and deallocation routines 
  * Adapted from the linux kernel implementation. The long comments on 
@@ -31,7 +33,7 @@ public class InodeAlloc {
 	 * For other inodes, search forward from the parent directory\'s block
 	 * group to find a free inode.
 	 */
-	public static int findGroupDir(Inode parent) {
+	public static int findGroupDir(Inode parent) throws NoSpaceLeftOnDevice {
 		int groupsCount = superblock.getGroupsCount();
 		long averageFreeInodes = countFreeInodes() / groupsCount;
 		BlockGroupDescriptor bestGroup = null;
@@ -48,13 +50,13 @@ public class InodeAlloc {
 		}
 
 		if (bestGroup == null)
-			return -1;
+		    throw new NoSpaceLeftOnDevice();
 		else
 			return bestNr;
 	}
 
 
-	public static int findGroupOther(Inode parent) {
+	public static int findGroupOther(Inode parent) throws NoSpaceLeftOnDevice {
 		int groupsCount = superblock.getGroupsCount();
 		int group = -1;
 		BlockGroupDescriptor desc = null;
@@ -108,7 +110,7 @@ public class InodeAlloc {
 				return group;
 		}
 
-		return -1;
+		throw new NoSpaceLeftOnDevice();
 	}	
 
 	/* Orlov's allocator for directories. 
@@ -187,8 +189,9 @@ public class InodeAlloc {
 	
 	/** Register Inode on disk. Find suitable position an reserve this position
 	 * for the Inode. Finally set location data in Inode
+	 * @throws NoSpaceLeftOnDevice 
 	 */
-	public static void registerInode(Inode dir, Inode inode) throws IOException {
+	public static void registerInode(Inode dir, Inode inode) throws IOException, NoSpaceLeftOnDevice {
 		/* find best suitable block group */
 		int group;
 		

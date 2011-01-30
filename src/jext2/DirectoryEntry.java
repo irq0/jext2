@@ -145,15 +145,10 @@ public class DirectoryEntry extends PartialBlock {
 	    return 8 + nameLen + numPadBytes(nameLen);
 	}
 
-	public static DirectoryEntry fromByteBuffer(ByteBuffer buf, long blockNr, int offset) {				
+	public static DirectoryEntry fromByteBuffer(ByteBuffer buf, long blockNr, int offset) throws IOException {				
 		DirectoryEntry dir = new DirectoryEntry(blockNr, offset);
-		try {
-			dir.read(buf);
-			return dir;
-		} catch (IOException e) {
-			// XXX don't ignore
-			return null;
-		}
+		dir.read(buf);
+		return dir;
 	}
 	
 	public static int readRecLen(ByteBuffer buf, int offset) {

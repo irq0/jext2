@@ -5,6 +5,7 @@ import java.util.Hashtable;
 
 import jext2.Inode;
 import jext2.InodeAccess;
+import jext2.exceptions.InvalidArgument;
 
 /**
  * Kind of inode table, that enshures that there are no inodes in memory
@@ -26,7 +27,7 @@ public class InodeAccessProvider {
             return openInodes.get(ino);
     }
     
-    Inode get(long ino) throws IOException { 
+    Inode get(long ino) throws IOException, InvalidArgument { 
         if (openInodes.containsKey(ino)) {
             return openInodes.get(ino);
         } else {

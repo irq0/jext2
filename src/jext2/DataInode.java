@@ -11,9 +11,25 @@ import jext2.exceptions.NoSpaceLeftOnDevice;
  */
 public class DataInode extends Inode {
     Superblock superblock = Superblock.getInstance();
-    BlockAccess blocks = BlockAccess.getInstance();
+    BlockAccess blockAccess = BlockAccess.getInstance();
     DataBlockAccess dataAccess = null;
 
+    private long[] block;
+    private long blocks = 0;
+    
+    
+    public final long getBlocks() {
+        return this.blocks;
+    }  
+    public final long[] getBlock() {
+        return this.block;
+    }
+    public final void setBlocks(long blocks) {
+        this.blocks = blocks;
+    }
+    public final void setBlock(long[] block) {
+        this.block = block;
+    }
     
     /**
      * Get the data access provider to read and write to the data area of this
@@ -52,7 +68,7 @@ public class DataInode extends Inode {
     
             int count = b.size();
             result.limit(result.position() + count * blocksize);
-            blocks.readToBuffer(
+            blockAccess.readToBuffer(
                     (((long)(b.getFirst() & 0xffffffff)) * blocksize)
                     + offset, result);
             start += b.size();          
@@ -89,7 +105,7 @@ public class DataInode extends Inode {
         }
         
         for (long nr : blockNrs) {
-            ByteBuffer block = blocks.read((int)nr);
+            ByteBuffer block = blockAccess.read((int)nr);
             block.position(offset);
     
             while (result.hasRemaining() && block.hasRemaining()) {
@@ -117,14 +133,10 @@ public class DataInode extends Inode {
         while (start < max) { 
             LinkedList<Long> b = accessData().getBlocksAllocate(start, max-start);
         
-            if (b == null) {
-                throw new IOException();
-            }
-        
             int count = b.size();
             buf.limit(Math.min(buf.position() + count * blocksize,
                                buf.capacity()));
-            blocks.writeFromBuffer(
+            blockAccess.writeFromBuffer(
                     (((long)(b.getFirst() & 0xffffffff)) * blocksize) + bufOffset,
                     buf);
             
@@ -145,6 +157,34 @@ public class DataInode extends Inode {
     
     protected DataInode(long blockNr, int offset) {
         super(blockNr, offset);
+    }
+    
+    protected void read(ByteBuffer buf) throws IOException {
+        super.read(buf);
+        this.blocks = Ext2fsDataTypes.getLE32U(buf, 28 + offset);
+        
+        if (!(this instanceof SymlinkInode && ((SymlinkInode)this).isFastSymlink())) {            
+            this.block = new long[Constants.EXT2_N_BLOCKS];
+            for (int i=0; i<Constants.EXT2_N_BLOCKS; i++) {
+                this.block[i] = Ext2fsDataTypes.getLE32U(buf, 40 + (i*4) + offset);
+            }
+        }
+    }
+    
+    
+    protected void write(ByteBuffer buf) throws IOException {
+        if (!(this instanceof SymlinkInode)) {
+            for (int i=0; i<Constants.EXT2_N_BLOCKS; i++) {
+                Ext2fsDataTypes.putLE32U(buf, this.block[i], 40 + (i*4));
+            }
+        }
+        Ext2fsDataTypes.putLE32U(buf, this.blocks, 28);
+        super.write(buf);
+    }
+    
+    public void write() throws IOException {
+        ByteBuffer buf = allocateByteBuffer();
+        write(buf);
     }
 
 }

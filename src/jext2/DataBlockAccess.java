@@ -14,7 +14,7 @@ public class DataBlockAccess {
 	protected static Superblock superblock = Superblock.getInstance();
 	protected static BlockAccess blocks = BlockAccess.getInstance();
 	protected static BlockGroupAccess blockGroups = BlockGroupAccess.getInstance();
-	protected Inode inode = null;
+	protected DataInode inode = null;
 
 	// used by findGoal 
     private long lastAllocLogicalBlock = 0; 
@@ -94,13 +94,13 @@ public class DataBlockAccess {
 		long current;
 		LinkedList<Long> blocks; /* cache for block nrs */
 
-		DataBlockIterator(Inode inode, long start) {
+		DataBlockIterator(DataInode inode, long start) {
 			this.inode = inode;
 			this.current = start;
 			this.remaining = inode.getBlocks()/(superblock.getBlocksize()/512);
 		}
 			
-		DataBlockIterator(Inode inode) {
+		DataBlockIterator(DataInode inode) {
 		    this(inode , -1);
 		}
 
@@ -153,7 +153,7 @@ public class DataBlockAccess {
 	 * that only one blockNr is returned. I wrote this first and kind of 
 	 * like the simplicity. But you should really use getBlocks()
 	 */
-	public static long getDataBlockNr(Inode inode, long fileBlockNumber) throws IOException {
+	public static long getDataBlockNr(DataInode inode, long fileBlockNumber) throws IOException {
 		long[] directBlocks = inode.getBlock();
 		int addrPerBlock = superblock.getBlocksize()/4;
 			
@@ -182,7 +182,7 @@ public class DataBlockAccess {
 		                         (int)fileBlockNumber);
 	}
 	
-	public static ByteBuffer readDataBlock(Inode inode, int fileBlockNumber) throws IOException {
+	public static ByteBuffer readDataBlock(DataInode inode, int fileBlockNumber) throws IOException {
 		return blocks.read(getDataBlockNr(inode, fileBlockNumber));
 	}
 	
@@ -275,7 +275,7 @@ public class DataBlockAccess {
 	 *     - if pointer will live in indirect block - allocate near that block
 	 *     - if pointer will live in inode - allocate in the same cylinder group
 	 */
-	public static long findNear(Inode inode, long[] blockNrs, int[] offsets) throws IOException {
+	public static long findNear(DataInode inode, long[] blockNrs, int[] offsets) throws IOException {
 	    int depth = blockNrs.length;
 	    
 	    /* Try to find previous block */
@@ -497,9 +497,6 @@ public class DataBlockAccess {
 		int count = depth - existDepth;
 
 		LinkedList<Long> newBlockNrs = allocBranch(count, goal, offsets, blockNrs);
-		if (newBlockNrs == null || newBlockNrs.size() == 0)
-		    throw new IOException();
-		
 		spliceBranch(fileBlockNr, offsets, blockNrs, newBlockNrs);
 		
 		result.add(newBlockNrs.getLast());
@@ -604,14 +601,14 @@ public class DataBlockAccess {
         }
     }
 
-    private DataBlockAccess(Inode inode) {
+    private DataBlockAccess(DataInode inode) {
 	    this.inode = inode;
 	}
 	
 	/** 
 	 * Create access provider to inode data 
 	 */ 
-	public static DataBlockAccess fromInode(Inode inode) {
+	public static DataBlockAccess fromInode(DataInode inode) {
 	    DataBlockAccess access = new DataBlockAccess(inode);
 	    return access;
 	}

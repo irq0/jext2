@@ -1,6 +1,8 @@
 package jext2;
 import java.nio.ByteBuffer;
 import java.io.IOException;
+
+import jext2.exceptions.InvalidArgument;
 public class InodeAccess {
 	private static Superblock superblock = Superblock.getInstance();
 	private static BlockAccess blocks = BlockAccess.getInstance();
@@ -24,9 +26,9 @@ public class InodeAccess {
 		}
 	}
 
-	public static Inode readByIno(long ino) throws IOException {
+	public static Inode readByIno(long ino) throws IOException, InvalidArgument {
 		if (ino == 0 || ino > superblock.getInodesCount()) {
-			return null;
+			throw new InvalidArgument();
 		}
 		
 		int group = Calculations.groupOfIno(ino);
@@ -44,6 +46,9 @@ public class InodeAccess {
 		ByteBuffer table = blocks.read(absBlock);
 		Inode inode = InodeAccess.readFromByteBuffer(table, relOffset);
 
+		// TODO check for NOENT exception
+		// TODO add blockNr and offset to readFrom call
+		
 		inode.setBlockGroup(group);
 		inode.setIno(ino);
 		inode.setBlockNr(absBlock);
@@ -54,6 +59,10 @@ public class InodeAccess {
 	}
 	
 	public static Inode readRootInode() throws IOException {
-		return readByIno(Constants.EXT2_ROOT_INO);
+	    try {
+	        return readByIno(Constants.EXT2_ROOT_INO);
+	    } catch (InvalidArgument e) {
+	        throw new RuntimeException("should not happen");
+	    }
 	}
 }

@@ -16,9 +16,7 @@ public class Inode extends PartialBlock {
 	private Date modificationTime;
 	private Date deletionTime;
 	private int linksCount = 0;
-	private long blocks = 0;
 	private	long flags = 0;
-	private long[] block;
 	private	long generation = 0;
 	private	long fileAcl = 0;
 	private	long dirAcl = 0;
@@ -62,14 +60,8 @@ public class Inode extends PartialBlock {
 	public final int getLinksCount() {
 		return this.linksCount;
 	}
-	public final long getBlocks() {
-		return this.blocks;
-	}
 	public final long getFlags() {
 		return this.flags;
-	}
-	public final long[] getBlock() {
-		return this.block;
 	}
 	public final long getGeneration() {
 		return this.generation;
@@ -152,14 +144,8 @@ public class Inode extends PartialBlock {
 	public final void setLinksCount(int linksCount) {
 		this.linksCount = linksCount;
 	}
-	public final void setBlocks(long blocks) {
-		this.blocks = blocks;
-	}
 	public final void setFlags(long flags) {
 		this.flags = flags;
-	}
-	public final void setBlock(long[] block) {
-		this.block = block;
 	}
 	public final void setGeneration(long generation) {
 		this.generation = generation;
@@ -181,20 +167,11 @@ public class Inode extends PartialBlock {
 		Ext2fsDataTypes.putDate(buf, this.deletionTime, 20);
 		Ext2fsDataTypes.putLE16U(buf, this.gidLow, 24);
 		Ext2fsDataTypes.putLE16U(buf, this.linksCount, 26);
-		Ext2fsDataTypes.putLE32U(buf, this.blocks, 28);
 		Ext2fsDataTypes.putLE32U(buf, this.flags, 32);
-		//		this.osd1 = Ext2fsDataTypes.getLE32U(buf, 36 + offset);
- 		
-		for (int i=0; i<Constants.EXT2_N_BLOCKS; i++) {
-			Ext2fsDataTypes.putLE32U(buf, this.block[i], 40 + (i*4));
-		}
-
 		Ext2fsDataTypes.putLE32U(buf, this.generation, 100);
 		Ext2fsDataTypes.putLE32U(buf, this.fileAcl, 104);
 		Ext2fsDataTypes.putLE32U(buf, this.dirAcl, 108);
 		Ext2fsDataTypes.putLE32U(buf, this.fragmentAddress, 112);
-		
-		// this.frag = Ext2fsDataTypes.getLE8(buf, 116 + offset);
 		Ext2fsDataTypes.putLE16U(buf, this.uidHigh, 120);
 		Ext2fsDataTypes.putLE16U(buf, this.gidHigh, 122);
 		
@@ -211,21 +188,11 @@ public class Inode extends PartialBlock {
 		this.deletionTime = Ext2fsDataTypes.getDate(buf, 20 + offset);
 		this.gidLow = Ext2fsDataTypes.getLE16U(buf, 24 + offset);
 		this.linksCount = Ext2fsDataTypes.getLE16U(buf, 26 + offset);
-		this.blocks = Ext2fsDataTypes.getLE32U(buf, 28 + offset);
-		this.flags = Ext2fsDataTypes.getLE32U(buf, 32 + offset);
-		//		this.osd1 = Ext2fsDataTypes.getLE32U(buf, 36 + offset);
- 		
-		this.block = new long[Constants.EXT2_N_BLOCKS];
-		for (int i=0; i<Constants.EXT2_N_BLOCKS; i++) {
-			this.block[i] = Ext2fsDataTypes.getLE32U(buf, 40 + (i*4) + offset);
-		}
-		
+		this.flags = Ext2fsDataTypes.getLE32U(buf, 32 + offset);		
 		this.generation = Ext2fsDataTypes.getLE32U(buf, 100 + offset);
 		this.fileAcl = Ext2fsDataTypes.getLE32U(buf, 104 + offset);
 		this.dirAcl = Ext2fsDataTypes.getLE32U(buf, 108 + offset);
 		this.fragmentAddress = Ext2fsDataTypes.getLE32U(buf, 112 + offset);
-		
-		// this.frag = Ext2fsDataTypes.getLE8(buf, 116 + offset);
 		this.uidHigh = Ext2fsDataTypes.getLE16U(buf, 120 + offset);
 		this.gidHigh = Ext2fsDataTypes.getLE16U(buf, 122 + offset);
 	}
