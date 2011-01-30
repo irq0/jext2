@@ -3,7 +3,11 @@ package fusejext2;
 import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
+import java.nio.charset.UnsupportedCharsetException;
 import java.io.File;
+
+import jext2.Filesystem;
 
 import fuse.Fuse;
 import fuse.SWIGTYPE_p_fuse_chan;
@@ -47,6 +51,10 @@ public class FuseJExt2 {
 		                  .hasArg()
 		                  .withArgName("FUSE_OPTIONS")
 		                  .create("o"));
+		options.addOption(OptionBuilder.withDescription("charset used for file system string conversion")
+		                  .hasArg()
+		                  .withArgName("CHARSET")
+		                  .create("c"));
 		try {
 			CommandLine cmd = parser.parse(options, args);
 
@@ -55,6 +63,15 @@ public class FuseJExt2 {
 			}
 			if (cmd.hasOption("h")) {
 				throw new ParseException("");
+			}
+			if (cmd.hasOption("c")) {
+			    String option = cmd.getOptionValue("c");
+			    try {
+			        Filesystem.setCharset(Charset.forName(option));
+			    } catch (UnsupportedCharsetException e) {
+			        throw new ParseException("Unknown charset: " + option +
+			                "\n Supported charsets:\n\n" + Charset.availableCharsets());
+			    }
 			}
 
 			String[] leftover = cmd.getArgs();

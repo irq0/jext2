@@ -3,7 +3,19 @@ package jext2;
 import java.lang.management.ManagementFactory;
 import java.nio.charset.Charset;
 
+// TODO make this a non static class which contains all pointers to runtime:
+//      filesystem data like superblock, blockaccess, etc. 
+//      This then should replace the direct superblock, etc. references in each class
 public class Filesystem {
+    private static Charset charset = Charset.defaultCharset();
+    
+    public static final Charset getCharset() {
+        return charset;
+    }
+    public static final void setCharset(Charset charset) {
+        Filesystem.charset = charset;
+    }
+
     /**
      * Get the PID of the running process
      */
@@ -13,13 +25,5 @@ public class Filesystem {
         long pid = Long.parseLong(strPid);
         return pid;     
     }
- 
-    // TODO add commandline option - 
-    // filesystem should normally be charset agnosic but since java uses unicode
-    //  for its strings conversion is required
-    public static Charset getCharset() {
-        return Charset.forName("UTF-8"); 
-    }
-        
-        
+
 }
