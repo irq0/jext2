@@ -8,7 +8,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 import java.io.File;
 
-import jext2.Feature;
 import jext2.Filesystem;
 
 import fuse.Fuse;

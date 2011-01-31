@@ -317,7 +317,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
             
             FuseContext context = req.getContext();           
             RegularInode inode = RegularInode.createEmpty();            
-            inode.setMode(Mode.IFREG | (mode & ~context.getUmask()));
+            inode.setMode(Mode.IFREG | (mode & ~(int)(context.getUmask())));
             inode.setUid(context.getUid());
             inode.setGid(context.getGid());
             InodeAlloc.registerInode(parentInode, inode);
@@ -344,7 +344,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
             FuseContext context = req.getContext();            
             DirectoryInode inode = 
                 DirectoryInode.createEmpty();            
-            inode.setMode(Mode.IFDIR | (mode & ~context.getUmask()));
+            inode.setMode(Mode.IFDIR | (mode & ~(int)(context.getUmask())));
             inode.setUid(context.getUid());
             inode.setGid(context.getGid());
             InodeAlloc.registerInode(parentInode, inode);

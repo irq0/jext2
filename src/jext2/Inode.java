@@ -6,8 +6,6 @@ import java.util.Date;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import javax.xml.crypto.Data;
-
 public class Inode extends PartialBlock {
     private int mode = 0;
 	private int gidLow = 0;

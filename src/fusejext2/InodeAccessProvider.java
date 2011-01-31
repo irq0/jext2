@@ -15,12 +15,6 @@ import jext2.exceptions.NoSuchFileOrDirectory;
 public class InodeAccessProvider {
     private Hashtable<Long,Inode> openInodes = new Hashtable<Long,Inode>();
     
-    class InodeNotOpenException extends Exception {
-        public InodeNotOpenException(String msg) { 
-            super(msg);
-        }               
-    }
-
     Inode getOpen(long ino)  {
         if (!openInodes.containsKey(ino))
             throw new RuntimeException("should not happen");

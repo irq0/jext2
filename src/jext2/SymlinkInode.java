@@ -2,7 +2,6 @@ package jext2;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 import java.util.Date;
 
 import jext2.exceptions.NoSpaceLeftOnDevice;
