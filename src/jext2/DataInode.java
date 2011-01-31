@@ -127,7 +127,9 @@ public class DataInode extends Inode {
     public int writeData(ByteBuffer buf, int offset) throws IOException, NoSpaceLeftOnDevice {
         int blocksize = superblock.getBlocksize();
         int start = offset / blocksize;
-        int max = buf.limit() / blocksize + start;
+        int max = buf.limit() / blocksize + start;        
+        if (max == 0)
+                max = 1;
         int bufOffset = offset % blocksize;        
 
         while (start < max) { 

@@ -117,7 +117,8 @@ public class BlockGroupDescriptor extends PartialBlock {
 	 * Check if block number is a valid data block in this block group 
 	 */
 	public boolean isValidDataBlockNr(long nr) {
-	    return ( getBlockBitmapPointer() != nr &&
+	    return ( nr > 0 &&
+	             getBlockBitmapPointer() != nr &&
 	             getInodeBitmapPointer() != nr &&
 	             nr >= firstBlock() &&
 	             (!(getInodeTablePointer() <= nr &&

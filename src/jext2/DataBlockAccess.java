@@ -530,9 +530,8 @@ public class DataBlockAccess {
         }
 
         /* start at first group and search the rest */
-        start = 0;
-        for (BlockGroupDescriptor descr : blockGroups.iterateBlockGroups(0)) {
-            long blockNr =  newBlockInGroup(start, descr);
+        for (BlockGroupDescriptor descr : blockGroups.iterateBlockGroups()) {
+            long blockNr =  newBlockInGroup(0, descr);
             if (blockNr > 0) {
                 return blockNr;
             }
@@ -579,7 +578,8 @@ public class DataBlockAccess {
                 /* Check to see if we are trying to allocate a system block */
                 if (!(descr.isValidDataBlockNr(blockNr))) {
                     throw new RuntimeException("Trying to allocate in system zone" 
-                                            + " blockNr=" + blockNr + " group=" + descr.getBlockGroup()
+                                            + " blockNr=" + blockNr 
+                                            + " group=" + descr.getBlockGroup()
                                             + " index=" + freeIndex);
                 }  
                 

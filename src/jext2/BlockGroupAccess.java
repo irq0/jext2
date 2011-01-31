@@ -23,6 +23,7 @@ public class BlockGroupAccess {
 	 * Read descriptors from first block group. Initialize the write-back parameters
 	 * to the first descriptor table. The backup tables will therefore no be updated. 
 	 */
+	// TODO reimplement with block iterator
 	public void readDescriptors() throws IOException {
 		int blockCount = (superblock.getGroupsCount() + 
 						  superblock.getGroupDescrPerBlock() - 1) /
@@ -31,7 +32,7 @@ public class BlockGroupAccess {
 		long start = BlockGroupDescriptor.descriptorLocation(0);
 		int groupsPerBlock = superblock.getGroupDescrPerBlock();
 		int group = 0;
-		descriptors = new BlockGroupDescriptor[superblock.getGroupsCount()];
+		descriptors = new BlockGroupDescriptor[groupCount+1];
 		
 		for (long nr=start; nr<blockCount+start; nr++) {			
 			ByteBuffer buf = blocks.read(nr);
