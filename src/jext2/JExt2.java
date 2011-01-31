@@ -75,26 +75,12 @@ class JExt2 {
 			fs.printMeta();		
 			
 			DirectoryInode root = (DirectoryInode)(InodeAccess.readRootInode());			
-			DirectoryEntry dir42 = root.lookup("42");
+			BlockAccess blocks = BlockAccess.getInstance();
 			
-			Inode newinode = InodeAccess.readByIno(dir42.getIno());
-			newinode.write();
-			
-			System.out.println("NEW INODE: \n" + newinode);
-			DataBlockAccess inodeData = ((RegularInode)newinode).accessData();
-			LinkedList<Long> block = inodeData.getBlocks(6, 1);
-			System.out.println("blocks: " + block);
-			BlockGroupDescriptor bg = BlockGroupAccess.getInstance().getGroupDescriptor(0);
-			Bitmap bmap = Bitmap.fromByteBuffer(BlockAccess.getInstance().read(bg.getBlockBitmapPointer()), bg.getBlockBitmapPointer());
+			Bitmap bmap = Bitmap.fromByteBuffer(blocks.read(65537), 65537);
 			System.out.println(bmap);
-			bmap.setBit(4, true);
-            System.out.println(bmap);
+			System.out.println(bmap.getNextZeroBitPos(0));
 			
-			ByteBuffer buf = BlockAccess.getInstance().read(block.getFirst());
-			Ext2fsDataTypes.putString(buf, "TESTTESTTESTTEST", 16, 0);
-			BlockAccess.getInstance().write(block.getFirst().intValue(), buf);
-            System.out.println("NEW INODE: \n" + newinode);
-			newinode.write();
 			
 		} catch (IOException e) {
 			System.err.println("IO Exception - possibly something with block device..");

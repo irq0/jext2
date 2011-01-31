@@ -574,12 +574,13 @@ public class DataBlockAccess {
 
             int freeIndex = bitmap.getNextZeroBitPos(start);
             if (freeIndex > 0) {
-                long blockNr = Calculations.blockNrOfLocal(freeIndex, descr.getBlockGroup());
+                long blockNr = descr.firstBlock() + freeIndex;
                 
                 /* Check to see if we are trying to allocate a system block */
                 if (!(descr.isValidDataBlockNr(blockNr))) {
                     throw new RuntimeException("Trying to allocate in system zone" 
-                                            + " blockNr=" + blockNr + " group=" + descr.getBlockGroup());
+                                            + " blockNr=" + blockNr + " group=" + descr.getBlockGroup()
+                                            + " index=" + freeIndex);
                 }  
                 
                 bitmap.setBit(freeIndex, true);
@@ -632,7 +633,9 @@ public class DataBlockAccess {
 	    if (blockNr < superblock.getFirstDataBlock() ||
 	        blockNr + count < blockNr ||
 	        blockNr + count > superblock.getBlocksCount()) {
-	        throw new RuntimeException("Free blocks not in datazone");
+	        throw new RuntimeException("Free blocks not in datazone" +
+	        		" blockNr=" + blockNr +
+	        		" count=" + count);
 	    }
 	    
 	    long overflow; 

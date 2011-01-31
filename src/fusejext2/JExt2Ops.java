@@ -32,6 +32,18 @@ public class JExt2Ops extends AbstractLowlevelOps {
 			superblock = Superblock.fromBlockAccess(blocks);
 			blocks.setBlocksize(superblock.getBlocksize());
 
+	        if (Feature.incompatUnsupported() || Feature.roCompatUnsupported()) {
+	            System.out.println("Featureset incompatible with JExt2 :(");
+	            System.exit(23);
+	        }      
+	        
+	        if (superblock.getMagic() != 0xEF53) {
+	            System.out.println("Wrong magic -> no ext2");
+	            System.exit(23);
+	        }
+	        
+	        // TODO set times, volume name, etc in  superblock
+	        
 			blockGroups = new BlockGroupAccess();
 			blockGroups.readDescriptors();
 		} catch (IOException e) {

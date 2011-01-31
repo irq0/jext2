@@ -2,12 +2,13 @@ package jext2;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 public class Bitmap extends Block {
 	private ByteBuffer bmap = ByteBuffer.allocate(Superblock.getInstance().getBlocksize());
 	protected void read(ByteBuffer buf) throws IOException {
-		buf.position(0);
-		bmap.put(buf);
+	    this.bmap = buf;
+	    bmap.order(ByteOrder.LITTLE_ENDIAN);
 	}
 
 	/**
@@ -33,10 +34,11 @@ public class Bitmap extends Block {
 		
 		while(bmap.hasRemaining() && numBytes > 0) {
 			if (chunk == 0) { /* is zero */
+
 			    pos = (bmap.position()-1) * 8;
 			    break;
 			} else if (chunk != (byte)0xFF) { /* has at least one zero bit */
-				pos = (bmap.position()-1)*8 + findFirstZeroBitInByte(chunk);
+				pos = (bmap.position()-1)*8 + findRightModeZeroBitInByte(chunk);
 				break;
 			} 
 						
@@ -51,6 +53,16 @@ public class Bitmap extends Block {
 	    return getNextZeroBitPos(start, bmap.limit());
 	}
 
+	/**
+	 * format a byte as bitstring as it appears on disk
+	 */
+	public static String formatByte(byte b) {
+	    return String.format("%1$#32s", 
+	            Integer.toBinaryString(b).replace(' ','0')).substring(24);
+	}
+
+	
+	
 	/**
 	 * test if bit at position pos is 1
 	 */
@@ -82,21 +94,36 @@ public class Bitmap extends Block {
 	}
 
 	/**
-	 * find first zero bit in byte from the left
+	 * Find position of first zero bit from the left
+	 * "00111111" -> 0
 	 */
-	private int findFirstZeroBitInByte(byte b) {
+	public int findLeftMostZeroBitInByte(byte b) {
 	    byte mask = -0x80; /* sign bit is 128 */
 		for (int i=0; i<8; i++) {
 		    if ((mask & b) == 0) {
 	            return i;
-
 			}
-
 			mask = (byte) ((mask >>> 1) & ~mask);
 		}
 		return -1;
 	}
+	
+	/**
+     * Find position of first zero bit from the right
+     * "00111111" -> 6
+     */
+    public int findRightModeZeroBitInByte(byte b) {
+        byte mask = 0x01;
+        for (int i=0; i<8; i++) {
+            if ((mask & b) == 0) {
+                return i;
+            }
+            mask = (byte) (mask << 1);
+        }
+        return -1;
+    }
 
+	
 	protected Bitmap(long blockNr) {
 		super(blockNr);
 	}
@@ -145,12 +172,12 @@ public class Bitmap extends Block {
 
 
         System.out.println();
-        System.out.println(bmap.findFirstZeroBitInByte((byte)0x8F)); // 1
-        System.out.println(bmap.findFirstZeroBitInByte((byte)-0x80)); // 1
-        System.out.println(bmap.findFirstZeroBitInByte((byte)0xDA)); // 2
-        System.out.println(bmap.findFirstZeroBitInByte((byte)0xFE)); // 7
-        System.out.println(bmap.findFirstZeroBitInByte((byte)0x0F)); // 0
-        System.out.println(bmap.findFirstZeroBitInByte((byte)0xFF)); // -1
+        System.out.println(bmap.findLeftMostZeroBitInByte((byte)0x8F)); // 1
+        System.out.println(bmap.findLeftMostZeroBitInByte((byte)-0x80)); // 1
+        System.out.println(bmap.findLeftMostZeroBitInByte((byte)0xDA)); // 2
+        System.out.println(bmap.findLeftMostZeroBitInByte((byte)0xFE)); // 7
+        System.out.println(bmap.findLeftMostZeroBitInByte((byte)0x0F)); // 0
+        System.out.println(bmap.findLeftMostZeroBitInByte((byte)0xFF)); // -1
 
         System.out.println();
         bmap.setBit(600, true);
@@ -182,7 +209,9 @@ public class Bitmap extends Block {
 	    
 	    bmap.rewind();
 	    for (int i=0; i<bmap.limit()/(Integer.SIZE/8); i++) {
-	        sb.append(String.format("%1$#32s", Integer.toBinaryString(bmap.getInt())).replace(' ', '0'));
+	        StringBuffer binstr = new StringBuffer();
+	        binstr.append(String.format("%1$#23s", (Integer.toBinaryString(bmap.getInt())).replace(' ','0')));
+	        sb.append(binstr.reverse());
 	        sb.append("\n");
 	    }
 	    
