@@ -8,7 +8,7 @@ public class Bitmap extends Block {
 	private ByteBuffer bmap = ByteBuffer.allocate(Superblock.getInstance().getBlocksize());
 	protected void read(ByteBuffer buf) throws IOException {
 	    this.bmap = buf;
-	    bmap.order(ByteOrder.LITTLE_ENDIAN);
+	    this.bmap.order(ByteOrder.LITTLE_ENDIAN);
 	}
 
 	/**
@@ -64,13 +64,14 @@ public class Bitmap extends Block {
 	
 	
 	/**
-	 * test if bit at position pos is 1
+	 * test if bit at position pos is 1 
 	 */
 	public boolean isSet(int pos) {
         int byteNum = pos / 8;
-        byte offset = (byte) (7 - (pos % 8));
+        byte offset = (byte) (pos % 8);
         
 	    byte chunk = bmap.get(byteNum);
+	    System.out.println("isSet: " + formatByte(chunk));
 	    byte mask = (byte)(1 << offset);
 	    
 	    return ((mask & chunk) != 0);
@@ -81,9 +82,11 @@ public class Bitmap extends Block {
 	 */
 	public void setBit(int pos, boolean value) {
 		int byteNum = pos / 8;
-		byte offset = (byte) (7 - (pos % 8));
+		byte offset = (byte) (pos % 8);
 		byte chunk = bmap.get(byteNum);
+        System.out.println("isSet: " + formatByte(chunk));
 
+		
 		if (value == true) // set to 1
 			chunk = (byte) (chunk | (1 << offset));
 		else  // set to 0
@@ -136,69 +139,7 @@ public class Bitmap extends Block {
 	
 	public void write() throws IOException {
 		write(bmap);
-	}
-	
-	public static void test() throws IOException {
-	    byte[] sequence = new byte[] { 23, 42, 1, 5, 3, 9, 7, 12 };
-	    
-	    ByteBuffer buf = ByteBuffer.allocate(50);
-	    
-	    buf.rewind();
-	    
-	    for (int i=0; i< buf.limit()/sequence.length; i++)
-	        buf.put(sequence);
-	    
-	    Bitmap bmap = Bitmap.fromByteBuffer(buf, -1);
-	    System.out.println(bmap);
-	    
-	    System.out.println(bmap.isSet(0)); // false
-        System.out.println(bmap.isSet(32)); // false
-        System.out.println(bmap.isSet(3)); // true
-        System.out.println(bmap.isSet(38)); // true
-        System.out.println(bmap.isSet(1023)); // false
-	    
-        System.out.println();
-        
-        bmap.setBit(1000, true);
-        System.out.println(bmap.isSet(1000)); // true
-
-        bmap.setBit(1000, false);
-        System.out.println(bmap.isSet(1000)); // false
-
-        System.out.println();
-        
-        bmap.setBit(1000, true);
-        System.out.println(bmap.isSet(1000)); // true
-
-
-        System.out.println();
-        System.out.println(bmap.findLeftMostZeroBitInByte((byte)0x8F)); // 1
-        System.out.println(bmap.findLeftMostZeroBitInByte((byte)-0x80)); // 1
-        System.out.println(bmap.findLeftMostZeroBitInByte((byte)0xDA)); // 2
-        System.out.println(bmap.findLeftMostZeroBitInByte((byte)0xFE)); // 7
-        System.out.println(bmap.findLeftMostZeroBitInByte((byte)0x0F)); // 0
-        System.out.println(bmap.findLeftMostZeroBitInByte((byte)0xFF)); // -1
-
-        System.out.println();
-        bmap.setBit(600, true);
-        bmap.setBit(601, true);
-        bmap.setBit(602, true);
-        bmap.setBit(603, true);
-        bmap.setBit(604, true);
-        System.out.println(bmap.getNextZeroBitPos(600)); // 605
-        System.out.println(bmap.getNextZeroBitPos(600,1)); // 605
-        bmap.setBit(605, true);
-        bmap.setBit(606, true);        
-        bmap.setBit(607, true);
-        bmap.setBit(608, true);
-        System.out.println(bmap.getNextZeroBitPos(600,1)); // -1 
-        System.out.println(bmap.getNextZeroBitPos(608,1)); // 609
-        System.out.println(bmap.getNextZeroBitPos(607,1)); // -1
-        
-        System.out.println(bmap.getNextZeroBitPos(706,1)); // -1
-	}
-	    
-	    
+	}	    
 	
 	public String toString() {
 	    StringBuffer sb = new StringBuffer();
