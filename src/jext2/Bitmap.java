@@ -71,7 +71,6 @@ public class Bitmap extends Block {
         byte offset = (byte) (pos % 8);
         
 	    byte chunk = bmap.get(byteNum);
-	    System.out.println("isSet: " + formatByte(chunk));
 	    byte mask = (byte)(1 << offset);
 	    
 	    return ((mask & chunk) != 0);
@@ -84,8 +83,6 @@ public class Bitmap extends Block {
 		int byteNum = pos / 8;
 		byte offset = (byte) (pos % 8);
 		byte chunk = bmap.get(byteNum);
-        System.out.println("isSet: " + formatByte(chunk));
-
 		
 		if (value == true) // set to 1
 			chunk = (byte) (chunk | (1 << offset));

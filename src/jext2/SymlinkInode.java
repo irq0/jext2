@@ -12,20 +12,7 @@ public class SymlinkInode extends DataInode {
 
 	public int FAST_SYMLINK_MAX=Constants.EXT2_N_BLOCKS * 4;
 
-	
-    /**
-     * Get the data access provider to read and write to the data area of this
-     * inode
-     */
-    public DataBlockAccess accessData() {
-        if (isFastSymlink()) 
-            return null;
-        
-        if (dataAccess == null)
-            dataAccess = DataBlockAccess.fromInode(this);
-        return dataAccess;
-    }
-    
+	  
     private String readSlowSymlink() throws IOException {
         ByteBuffer buf = readData((int)getSize(), 0);        
         return Ext2fsDataTypes.getString(buf, 0, buf.limit());
@@ -96,7 +83,7 @@ public class SymlinkInode extends DataInode {
     }
     
     protected void write(ByteBuffer buf) throws IOException {
-        if (getSize() > 0) 
+        if (isFastSymlink() && getSize() > 0) 
             Ext2fsDataTypes.putString(buf, symlink, (int)getSize(), 40);
         super.write(buf);
     }
