@@ -347,5 +347,6 @@ public class DirectoryInode extends DataInode {
 	    /* set the record length of the predecessor to skip the toDelete entry */ 
 	    prev.setRecLen(prev.getRecLen() + toDelete.getRecLen());
 	    prev.write();
+	    setModificationTime(new Date());
 	}
 }
