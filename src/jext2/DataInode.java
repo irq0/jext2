@@ -2,6 +2,7 @@ package jext2;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Date;
 import java.util.LinkedList;
 
 import jext2.exceptions.NoSpaceLeftOnDevice;
@@ -150,6 +151,7 @@ public class DataInode extends Inode {
         
         /* increase inode.size if we grew the file */
         if (offset + written > getSize()) { /* file grew */
+            setStatusChangeTime(new Date());
             setSize(offset + written);
             write();
         } 

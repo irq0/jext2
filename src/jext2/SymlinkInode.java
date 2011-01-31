@@ -59,6 +59,8 @@ public class SymlinkInode extends DataInode {
 	    } else { /* slow symlink */
 	        writeSlowSymlink(link);
 	    }
+
+	    setStatusChangeTime(new Date());
 	}
 	
 	protected SymlinkInode(long blockNr, int offset) throws IOException {
@@ -112,7 +114,7 @@ public class SymlinkInode extends DataInode {
         
         inode.setModificationTime(now);
         inode.setAccessTime(now);
-        inode.setCreateTime(now);
+        inode.setStatusChangeTime(now);
         inode.setDeletionTime(new Date(0));
         inode.setMode(Mode.IFLNK | 0777);
         inode.setBlock(new long[Constants.EXT2_N_BLOCKS]);

@@ -91,7 +91,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		    s.setBlocks(0);
 		
 		s.setAtim(dateToTimespec(inode.getAccessTime()));
-		s.setCtim(dateToTimespec(inode.getCreateTime()));
+		s.setCtim(dateToTimespec(inode.getStatusChangeTime()));
 		s.setMtim(dateToTimespec(inode.getModificationTime()));
 		
 		return s;

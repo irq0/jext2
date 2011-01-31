@@ -685,7 +685,7 @@ public class DataBlockAccess {
 	    
 	    
 	    inode.setBlocks(inode.getBlocks() - freed * (superblock.getBlocksize()/ 512));
-	    
+	    inode.setModificationTime(new Date());
 	    superblock.setFreeBlocksCount(superblock.getFreeBlocksCount() + freed);
 	    superblock.write();
 	}

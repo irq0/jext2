@@ -144,7 +144,9 @@ public class DirectoryInode extends DataInode {
                    newEntry.setRecLen(currentEntry.getRecLen());                   
                    blocks.writePartial(blockNr, offset, newEntry.toByteBuffer());
                    
-                   setLinksCount(getLinksCount() + 1);            
+                   setLinksCount(getLinksCount() + 1);
+                   setModificationTime(new Date()); // should be handeld by block layer 
+                   setStatusChangeTime(new Date());
                    return;
                }
                
@@ -169,6 +171,8 @@ public class DirectoryInode extends DataInode {
                    blocks.writePartial(blockNr, offset, newEntry.toByteBuffer());
 
                    setLinksCount(getLinksCount() + 1);            
+                   setModificationTime(new Date());
+                   setStatusChangeTime(new Date());
                    return;
                }
                
@@ -193,6 +197,9 @@ public class DirectoryInode extends DataInode {
        
        DirectoryEntry rest = DirectoryEntry.createRestDummy(newEntry);
        blocks.writePartial(blockNr, newEntry.getRecLen(), rest.toByteBuffer());
+       
+       setStatusChangeTime(new Date());
+
 	}
 
 	
@@ -276,7 +283,7 @@ public class DirectoryInode extends DataInode {
 	        
 	    inode.setModificationTime(now);
 	    inode.setAccessTime(now);
-	    inode.setCreateTime(now);
+	    inode.setStatusChangeTime(now);
 	    inode.setDeletionTime(new Date(0));
         inode.setMode(Mode.IFDIR);
         inode.setBlock(new long[Constants.EXT2_N_BLOCKS]);
@@ -313,7 +320,8 @@ public class DirectoryInode extends DataInode {
 	private void unlink(Inode inode, String name) throws IOException {
 	    removeLink(name);
 	    inode.setLinksCount(inode.getLinksCount() - 1);
-	    
+	    setStatusChangeTime(new Date());
+
 	    if (inode.getLinksCount() == 0) {
 	        InodeAlloc.freeInode(inode);
 	    }
