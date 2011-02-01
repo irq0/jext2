@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.LinkedList;
 
+import jext2.exceptions.InvalidArgument;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 
 /**
@@ -47,76 +48,44 @@ public class DataInode extends Inode {
      * @param  size    size of the data to be read
      * @param  offset  start adress in data area
      * @return buffer of size size containing data.
+     * @throws InvalidArgument 
      */ 
     public ByteBuffer readData(int size, long offset) throws IOException {
         ByteBuffer result = ByteBuffer.allocateDirect(size);
     
         int blocksize = superblock.getBlocksize();
         long start = offset / blocksize;
-        long max = Math.min(size / blocksize + start,
-                           (int)(getBlocks()/(blocksize/512)));
+        long max = Math.min((size / blocksize) + start,
+                           (int)(getSize()/(blocksize)));
         offset = offset % blocksize;
         int firstInBuffer = (int) offset;
         
         while (start < max) { 
             LinkedList<Long> b = accessData().getBlocks(start, max-start);
-    
-            // getBlocks returns null in case create=false and the block 
-            // does not exist. FUSE can and will request not existing blocks. 
-            if (b == null) {
-                break;
+            int count = 0;
+            
+            /**
+             * Sparse file support:
+             * getBlocks will return null if there is no data block for this 
+             * logical address. So just move the position count blocks forward.
+             */
+            
+            if (b == null) { /* hole */
+                count = 1;
+                result.position(result.position() + count * blocksize);
+            } else { /* blocks */
+                count = b.size();
+                result.limit(result.position() + count * blocksize);
+                blockAccess.readToBuffer(
+                        (((long)(b.getFirst() & 0xffffffff)) * blocksize)
+                        + offset, result);
             }
     
-            int count = b.size();
-            result.limit(result.position() + count * blocksize);
-            blockAccess.readToBuffer(
-                    (((long)(b.getFirst() & 0xffffffff)) * blocksize)
-                    + offset, result);
-            start += b.size();          
+            start += count;          
             offset = 0;
         }
     
         result.position(firstInBuffer);
-        return result;
-    }
-
-    /**
-     * Old implementation of readData. Dont use this. Its just for reference how 
-     * not to do it
-     */
-    public ByteBuffer readDataSlow(int size, long offset) throws IOException {
-        ByteBuffer result = ByteBuffer.allocateDirect(size);
-    
-        long start = offset / superblock.getBlocksize();
-        long max = size / superblock.getBlocksize() + start;
-        offset = offset % superblock.getBlocksize();        
-        LinkedList<Long> blockNrs = new LinkedList<Long>();   
-        
-        while (start < max) { 
-            LinkedList<Long> b = accessData().getBlocks(start, max-start);
-            
-            // getBlocks returns null in case create=false and the block 
-            // does not exist. FUSE can and will request not existing blocks. 
-            if (b == null) {
-                break;
-            }
-                        
-            start += b.size();          
-            blockNrs.addAll(b);
-        }
-        
-        for (long nr : blockNrs) {
-            ByteBuffer block = blockAccess.read((int)nr);
-            block.position((int)offset);
-    
-            while (result.hasRemaining() && block.hasRemaining()) {
-                    result.put(block.get());
-            }
-    
-            offset = 0;
-        }
-        
-        result.rewind();
         return result;
     }
 
@@ -126,11 +95,16 @@ public class DataInode extends Inode {
      * @throws NoSpaceLeftOnDevice 
      */    
     public int writeData(ByteBuffer buf, long offset) throws IOException, NoSpaceLeftOnDevice {
+        System.out.println("writing " + buf + " at offset " + offset);
+        /*
+         * Note on sparse file support:
+         * getBlocksAllocate does not care if there are holes. Just write as much 
+         * blocks as the buffer requires at the desired location an set inode.size
+         * accordingly. 
+         */        
         int blocksize = superblock.getBlocksize();
         long start = offset / blocksize;
-        long max = buf.limit() / blocksize + start;        
-        if (max == 0)
-                max = 1;
+        long max = Math.max(start+1, (buf.limit() / blocksize) + start);        
         long bufOffset = offset % blocksize;        
 
         while (start < max) { 

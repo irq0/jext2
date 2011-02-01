@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Date;
 
+import jext2.exceptions.InvalidArgument;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 
 public class SymlinkInode extends DataInode {
@@ -13,7 +14,7 @@ public class SymlinkInode extends DataInode {
 
 	  
     private String readSlowSymlink() throws IOException {
-        ByteBuffer buf = readData((int)getSize(), 0);        
+        ByteBuffer buf = readData((int)getSize(), 0);
         return Ext2fsDataTypes.getString(buf, 0, buf.limit());
     }       
     private void writeSlowSymlink(String link) throws IOException, NoSpaceLeftOnDevice {

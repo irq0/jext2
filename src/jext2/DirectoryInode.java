@@ -106,17 +106,20 @@ public class DirectoryInode extends DataInode {
         newDir.setFileType(inode.getFileType());
 
         addLink(newDir);
+        
+        inode.setLinksCount(inode.getLinksCount() + 1);
+        inode.write();
 	}
 	
 	/**
 	 * Add directory entry. Iterate over data blocks and check for entries with
 	 * the same name on the way. 
-	 * @throws InvalidArgument     When we find a corrupt entry 
+	 * @throws InvalidArgument     Found a corrupt entry 
 	 * @throws NoSpaceLeftOnDevice 
 	 * @throws FileExistsException      When we find an entry with same name
 	 */
 	// TODO rewrite addLink to use the directory iterator
-	public void addLink(DirectoryEntry newEntry) throws IOException, FileExists, InvalidArgument, NoSpaceLeftOnDevice {
+	private void addLink(DirectoryEntry newEntry) throws IOException, FileExists, InvalidArgument, NoSpaceLeftOnDevice {
        ByteBuffer block;
        int offset = 0;
        
@@ -144,7 +147,6 @@ public class DirectoryInode extends DataInode {
                    newEntry.setRecLen(currentEntry.getRecLen());                   
                    blocks.writePartial(blockNr, offset, newEntry.toByteBuffer());
                    
-                   setLinksCount(getLinksCount() + 1);
                    setModificationTime(new Date()); // should be handeld by block layer 
                    setStatusChangeTime(new Date());
                    return;
@@ -170,7 +172,6 @@ public class DirectoryInode extends DataInode {
                    newEntry.setRecLen(spaceFreed);
                    blocks.writePartial(blockNr, offset, newEntry.toByteBuffer());
 
-                   setLinksCount(getLinksCount() + 1);            
                    setModificationTime(new Date());
                    setStatusChangeTime(new Date());
                    return;
@@ -258,17 +259,9 @@ public class DirectoryInode extends DataInode {
 	}
 
 	public void addDotLinks(DirectoryInode parent) throws IOException, FileExists, InvalidArgument, NoSpaceLeftOnDevice {        
-	    try {
-	        DirectoryEntry dot = DirectoryEntry.create(".");
-	        DirectoryEntry dotdot = DirectoryEntry.create("..");
-	        dot.setFileType(DirectoryEntry.FILETYPE_DIR);
-	        dot.setIno(this.getIno());
-	        
-	        dotdot.setFileType(DirectoryEntry.FILETYPE_DIR);
-	        dotdot.setIno(parent.getIno());
-
-	        this.addLink(dot);
-	        this.addLink(dotdot);
+	    try {        
+	        addLink(this, ".");
+	        addLink(parent, "..");
 	    } catch (FileNameTooLong e) {
 	        throw new RuntimeException("should not happen");
 	    }
