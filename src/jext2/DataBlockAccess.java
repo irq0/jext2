@@ -44,7 +44,6 @@ public class DataBlockAccess {
         long[] result = new long[(end-start)+1];
         
         ByteBuffer buffer = blocks.read(dataBlock);
-        buffer.order(ByteOrder.LITTLE_ENDIAN);
         buffer.limit((end+1) * 4);
         
         for (int i=0; i<=(end-start); i++) {
@@ -341,7 +340,7 @@ public class DataBlockAccess {
                     if (nr > 0) {
                         result.addLast(nr);
                         buf.clear();
-                        Ext2fsDataTypes.putLE32U(buf, nr, offsets[n]);
+                        Ext2fsDataTypes.putLE32U(buf, nr, offsets[n]*4 );                        
                         blocks.write(parent, buf);	        
                     } else {	                
                         break;
@@ -379,7 +378,7 @@ public class DataBlockAccess {
 	        directBlocks[offsets[0]] = newBlockNrs.getFirst().longValue();
 	    } else {
 	        ByteBuffer buf = blocks.read(blockNrs[existDepth-1]);
-	        Ext2fsDataTypes.putLE32(buf, newBlockNrs.getFirst().intValue(), 
+	        Ext2fsDataTypes.putLE32U(buf, newBlockNrs.getFirst().longValue()*4, 
 	                                     offsets[existDepth]);
 	        blocks.write(blockNrs[existDepth-1], buf);	        
 	    }

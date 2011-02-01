@@ -55,8 +55,8 @@ public class DataInode extends Inode {
     
         int blocksize = superblock.getBlocksize();
         long start = offset / blocksize;
-        long max = Math.min((size / blocksize) + start,
-                           (int)(getSize()/(blocksize)));
+        long max = (size/blocksize) + start;
+        
         offset = offset % blocksize;
         int firstInBuffer = (int) offset;
         
@@ -72,6 +72,7 @@ public class DataInode extends Inode {
             
             if (b == null) { /* hole */
                 count = 1;
+                result.limit(result.position() + count * blocksize);                
                 result.position(result.position() + count * blocksize);
             } else { /* blocks */
                 count = b.size();
@@ -80,7 +81,7 @@ public class DataInode extends Inode {
                         (((long)(b.getFirst() & 0xffffffff)) * blocksize)
                         + offset, result);
             }
-    
+
             start += count;          
             offset = 0;
         }
