@@ -61,6 +61,8 @@ public class Superblock extends Block {
     private int inodeTableBlocksPerGroup;
     private int inodesPerBlock;
 
+    private int overhead = 0;
+    
 	public final long getInodesCount() {
         return inodesCount;
     }
@@ -184,6 +186,14 @@ public class Superblock extends Block {
     public final int getInodesPerBlock() {
         return inodesPerBlock;
     }
+    /**
+     * Return number of blocks used by fs structures 
+     */
+    public int getOverhead() {
+        if (this.overhead == 0) 
+            this.overhead = calculateOverhead();
+        return this.overhead;       
+    }
     public void setFreeBlocksCount(long freeBlocksCount) {
 		this.freeBlocksCount = freeBlocksCount;
 	}
@@ -254,7 +264,7 @@ public class Superblock extends Block {
 		this.blocksize = (1024 << this.logBlockSize);
 		this.groupDescrPerBlock = this.blocksize / 32; // 32 = sizeof (struct ext2_group_desc);
 		this.groupsCount = (int)( ((this.blocksCount - this.firstDataBlock) - 1) /
-						   this.blocksPerGroup);
+						   this.blocksPerGroup + 1);
 		this.groupDescrBlocks = (this.groupsCount + this.groupDescrPerBlock -1) / 
 		                         this.groupDescrPerBlock;
 		this.inodesPerBlock = this.blocksize / this.inodeSize;
@@ -301,6 +311,42 @@ public class Superblock extends Block {
 		
 		super.write(buf);
 	}
+
+	// TODO add debug code that checks bitmap
+	public long countFreeInodes() {
+	    long inodes = 0;
+	    for (BlockGroupDescriptor descr :
+	        BlockGroupAccess.getInstance().iterateBlockGroups()) {
+	        inodes += descr.getFreeInodesCount();
+	    }
+	    return inodes;
+	}
+
+	// TODO add debug code that checks bitmap
+	public long countFreeBlocks() {
+	    long blocks = 0;
+	    for (BlockGroupDescriptor descr :
+	        BlockGroupAccess.getInstance().iterateBlockGroups()) {
+	        blocks += descr.getFreeBlocksCount();
+	    }
+	    return blocks;
+	}
+
+	
+	/**
+	 * Calculate the overhead (eg. blocks that are in use by fs structures
+	 */
+	private int calculateOverhead() {
+	    int overhead = (int)getFirstDataBlock();
+
+	    for (BlockGroupDescriptor descr : 
+	         BlockGroupAccess.getInstance().iterateBlockGroups()) {
+	        overhead += descr.getOverhead();
+	    }
+	    
+	    return overhead;
+	}
+	
 	
 	public void write() throws IOException {
 		ByteBuffer buf = allocateByteBuffer();

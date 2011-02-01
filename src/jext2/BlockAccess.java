@@ -64,8 +64,6 @@ public class BlockAccess {
 		blockdev.write(buf);
 	}	
 	
-	
-	@SuppressWarnings("unused")
     public void dumpByteBuffer(ByteBuffer buf) {
 	    try {
 	    while (buf.hasRemaining()) {

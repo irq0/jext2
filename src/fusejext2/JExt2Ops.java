@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.UUID;
 
 import jext2.*;
+import jext2.exceptions.FileTooLarge;
 import jext2.exceptions.JExt2Exception;
 import fuse.*;
 import jlowfuse.*;
@@ -114,18 +115,24 @@ public class JExt2Ops extends AbstractLowlevelOps {
         }
 	}
 	
-	public void read(FuseReq req, long ino, int size, int off, FileInfo fi) {
+	public void read(FuseReq req, long ino, long size, long off, FileInfo fi) {
 		try {
+		    if (size > Integer.MAX_VALUE)
+		        throw new FileTooLarge();
+		    
 		    RegularInode inode = (RegularInode)(inodes.getOpen(ino));
-			ByteBuffer buf = inode.readData(size, off);
+			ByteBuffer buf = inode.readData((int)size, off);
 			Reply.byteBuffer(req, buf, 0, size);
 		} catch (IOException e) {
 			Reply.err(req, Errno.EIO);
-		} 
+		} catch (JExt2Exception e) {
+		    Reply.err(req, e.getErrno());
+		}
+		
 	}
 	
 	
-	public void write(FuseReq req, long ino, ByteBuffer buf, int off, FileInfo fi) {
+	public void write(FuseReq req, long ino, ByteBuffer buf, long off, FileInfo fi) {
 	    try {
 	        RegularInode inode = (RegularInode)(inodes.getOpen(ino));
 	        buf.rewind();
@@ -274,7 +281,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 	}
 	
 	
-	public void readdir(FuseReq req, long ino, int size, int off, FileInfo fi) {
+	public void readdir(FuseReq req, long ino, long size, long off, FileInfo fi) {
 	    if (ino == 1) ino = Constants.EXT2_ROOT_INO;
 
         DirectoryInode inode = (DirectoryInode)(inodes.getOpen(ino));
@@ -364,25 +371,24 @@ public class JExt2Ops extends AbstractLowlevelOps {
     public void statfs(FuseReq req, long ino) {
         StatVFS s = new StatVFS();
 
-        // TODO rw: calculate overhead
-        // TODO rw: ext2_count_free_blocks
-        // TODO rw: ext2_count_free_inodes
-        
         s.setBsize(superblock.getBlocksize());
-        s.setBlocks(superblock.getBlocksCount()); // - overhead_last );
-        s.setBfree(superblock.getFreeBlocksCount()); 
-        s.setBavail(s.getBfree() - superblock.getResevedBlocksCount());
-        if (s.getBfree() < superblock.getResevedBlocksCount())
+        s.setFrsize(superblock.getBlocksize());
+        s.setBlocks(superblock.getBlocksCount() - superblock.getOverhead());
+        s.setBfree(superblock.getFreeBlocksCount());
+        
+        if (s.getBfree() >= superblock.getResevedBlocksCount())
+            s.setBavail(superblock.getFreeBlocksCount() - superblock.getResevedBlocksCount());
+        else 
         	s.setBavail(0);
+        
         s.setFiles(superblock.getInodesCount());
         s.setFfree(superblock.getFreeInodesCount());
+        s.setFavail(superblock.getFreeInodesCount());
+        
+        s.setFsid(0); 
+        s.setFlag(0);
         s.setNamemax(DirectoryEntry.MAX_NAME_LEN);
 
-        // Note: This is not the same as the Linux kernel writes there.. 
-        UUID uuid = superblock.getUuid();
-        long fsid = uuid.getLeastSignificantBits() ^
-        			uuid.getMostSignificantBits();
-        s.setFsid(fsid); 
         Reply.statfs(req, s);
     }
 

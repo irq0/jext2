@@ -1,5 +1,6 @@
 package jext2;
 
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.io.IOException;
 
@@ -126,6 +127,16 @@ public class BlockGroupDescriptor extends PartialBlock {
 	}
 
 	/**
+	 * Return the number of blocks used for file system structures
+	 */
+	public int getOverhead() {
+	    return (((hasSuperblock())?1:0) + 
+	            getDescriptorTableBlocks() +
+	            superblock.getInodeTableBlocksPerGroup() +
+	            2 /* inode, block bitmap */ );	            
+	}
+	
+	/**
 	 * do not use this method. it is just for later improvement here. It does
 	 * not take into account that sparse block groups have not descriptor table
 	 */ 
@@ -159,6 +170,19 @@ public class BlockGroupDescriptor extends PartialBlock {
 	
 	public boolean hasDescrptiorTable() {
 	    return hasDescriptorTable(this.blockGroup);
+	}
+	
+	
+	/**
+	 * Return the number of blocks used for the descriptor table. 
+	 * Depends on the sparse_super feature
+	 */
+	public int getDescriptorTableBlocks() {
+	    if (hasDescrptiorTable()) {
+	        return superblock.getGroupDescrBlocks();
+	    } else {
+	        return 0;
+	    }
 	}
 	
 	/**
