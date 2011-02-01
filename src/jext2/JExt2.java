@@ -72,7 +72,7 @@ class JExt2 {
 			fs.checkFeatures();
 			fs.printMeta();		
 			
-			DirectoryInode root = (DirectoryInode)(InodeAccess.readRootInode());			
+		//	DirectoryInode root = (DirectoryInode)(InodeAccess.readRootInode());			
 			BlockAccess blocks = BlockAccess.getInstance();
 			
 			Bitmap bmap = Bitmap.fromByteBuffer(blocks.read(65537), 65537);

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Date;
-import java.util.UUID;
 
 import jext2.*;
 import jext2.exceptions.FileTooLarge;
@@ -100,8 +99,6 @@ public class JExt2Ops extends AbstractLowlevelOps {
 
 	public void open(FuseReq req, long ino, FileInfo fi) {
 		try {
-		    int flags = fi.getFlags();
-
 			Inode inode = inodes.get(ino);
 			if (! (inode instanceof RegularInode)) {
 			    Reply.err(req, Errno.EPERM);

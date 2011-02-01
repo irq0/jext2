@@ -1,6 +1,5 @@
 package jext2;
 
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.io.IOException;
 
