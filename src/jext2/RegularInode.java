@@ -27,8 +27,10 @@ public class RegularInode extends DataInode {
      * @param   size    new size
      */
     public void setSizeAndTruncate(long size) throws IOException {
+        long oldSize = getSize();
         setSize(size);
-        accessData().truncate();
+        if (oldSize > size)
+            accessData().truncate();
     }
 
     /**
