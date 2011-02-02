@@ -703,14 +703,15 @@ public class DataBlockAccess {
 	    long[] branchNrs = getBranch(offsets);
 	    int existDepth = branchNrs.length;
 	    
-	    for (int i=existDepth-1; i>=0; i++) {
-	        long nr = branchNrs[i];
+	    for (int i=existDepth-1; i>0; i--) {
+	        long nr = branchNrs[i-1];
 	        int start = offsets[i];
 	        
 	        long[] blockNrs = blocks.readBlockNrsFromBlock(nr, start, ptrs-1);
 	        blocks.zeroOut(nr, start*4, (ptrs-1)*4);
-	        freeBranches(depth, blockNrs);
+	        freeBranches((existDepth-2)-i, blockNrs);
 	    }
+	    directBlocks[offsets[0]] = 0;
 	        
 	    /* kill the remaining (whole) subtrees */
 	    long nr = -1;
