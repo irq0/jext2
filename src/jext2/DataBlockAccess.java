@@ -4,7 +4,6 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
-import java.nio.ByteOrder;
 import java.util.Iterator;
 import java.io.IOException;
 

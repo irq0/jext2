@@ -10,7 +10,6 @@ import java.util.LinkedList;
  * Access to the filesystem blocks  
  */
 public class BlockAccess {
-    private  Superblock superblock;
 	private int blocksize = Constants.EXT2_MIN_BLOCK_SIZE;
 	private FileChannel blockdev;
 	private static BlockAccess instance;
@@ -97,7 +96,7 @@ public class BlockAccess {
 	}
 			
 	public void initialize(Superblock superblock) {
-		this.superblock = superblock;
+	    blocksize = superblock.getBlocksize();
 		ptrs = superblock.getAddressesPerBlock();
 	}
 

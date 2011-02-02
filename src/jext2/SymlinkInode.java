@@ -5,7 +5,6 @@ import java.nio.ByteBuffer;
 import java.util.Date;
 
 import jext2.exceptions.FileTooLarge;
-import jext2.exceptions.InvalidArgument;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 
 public class SymlinkInode extends DataInode {

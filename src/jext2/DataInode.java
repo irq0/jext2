@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.LinkedList;
 
 import jext2.exceptions.FileTooLarge;
-import jext2.exceptions.InvalidArgument;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 
 /**
@@ -99,7 +98,6 @@ public class DataInode extends Inode {
      * @throws FileTooLarge 
      */    
     public int writeData(ByteBuffer buf, long offset) throws IOException, NoSpaceLeftOnDevice, FileTooLarge {
-        System.out.println("writing " + buf + " at offset " + offset);
         /*
          * Note on sparse file support:
          * getBlocksAllocate does not care if there are holes. Just write as much 
@@ -111,9 +109,6 @@ public class DataInode extends Inode {
         long max = Math.max(start+1, (buf.limit() / blocksize) + start);        
         long bufOffset = offset % blocksize;        
 
-        System.out.println("writing " + (max-start) + " blocks from " + start + " to " + max);
-
-        
         while (start < max) { 
             LinkedList<Long> b = accessData().getBlocksAllocate(start, max-start);
         
@@ -130,9 +125,6 @@ public class DataInode extends Inode {
         
         int written = buf.position();
         
-        System.out.println("filesize is now " + (offset + written) + " was " + getSize() );
-
-        
         /* increase inode.size if we grew the file */
         if (offset + written > getSize()) { /* file grew */
             setStatusChangeTime(new Date());
@@ -140,9 +132,6 @@ public class DataInode extends Inode {
             write();
         } 
 
-        System.out.println("filesize is now " + (offset + written) + " was " + getSize() );
-        
-        
         return buf.position();
     }  
     

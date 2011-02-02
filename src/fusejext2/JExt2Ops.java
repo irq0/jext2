@@ -6,7 +6,6 @@ import java.nio.channels.FileChannel;
 import java.util.Date;
 
 import jext2.*;
-import jext2.exceptions.FileTooLarge;
 import jext2.exceptions.JExt2Exception;
 import fuse.*;
 import jlowfuse.*;
@@ -180,10 +179,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		    Inode inode = inodes.get(ino);
 			Stat stat = makeStat(inode);
 			
-			System.out.println("inode=" + ino + " isize=" +inode.getSize() + " st_size=" + stat.getSize());
-			
 			Reply.attr(req, stat, 0.0);
-			
 		} catch (IOException e) {
 			Reply.err(req, Errno.EIO);
 		} catch (JExt2Exception e) {
