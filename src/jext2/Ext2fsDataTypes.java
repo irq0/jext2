@@ -139,6 +139,8 @@ public class Ext2fsDataTypes {
 	}
 
 	public static void putLE32U(ByteBuffer buffer, long value, int offset) {
+	    if (value < 0) 
+	        throw new IllegalArgumentException("Attempt to put negative number");
 	    buffer.order(ByteOrder.LITTLE_ENDIAN);
 	    buffer.putInt(offset, (int)(value & 0xffffffffL));
 	}
@@ -149,6 +151,8 @@ public class Ext2fsDataTypes {
 	}
 
 	public static void putLE16U(ByteBuffer buffer, int value, int offset) {
+        if (value < 0) 
+            throw new IllegalArgumentException("Attempt to put negative number");
 	    buffer.order(ByteOrder.LITTLE_ENDIAN);
 	    buffer.putShort(offset, (short)(value & 0xffff));
 	}
@@ -159,6 +163,8 @@ public class Ext2fsDataTypes {
 	}
 
 	public static void putLE8U(ByteBuffer buffer, short value, int offset) {
+	    if (value < 0) 
+	        throw new IllegalArgumentException("Attempt to put negative number");
         buffer.order(ByteOrder.LITTLE_ENDIAN);
         buffer.put(offset, (byte)(value & 0xff));
     }	
