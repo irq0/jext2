@@ -155,13 +155,7 @@ public class DirectoryEntry extends PartialBlock {
 	}
 	
 	public static int readRecLen(ByteBuffer buf, int offset) {
-	    int recLen;
-	    try {
-	        recLen = Ext2fsDataTypes.getLE16(buf, offset + 4);
-	    } catch (IOException e) {
-	        recLen = 0;
-	    }	    
-	    return recLen;
+	    return Ext2fsDataTypes.getLE16(buf, offset + 4);
 	}		
 	
 	/**

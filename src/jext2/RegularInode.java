@@ -24,12 +24,27 @@ public class RegularInode extends DataInode {
 	    return DirectoryEntry.FILETYPE_REG_FILE;
 	}
 
+	/**
+	 * Set size. For regular inodes the size is stored in i_size and i_dir_acl
+	 * 
+	 */
+	public void setSize(long newsize) { 
+	    super.setSize(newsize & Ext2fsDataTypes.LE32_MAX);
+	    super.setDirAcl((newsize >>> Ext2fsDataTypes.LE32_SIZE) & Ext2fsDataTypes.LE32_MAX);
+	}
+	
+    public long getSize() {
+        return super.getSize() + (super.getDirAcl() << Ext2fsDataTypes.LE32_SIZE);
+    }	
+	
     /**
      * Set size and truncate.
      * @param   size    new size
      * @throws FileTooLarge 
      */
     public void setSizeAndTruncate(long size) throws IOException, FileTooLarge {
+        if (size < 0) 
+            throw new IllegalArgumentException("Try to set negative file size");
         long oldSize = getSize();
         setSize(size);
         if (oldSize > size)

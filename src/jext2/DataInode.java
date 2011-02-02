@@ -111,6 +111,9 @@ public class DataInode extends Inode {
         long max = Math.max(start+1, (buf.limit() / blocksize) + start);        
         long bufOffset = offset % blocksize;        
 
+        System.out.println("writing " + (max-start) + " blocks from " + start + " to " + max);
+
+        
         while (start < max) { 
             LinkedList<Long> b = accessData().getBlocksAllocate(start, max-start);
         
@@ -127,12 +130,18 @@ public class DataInode extends Inode {
         
         int written = buf.position();
         
+        System.out.println("filesize is now " + (offset + written) + " was " + getSize() );
+
+        
         /* increase inode.size if we grew the file */
         if (offset + written > getSize()) { /* file grew */
             setStatusChangeTime(new Date());
             setSize(offset + written);
             write();
         } 
+
+        System.out.println("filesize is now " + (offset + written) + " was " + getSize() );
+        
         
         return buf.position();
     }  

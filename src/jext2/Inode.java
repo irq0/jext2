@@ -42,7 +42,7 @@ public class Inode extends PartialBlock {
 	public final int getUidLow() {
 		return this.uidLow;
 	}
-	public final long getSize() {
+	public long getSize() {
 		return this.size;
 	}
 	/**
@@ -92,11 +92,11 @@ public class Inode extends PartialBlock {
 	}
 
 	public final long getUid() {
-		return this.uidLow + (16 << this.uidHigh);
+		return this.uidLow + (this.uidHigh << Ext2fsDataTypes.LE16_SIZE);
 	}
 	
 	public final long getGid() {
-		return this.gidLow + (16 << this.gidHigh);
+		return this.gidLow + (this.gidHigh << Ext2fsDataTypes.LE16_SIZE);
 	}
 
 	public final int getBlockGroup() {
@@ -113,13 +113,13 @@ public class Inode extends PartialBlock {
 	}
 	
 	public void setUid(long uid) {
-	    this.uidLow = (int)(uid & 0xFFFFFFFF);
-	    this.uidHigh = (int)((uid >> Integer.SIZE) & 0xFFFFFFFF);
+	    this.uidLow = (int)(uid & 0xFFFFFFFFL);
+	    this.uidHigh = (int)((uid >> Ext2fsDataTypes.LE32_SIZE) & 0xFFFFFFFF);
 	}
 	
 	public void setGid(long gid) {
-	    this.gidLow = (int)(gid & 0xFFFFFFFF);
-	    this.gidHigh = (int)((gid >> Integer.SIZE) & 0xFFFFFFFF);
+	    this.gidLow = (int)(gid & 0xFFFFFFFFL);
+	    this.gidHigh = (int)((gid >> Ext2fsDataTypes.LE32_SIZE) & 0xFFFFFFFF);
 	}
 	
 	/** OR mode onto */
@@ -135,7 +135,7 @@ public class Inode extends PartialBlock {
 	public final void setUidLow(int uidLow) {
 		this.uidLow = uidLow;
 	}
-	public final void setSize(long size) {
+	public void setSize(long size) {
 		this.size = size;
 	}
 	public final void setAccessTime(Date accessTime) {
@@ -165,7 +165,9 @@ public class Inode extends PartialBlock {
 	public final void setGidHigh(int gidHigh) {
 		this.gidHigh = gidHigh;
 	}
-	
+	protected final void setDirAcl(long dirAcl) {
+	    this.dirAcl = dirAcl;
+	}
 	public final boolean isDeleted() {
 	    return (this.deletionTime.after(new Date(0))); 
 	}

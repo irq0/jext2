@@ -84,7 +84,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		s.setBlksize(superblock.getBlocksize());
 		s.setNlink(inode.getLinksCount());
 		s.setSize(inode.getSize());
-
+		
 		if (inode instanceof DataInode) 
 		    s.setBlocks(((DataInode)inode).getBlocks());
 		else 
@@ -114,10 +114,8 @@ public class JExt2Ops extends AbstractLowlevelOps {
 	
 	public void read(FuseReq req, long ino, long size, long off, FileInfo fi) {
 		try {
-		    if (size > Integer.MAX_VALUE)
-		        throw new FileTooLarge();
-		    
 		    RegularInode inode = (RegularInode)(inodes.getOpen(ino));
+		    // TODO the (int) cast is due to the java-no-unsigned problem. handle this better here
 			ByteBuffer buf = inode.readData((int)size, off);
 			Reply.byteBuffer(req, buf, 0, size);
 		} catch (IOException e) {
@@ -181,6 +179,9 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		try {
 		    Inode inode = inodes.get(ino);
 			Stat stat = makeStat(inode);
+			
+			System.out.println("inode=" + ino + " isize=" +inode.getSize() + " st_size=" + stat.getSize());
+			
 			Reply.attr(req, stat, 0.0);
 			
 		} catch (IOException e) {

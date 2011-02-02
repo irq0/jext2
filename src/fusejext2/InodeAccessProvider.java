@@ -22,7 +22,7 @@ public class InodeAccessProvider {
             return openInodes.get(ino);
     }
     
-    Inode get(long ino) throws IOException, InvalidArgument, NoSuchFileOrDirectory { 
+    Inode get(long ino) throws IOException, NoSuchFileOrDirectory, InvalidArgument { 
         if (openInodes.containsKey(ino)) {
             Inode inode = openInodes.get(ino);
             if (inode.isDeleted()) {
