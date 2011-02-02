@@ -325,9 +325,7 @@ public class DataBlockAccess {
 	                                           throws IOException, NoSpaceLeftOnDevice {
 
 	    int n = 0;
-	    
 	    LinkedList<Long> result = new LinkedList<Long>();
-        ByteBuffer buf = ByteBuffer.allocate(superblock.getBlocksize());
 
         try {
             long parent = allocateBlock(goal); 
@@ -339,8 +337,9 @@ public class DataBlockAccess {
                     long nr = allocateBlock(parent);
                     if (nr > 0) {
                         result.addLast(nr);
-                        buf.clear();
-                        Ext2fsDataTypes.putLE32U(buf, nr, offsets[n]*4 );                        
+                        
+                        ByteBuffer buf = ByteBuffer.allocate(superblock.getBlocksize());
+                        Ext2fsDataTypes.putLE32U(buf, nr, offsets[n]*4);                        
                         blocks.write(parent, buf);	        
                     } else {	                
                         break;
@@ -663,8 +662,11 @@ public class DataBlockAccess {
 	        /* Set block bits to "free" */
 	        groupFreed = 0;
 	        for (int i=0; i<count; i++) {
-	            if (!bitmap.isSet(groupIndex + i)) {
-	                throw new RuntimeException("Bit allready cleared for block");
+	            if (!(bitmap.isSet(groupIndex + i))) {
+	                throw new RuntimeException("Bit allready cleared for block" +
+	                        " nr=" + (blockNr+i) +
+	                        " groupIndex=" + (groupIndex+i) +
+	                        " bitmap=" + bitmap.getBitStringContaining(groupIndex + i));
 	            } else if (groupIndex + i > superblock.getBlocksPerGroup()) {
 	                groupFreed++;
 	            } else {
@@ -726,7 +728,7 @@ public class DataBlockAccess {
 	 * 
 	 */
 	private void freeBranches(int depth, long[] blockNrs) throws IOException {	    
-	    if (depth > 0) { /* indirection exists -> got down */
+	    if (depth > 0) { /* indirection exists -> go down */
 	        depth -= 1;
 	        for (long nr : blockNrs) {
 	            if (nr == 0) continue;
