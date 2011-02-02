@@ -46,6 +46,7 @@ public class Bitmap extends Block {
 			numBytes--;
 		}
 		
+		assert !isSet(pos);
 		return pos;
 	}		
 
@@ -57,10 +58,13 @@ public class Bitmap extends Block {
 	 * format a byte as bitstring as it appears on disk
 	 */
 	public static String formatByte(byte b) {
-	    return String.format("%1$#32s", 
-	            Integer.toBinaryString(b).replace(' ','0')).substring(24);
+	    return (new StringBuffer(String.format("%1$#32s", 
+	            Integer.toBinaryString(b).replace(' ','0')).substring(24))).reverse().toString();
 	}
 
+	public String getBitStringContaining(int pos) {
+	    return Bitmap.formatByte(bmap.get(pos/8));
+	}
 	
 	
 	/**
@@ -90,7 +94,11 @@ public class Bitmap extends Block {
 			chunk = (byte) (chunk & (0xFF ^ (1 << offset))); 
 
 		bmap.put(byteNum, chunk);
-			
+
+		if (value)
+		    assert isSet(pos);
+		else
+		    assert !isSet(pos);
 	}
 
 	/**
