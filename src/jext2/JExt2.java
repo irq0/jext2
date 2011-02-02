@@ -21,7 +21,7 @@ class JExt2 {
 			blockDev = blockDevFile.getChannel();
 			blocks = new BlockAccess(blockDev);
 			superblock = Superblock.fromBlockAccess(blocks);
-			blocks.setBlocksize(superblock.getBlocksize());
+			blocks.initialize(superblock);
 
 			blockGroups = new BlockGroupAccess();
 			blockGroups.readDescriptors();
@@ -72,17 +72,6 @@ class JExt2 {
 			fs.checkFeatures();
 			fs.printMeta();		
 			
-		//	DirectoryInode root = (DirectoryInode)(InodeAccess.readRootInode());			
-			BlockAccess blocks = BlockAccess.getInstance();
-			
-			Bitmap bmap = Bitmap.fromByteBuffer(blocks.read(65537), 65537);
-			System.out.println(bmap);
-			System.out.println(bmap.getNextZeroBitPos(0));
-			
-			
-		} catch (IOException e) {
-			System.err.println("IO Exception - possibly something with block device..");
-			e.printStackTrace();
 		} catch (Exception e) {
 			System.err.println("Some error occured :(");
 			System.err.println("MESSAGE: " + e.getMessage());

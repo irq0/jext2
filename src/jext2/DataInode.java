@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.LinkedList;
 
+import jext2.exceptions.FileTooLarge;
 import jext2.exceptions.InvalidArgument;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 
@@ -48,9 +49,10 @@ public class DataInode extends Inode {
      * @param  size    size of the data to be read
      * @param  offset  start adress in data area
      * @return buffer of size size containing data.
+     * @throws FileTooLarge 
      * @throws InvalidArgument 
      */ 
-    public ByteBuffer readData(int size, long offset) throws IOException {
+    public ByteBuffer readData(int size, long offset) throws IOException, FileTooLarge {
         ByteBuffer result = ByteBuffer.allocateDirect(size);
     
         int blocksize = superblock.getBlocksize();
@@ -94,8 +96,9 @@ public class DataInode extends Inode {
      * Write data in buffer to disk. May trigger an write() when data size 
      * grows.
      * @throws NoSpaceLeftOnDevice 
+     * @throws FileTooLarge 
      */    
-    public int writeData(ByteBuffer buf, long offset) throws IOException, NoSpaceLeftOnDevice {
+    public int writeData(ByteBuffer buf, long offset) throws IOException, NoSpaceLeftOnDevice, FileTooLarge {
         System.out.println("writing " + buf + " at offset " + offset);
         /*
          * Note on sparse file support:

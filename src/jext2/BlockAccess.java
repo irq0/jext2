@@ -4,16 +4,20 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
+import java.util.LinkedList;
 
 /**
  * Access to the filesystem blocks  
  */
 public class BlockAccess {
+    private  Superblock superblock;
 	private int blocksize = Constants.EXT2_MIN_BLOCK_SIZE;
 	private FileChannel blockdev;
 	private static BlockAccess instance;
 	
-	
+	/** number of pointers in indirection block */
+    private int ptrs;
+    
 	public BlockAccess(FileChannel blockdev) {
 		if (BlockAccess.instance != null) {
 			throw new RuntimeException("BlockAccess is singleton!");
@@ -92,11 +96,86 @@ public class BlockAccess {
 	    blockdev.write(buf, ((((long)(nr & 0xffffffff)) * blocksize) + offset));
 	}
 			
-	public void setBlocksize(int blocksize) {
-		this.blocksize = blocksize;
+	public void initialize(Superblock superblock) {
+		this.superblock = superblock;
+		ptrs = superblock.getAddressesPerBlock();
 	}
 
-	public static BlockAccess getInstance() {
+	/**
+     * Read block pointers from block. 
+     * Note: Zero pointers are not skipped
+     * @param   dataBlock   physical block number
+     * @param   start       index of first pointer to retrieve
+     * @param   end         index of last pointer to retrieve
+     * @return  array containing all block numbers in block 
+     */
+    public long[] readBlockNrsFromBlock(long dataBlock, int start, int end) throws IOException {
+        long[] result = new long[(end-start)+1];
+        
+        ByteBuffer buffer = read(dataBlock);
+        buffer.limit((end+1) * 4);
+        
+        for (int i=0; i<=(end-start); i++) {
+            result[i] = Ext2fsDataTypes.getLE32U(buffer, (start+i)*4);
+        }
+        
+        return result;
+    }
+
+    /**
+     * Read block pointers from block. Skip pointers that are zero.  
+     * Note: Since we return a list, you cannot use indices computed 
+     * for the block with the result.
+     * @param   dataBlock   physical block number
+     * @param   start       index of first pointer to retrieve
+     * @param   end         index of last pointer to retrieve
+     * @return  list of non-zero block numbers found in block
+     */
+    public LinkedList<Long> 
+    readBlockNrsFromBlockSkipZeros(long dataBlock, int start, int end) throws IOException {
+        LinkedList<Long> result = new LinkedList<Long>();
+        
+        ByteBuffer buffer = read(dataBlock);
+        buffer.limit((end+1) * 4);
+        
+        for (int i=0; i<=(end-start); i++) {
+            long tmp = Ext2fsDataTypes.getLE32U(buffer, (start+i)*4);
+            if (tmp > 0)
+                result.add(tmp);
+        }
+        
+        return result;
+    }
+
+    /**
+     * Read all block pointers from block.
+     * @param   dataBlock   physical block number
+     * @return  array with all pointers stored in block
+     */
+    public long[] readAllBlockNumbersFromBlock(long dataBlock) throws IOException {
+        return readBlockNrsFromBlock(dataBlock, 0, ptrs-1);
+    }
+
+    /**
+     * Read all block pointers from block. Skip Zero pointers
+     * @param   dataBlock   physical block number
+     * @return  list with all non-zero pointers in block
+     */
+    public LinkedList<Long> 
+    readAllBlockNumbersFromBlockSkipZero(long dataBlock) throws IOException {
+        return readBlockNrsFromBlockSkipZeros(dataBlock, 0, ptrs-1);
+    }
+
+    /**
+     * Read single block pointer from block.
+     * @param   dataBlock   physical block number
+     * @param   index       index of block number to retrieve
+     */
+    public long readBlockNumberFromBlock(long dataBlock, int index) throws IOException {
+        return (readBlockNrsFromBlock(dataBlock, index, index))[0];
+    }
+
+    public static BlockAccess getInstance() {
 		return BlockAccess.instance;
 	}
 	

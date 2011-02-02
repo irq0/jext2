@@ -8,6 +8,7 @@ import java.nio.ByteOrder;
 import java.util.Iterator;
 import java.io.IOException;
 
+import jext2.exceptions.FileTooLarge;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 
 public class DataBlockAccess {
@@ -21,7 +22,7 @@ public class DataBlockAccess {
     private long lastAllocPhysicalBlock = 0;
 	
 	/** number of pointers in indirection block */
-	private static int ptrs = superblock.getAddressesPerBlock();
+    private static int ptrs = superblock.getAddressesPerBlock();
     
     /** number of direct Blocks */
     public static final long directBlocks = Constants.EXT2_NDIR_BLOCKS;
@@ -32,61 +33,6 @@ public class DataBlockAccess {
     /** number of triple indirect blocks */
     public static final long trippleBlocks = ptrs*ptrs*ptrs;
 		
-    
-    /**
-     * Read block pointers from block. 
-     * Note: Zero pointers are not skipped
-     * @param   dataBlock   physical block number
-     * @param   start       index of first pointer to retrieve
-     * @param   end         index of last pointer to retrieve
-     */
-    public static long[] readBlockNrsFromBlock(long dataBlock, int start, int end) throws IOException {
-        long[] result = new long[(end-start)+1];
-        
-        ByteBuffer buffer = blocks.read(dataBlock);
-        buffer.limit((end+1) * 4);
-        
-        for (int i=0; i<=(end-start); i++) {
-            result[i] = Ext2fsDataTypes.getLE32U(buffer, (start+i)*4);
-        }
-        
-        return result;
-    }
-    
-    /**
-     * Read all block pointers from block.
-     * @param   dataBlock   physical block number
-     */
-    public static long[] readAllBlockNumbersFromBlock(long dataBlock) throws IOException {
-        return readBlockNrsFromBlock(dataBlock, 0, ptrs-1);
-    }
-    
-    /**
-     * Read single block pointer from block.
-     * @param   dataBlock   physical block number
-     * @param   index       index of block number to retrieve
-     */
-	public static long readBlockNumberFromBlock(long dataBlock, int index) throws IOException {
-	    return (readBlockNrsFromBlock(dataBlock, index, index))[0];
-	}
-	
-	public static long readIndirect(long ind, int nr) throws IOException {
-		long block = readBlockNumberFromBlock(ind, nr);
-		return block;
-	}
-
-	public static long readDoubleIndirect(long dint, int nr) throws IOException {
-		long ind = readIndirect(dint, (int)(nr / ptrs));
-		long block = readIndirect(ind, (int)(nr % ptrs));
-		return block;
-	}
-
-	public static long  readTripleIndirect(long tind, int nr) throws IOException {
-		long dind = readDoubleIndirect(tind, (int)(nr / ptrs));
-		long block = readIndirect(dind, (int)(nr % ptrs));
-		return block;
-	}
-
 	class DataBlockIterator implements Iterator<Long>, Iterable<Long>{
 		Inode inode;
 		long remaining; 
@@ -112,7 +58,11 @@ public class DataBlockAccess {
 			try {
 			   if (remaining > 0) { /* still blocks to fetch */
 			      if (blocks == null || blocks.size() == 0) { /* blockNr cache empty */
-			           blocks = getBlocks(current + 1, remaining);
+			           try {
+			               blocks = getBlocks(current + 1, remaining);
+			           } catch (FileTooLarge e) {
+			               blocks = null;
+			           }
 			           if (blocks == null) {
 			               remaining = 0;
 			               return;
@@ -147,51 +97,14 @@ public class DataBlockAccess {
 	}
 	
 	/** 
-	 * get the logical block number of file block *
-	 * This is actually more or less the same as getBlocks except 
-	 * that only one blockNr is returned. I wrote this first and kind of 
-	 * like the simplicity. But you should really use getBlocks()
-	 */
-	public static long getDataBlockNr(DataInode inode, long fileBlockNumber) throws IOException {
-		long[] directBlocks = inode.getBlock();
-		int addrPerBlock = superblock.getBlocksize()/4;
-			
-		// direct
-		if (fileBlockNumber < Constants.EXT2_NDIR_BLOCKS) {
-			return directBlocks[(int)fileBlockNumber];
-		}
-
-		// indirect
-		fileBlockNumber -= Constants.EXT2_NDIR_BLOCKS;
-		if (fileBlockNumber < addrPerBlock) {
-			return readIndirect(directBlocks[Constants.EXT2_IND_BLOCK],
-			                   (int)fileBlockNumber);
-		}
-		
-		// double indirect
-		fileBlockNumber -= addrPerBlock;
-		if (fileBlockNumber < addrPerBlock*addrPerBlock) {
-			return readDoubleIndirect(directBlocks[Constants.EXT2_DIND_BLOCK],
-			                         (int)fileBlockNumber);
-		}
-		
-		// triple indirect
-		fileBlockNumber -= addrPerBlock*addrPerBlock;
-		return readTripleIndirect(directBlocks[Constants.EXT2_TIND_BLOCK],
-		                         (int)fileBlockNumber);
-	}
-	
-	public static ByteBuffer readDataBlock(DataInode inode, int fileBlockNumber) throws IOException {
-		return blocks.read(getDataBlockNr(inode, fileBlockNumber));
-	}
-	
-	/** 
 	 * parse the block number into array of offsets
 	 * 
 	 * @param	fileBlockNr		block number to be parsed
 	 * @return	array of offsets, length is the path depth 
+	 * @throws FileTooLarge When the offset calculated from fileBlockNr is larger 
+	 *     than the last possible triple indirection offset for this blocksize
 	 */
-	public static int[] blockToPath(long fileBlockNr) {
+	public static int[] blockToPath(long fileBlockNr) throws FileTooLarge {
 	    // fileBlockNr will allways be less than blockSize -> int is ok
 		if (fileBlockNr < 0) {
 			throw new RuntimeException("blockToPath: file block number < 0");
@@ -210,7 +123,7 @@ public class DataBlockAccess {
 							    ((int)fileBlockNr / ptrs) % ptrs ,
 							    (int)fileBlockNr % ptrs };
 		} else {
-			throw new RuntimeException("blockToPath: block is to big");
+		    throw new FileTooLarge();
 		}
 	}
 
@@ -234,8 +147,8 @@ public class DataBlockAccess {
 		} 
 				
 		for (int i=1; i<depth; i++) {
-				long nr = readBlockNumberFromBlock(blockNrs[i-1], 
-					    					       offsets[i]);
+				long nr = blocks.readBlockNumberFromBlock(blockNrs[i-1], 
+					    					              offsets[i]);
 
 				blockNrs[i] = nr;
 				
@@ -274,7 +187,7 @@ public class DataBlockAccess {
 	 *     - if pointer will live in indirect block - allocate near that block
 	 *     - if pointer will live in inode - allocate in the same cylinder group
 	 */
-	public static long findNear(DataInode inode, long[] blockNrs, int[] offsets) throws IOException {
+	public long findNear(DataInode inode, long[] blockNrs, int[] offsets) throws IOException {
 	    int depth = blockNrs.length;
 	    
 	    /* Try to find previous block */
@@ -398,8 +311,11 @@ public class DataBlockAccess {
 	 * @param  fileBlockNr  logical block address
 	 * @param  maxBlocks    maximum blocks returned
 	 * @return list of block nrs or null if logical block not found
+     * @throws FileTooLarge fileBlockNr bigger than maximum indirection offset 
+     * @throws IOException 
 	 */
-	public LinkedList<Long> getBlocks(long fileBlockNr, long maxBlocks) throws IOException {
+	public LinkedList<Long> getBlocks(long fileBlockNr, long maxBlocks) 
+	        throws IOException, FileTooLarge {
 	    try {
 	        return getBlocks(fileBlockNr, maxBlocks, false);
 	    } catch (NoSpaceLeftOnDevice e) {
@@ -409,14 +325,19 @@ public class DataBlockAccess {
 
 	/** 
      * Get up to maxBlocks block numbers for the logical block number. Allocate new blocks if
-     * necessary. In case of block allocation only one blockNr returns. 
+     * necessary. In case of block allocation only one is blockNr returned. 
      * @see    getBlocksAllocate
      * @param  fileBlockNr  logical block address
      * @param  maxBlocks    maximum blocks returned
      * @return list of block nrs
-	 * @throws NoSpaceLeftOnDevice 
+     * @throws NoSpaceLeftOnDevice 
+     * @throws FileTooLarge fileBlockNr bigger than maximum indirection offset
+     * @throws IOException
+     * @see #getBlocks(long fileBlockNr, long maxBlocks, boolean create) 
+     * @see #getBlocks(long fileBlockNr, long maxBlocks) 
      */
-    public LinkedList<Long> getBlocksAllocate(long fileBlockNr, long maxBlocks) throws IOException, NoSpaceLeftOnDevice {
+    public LinkedList<Long> getBlocksAllocate(long fileBlockNr, long maxBlocks) 
+            throws IOException, NoSpaceLeftOnDevice, FileTooLarge {
         return getBlocks(fileBlockNr, maxBlocks, true);
     }	
 
@@ -430,9 +351,11 @@ public class DataBlockAccess {
 	 * @param create       true: create blocks if nesseccary; false: just read
 	 * @return             list of block nrs; if create=false null is returned if block does not exist
 	 * @throws NoSpaceLeftOnDevice 
+	 * @throws FileTooLarge 
+	 * @throws IOException
 	 */
 	private LinkedList<Long> getBlocks(long fileBlockNr, long maxBlocks, boolean create) 
-	    throws IOException, NoSpaceLeftOnDevice {
+	    throws IOException, NoSpaceLeftOnDevice, FileTooLarge {
 	    
 		if (fileBlockNr < 0 || maxBlocks < 1) 
 			throw new IllegalArgumentException();
@@ -469,7 +392,7 @@ public class DataBlockAccess {
 				long nextByNumber = firstBlockNr + count;
 				long nextOnDisk = -1;
 				if (depth >= 2) /* indirect blocks */
-					nextOnDisk = readBlockNumberFromBlock(
+					nextOnDisk = blocks.readBlockNumberFromBlock(
 						blockNrs[depth-2], offsets[depth-1] + count);
 				else /* direct blocks */
 					nextOnDisk = inode.getBlock()[offsets[0] + count];
@@ -733,7 +656,7 @@ public class DataBlockAccess {
 	        for (long nr : blockNrs) {
 	            if (nr == 0) continue;
 	            
-	            long[] nextBlockNrs = readAllBlockNumbersFromBlock(nr);
+	            long[] nextBlockNrs = blocks.readAllBlockNumbersFromBlock(nr);
 	            
 	            freeBranches(depth, nextBlockNrs);
 	            freeDataBlock(nr);
@@ -745,23 +668,26 @@ public class DataBlockAccess {
 	
 
 	/**
-	 * Truncate data blocks to inode.size
+	 * Truncate data blocks toSize. 
 	 * @throws IOException 
+	 * @throws FileTooLarge When you try to truncate to a size 
+	 *     beyond the max. blocks count
 	 */
-	public void truncate() throws IOException {
+	void truncate(long toSize) throws IOException, FileTooLarge {
 	    if (inode instanceof SymlinkInode && 
 	            ((SymlinkInode)inode).isFastSymlink())
 	        return;
+	    
 	    // TODO check inode flags for append or immutable 
 
         long[] directBlocks = inode.getBlock();
 	    
 	    int blocksize = superblock.getBlocksize();
-	    long blockToKill = (inode.getSize() + blocksize-1) / blocksize;
-	    
+	    long blockToKill = (toSize + blocksize-1) / blocksize;
+
 	    int[] offsets = blockToPath(blockToKill);
-        int depth = offsets.length;
-        	    
+	    int depth = offsets.length;;
+
         /* kill direct blocks */
 	    if (depth == 1) { 
 	        long[] blocksToFree = Arrays.copyOfRange(directBlocks, 
@@ -781,7 +707,7 @@ public class DataBlockAccess {
 	        long nr = branchNrs[i];
 	        int start = offsets[i];
 	        
-	        long[] blockNrs = readBlockNrsFromBlock(nr, start, ptrs-1);
+	        long[] blockNrs = blocks.readBlockNrsFromBlock(nr, start, ptrs-1);
 	        blocks.zeroOut(nr, start*4, (ptrs-1)*4);
 	        freeBranches(depth, blockNrs);
 	    }

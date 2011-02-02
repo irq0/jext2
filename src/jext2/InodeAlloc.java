@@ -3,6 +3,7 @@ package jext2;
 import java.io.IOException;
 import java.util.Date;
 
+import jext2.exceptions.FileTooLarge;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 
 /** 
@@ -152,7 +153,11 @@ public class InodeAlloc {
 	    inode.setDeletionTime(new Date());
 	    inode.setSize(0);
         if (inode instanceof DataInode) {
-            ((DataInode)inode).accessData().truncate();
+            try {
+                ((DataInode)inode).accessData().truncate(0);
+            } catch (FileTooLarge e) {
+                throw new RuntimeException("should not happen");
+            }
         }
 	    
         inode.write();

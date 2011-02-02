@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Date;
 
+import jext2.exceptions.FileTooLarge;
+
 /**
  * Inode for regular files. 
  */
@@ -25,12 +27,13 @@ public class RegularInode extends DataInode {
     /**
      * Set size and truncate.
      * @param   size    new size
+     * @throws FileTooLarge 
      */
-    public void setSizeAndTruncate(long size) throws IOException {
+    public void setSizeAndTruncate(long size) throws IOException, FileTooLarge {
         long oldSize = getSize();
         setSize(size);
         if (oldSize > size)
-            accessData().truncate();
+            accessData().truncate(size);
     }
 
     /**

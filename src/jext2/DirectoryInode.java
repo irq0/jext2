@@ -9,9 +9,11 @@ import java.util.LinkedList;
 import jext2.exceptions.DirectoryNotEmpty;
 import jext2.exceptions.FileExists;
 import jext2.exceptions.FileNameTooLong;
+import jext2.exceptions.FileTooLarge;
 import jext2.exceptions.InvalidArgument;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 import jext2.exceptions.NoSuchFileOrDirectory;
+import jext2.exceptions.TooManyLinks;
 
 
 /** Inode for directories */
@@ -95,16 +97,22 @@ public class DirectoryInode extends DataInode {
 
 	/**
 	 * Add directory entry for given inode and name.
-	 * @throws InvalidArgument 
 	 * @throws NoSpaceLeftOnDevice 
-	 * @throws FileNameTooLong 
+	 * @throws FileNameTooLong  
+	 * @throws FileTooLarge Allocating a new block would hit the max. block count
+	 * @throws TooManyLinks When adding a link would cause nlinks to hit the limit. 
+	 * Checkt is performed before any allocation. 
 	 * @see addLink(DirectoryEntry newEntry) 
 	 */
-	public void addLink(Inode inode, String name) throws IOException, FileExists, InvalidArgument, NoSpaceLeftOnDevice, FileNameTooLong {
-        DirectoryEntry newDir = DirectoryEntry.create(name);
+	public void addLink(Inode inode, String name) throws IOException, FileExists, NoSpaceLeftOnDevice, FileNameTooLong, TooManyLinks, FileTooLarge {
+	    if (inode.getLinksCount() >= Constants.EXT2_LINK_MAX)
+	        throw new TooManyLinks();
+	    
+	    DirectoryEntry newDir = DirectoryEntry.create(name);
         newDir.setIno(inode.getIno());
         newDir.setFileType(inode.getFileType());
 
+        
         addLink(newDir);
         
         inode.setLinksCount(inode.getLinksCount() + 1);
@@ -113,13 +121,14 @@ public class DirectoryInode extends DataInode {
 	
 	/**
 	 * Add directory entry. Iterate over data blocks and check for entries with
-	 * the same name on the way. 
-	 * @throws InvalidArgument     Found a corrupt entry 
+	 * the same name on the way. This function does the heavy lifting compared to #addLink(Inode, String) 
+	 * and should never be used directly.  
 	 * @throws NoSpaceLeftOnDevice 
-	 * @throws FileExistsException      When we find an entry with same name
+	 * @throws FileTooLarge Allocating a new block would hit the max. block count
+	 * @throws FileExistsException      When we stumble upon an entry with same name
 	 */
 	// TODO rewrite addLink to use the directory iterator
-	private void addLink(DirectoryEntry newEntry) throws IOException, FileExists, InvalidArgument, NoSpaceLeftOnDevice {
+	private void addLink(DirectoryEntry newEntry) throws IOException, FileExists, NoSpaceLeftOnDevice, FileTooLarge {
        ByteBuffer block;
        int offset = 0;
        
@@ -134,7 +143,8 @@ public class DirectoryInode extends DataInode {
                
                if (currentEntry.getRecLen() == 0 ||
                        currentEntry.getRecLen() > superblock.getBlocksize()) {
-                   throw new InvalidArgument();
+                   throw new RuntimeException
+                       ("zero-length or bigger-than-blocksize directory entry");
                }
                
                /* 
@@ -258,14 +268,14 @@ public class DirectoryInode extends DataInode {
 		return inode;
 	}
 
-	public void addDotLinks(DirectoryInode parent) throws IOException, FileExists, InvalidArgument, NoSpaceLeftOnDevice {        
+	public void addDotLinks(DirectoryInode parent) 
+	        throws IOException, FileExists, InvalidArgument, NoSpaceLeftOnDevice, TooManyLinks, FileTooLarge {        
 	    try {        
 	        addLink(this, ".");
 	        addLink(parent, "..");
 	    } catch (FileNameTooLong e) {
 	        throw new RuntimeException("should not happen");
-	    }
-        
+        }    
 	}
 	/**
 	 *  Create new empty directory. Don not add ., .. entries. Use addDotLinks()

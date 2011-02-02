@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Date;
 
+import jext2.exceptions.FileTooLarge;
 import jext2.exceptions.InvalidArgument;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 
@@ -13,11 +14,11 @@ public class SymlinkInode extends DataInode {
 	public int FAST_SYMLINK_MAX=Constants.EXT2_N_BLOCKS * 4;
 
 	  
-    private String readSlowSymlink() throws IOException {
+    private String readSlowSymlink() throws IOException, FileTooLarge {
         ByteBuffer buf = readData((int)getSize(), 0);
         return Ext2fsDataTypes.getString(buf, 0, buf.limit());
     }       
-    private void writeSlowSymlink(String link) throws IOException, NoSpaceLeftOnDevice {
+    private void writeSlowSymlink(String link) throws IOException, NoSpaceLeftOnDevice, FileTooLarge {
         ByteBuffer buf = ByteBuffer.allocate(Ext2fsDataTypes.getStringByteLength(link));
         Ext2fsDataTypes.putString(buf, link, buf.capacity(), 0);
         buf.rewind();
@@ -28,7 +29,7 @@ public class SymlinkInode extends DataInode {
         return Ext2fsDataTypes.getString(buf, 40 + offset, (int)getSize());
     }
     
-	public final String getSymlink() throws IOException {
+	public final String getSymlink() throws IOException, FileTooLarge {
 	    if (isFastSymlink())
 	        return symlink;
 	    else
@@ -38,15 +39,21 @@ public class SymlinkInode extends DataInode {
 	/**
 	 * Set new symlink. We either write data blocks or characters to the 
 	 * data block pointer depending on the symlink length.
+	 * @throws FileTooLarge This is unlikely to happen because is requires 
+	 *     a symlink spanning thousands of blocks. 
 	 */
-	public void setSymlink(String link) throws NoSpaceLeftOnDevice, IOException {
+	public void setSymlink(String link) throws NoSpaceLeftOnDevice, IOException, FileTooLarge {
 	    int newSize = Ext2fsDataTypes.getStringByteLength(link);
 	    
 	    setSize(0);
 
 	    /* slow to fast (or vice versa) cleanup */ 
 	    if (!isFastSymlink() && newSize >= FAST_SYMLINK_MAX) {
-	        accessData().truncate();
+	        try {
+	            accessData().truncate(0);
+	        } catch (FileTooLarge e) {
+	            throw new RuntimeException("should not happen");
+	        }
 	    } else {
 	        this.symlink = "";
 	    }

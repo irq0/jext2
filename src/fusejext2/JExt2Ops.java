@@ -30,7 +30,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		try {
 			blocks = new BlockAccess(blockDev);
 			superblock = Superblock.fromBlockAccess(blocks);
-			blocks.setBlocksize(superblock.getBlocksize());
+			blocks.initialize(superblock);
 
 	        if (Feature.incompatUnsupported() || Feature.roCompatUnsupported()) {
 	            System.out.println("Featureset incompatible with JExt2 :(");
