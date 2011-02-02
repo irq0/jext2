@@ -71,49 +71,6 @@ public class Constants {
 
 	public static final int EXT2_GOOD_OLD_INODE_SIZE= 128;
 
-	// Features
-	public static final int EXT2_FEATURE_COMPAT_DIR_PREALLOC    = 0x0001;
-	public static final int EXT2_FEATURE_COMPAT_IMAGIC_INODES   = 0x0002;
-	public static final int EXT3_FEATURE_COMPAT_HAS_JOURNAL     = 0x0004;
-	public static final int EXT2_FEATURE_COMPAT_EXT_ATTR        = 0x0008;
-	public static final int EXT2_FEATURE_COMPAT_RESIZE_INO      = 0x0010;
-	public static final int EXT2_FEATURE_COMPAT_DIR_INDEX       = 0x0020;
-	public static final int EXT2_FEATURE_COMPAT_ANY             = 0xffffffff;
-	
-	public static final int EXT2_FEATURE_RO_COMPAT_SPARSE_SUPER = 0x0001;
-	public static final int EXT2_FEATURE_RO_COMPAT_LARGE_FILE   = 0x0002;
-	public static final int EXT2_FEATURE_RO_COMPAT_BTREE_DIR    = 0x0004;
-	public static final int EXT2_FEATURE_RO_COMPAT_ANY          = 0xffffffff;
-	
-	public static final int EXT2_FEATURE_INCOMPAT_COMPRESSION   = 0x0001;
-	public static final int EXT2_FEATURE_INCOMPAT_FILETYPE      = 0x0002;
-	public static final int EXT3_FEATURE_INCOMPAT_RECOVER       = 0x0004;
-	public static final int EXT3_FEATURE_INCOMPAT_JOURNAL_DEV   = 0x0008;
-	public static final int EXT2_FEATURE_INCOMPAT_META_BG       = 0x0010;
-	public static final int EXT2_FEATURE_INCOMPAT_ANY           = 0xffffffff;
-
-	// Features supported by ext2fsprogrs impl
-	public static final int EXT2PROGS_FEATURE_COMPAT_SUPP           = 0;
-	public static final int EXT2PROGS_FEATURE_INCOMPAT_SUPP         = (EXT2_FEATURE_INCOMPAT_FILETYPE);
-	public static final int EXT2PROGS_FEATURE_RO_COMPAT_SUPP        = (EXT2_FEATURE_RO_COMPAT_SPARSE_SUPER|EXT2_FEATURE_RO_COMPAT_LARGE_FILE|EXT2_FEATURE_RO_COMPAT_BTREE_DIR);
-	public static final int EXT2PROGS_FEATURE_RO_COMPAT_UNSUPPORTED = ~EXT2PROGS_FEATURE_RO_COMPAT_SUPP;
-	public static final int EXT2PROGS_FEATURE_INCOMPAT_UNSUPPORTED  = ~EXT2PROGS_FEATURE_INCOMPAT_SUPP;
-
-	// Features supported by linux 2.6.36
-	public static final int EXT2KERNEL_FEATURE_COMPAT_SUPP           = (EXT2_FEATURE_COMPAT_EXT_ATTR);
-	public static final int EXT2KERNEL_FEATURE_INCOMPAT_SUPP         = (EXT2_FEATURE_INCOMPAT_FILETYPE|EXT2_FEATURE_INCOMPAT_META_BG);
-	public static final int EXT2KERNEL_FEATURE_RO_COMPAT_SUPP        = (EXT2_FEATURE_RO_COMPAT_SPARSE_SUPER|EXT2_FEATURE_RO_COMPAT_LARGE_FILE|EXT2_FEATURE_RO_COMPAT_BTREE_DIR);
-	public static final int EXT2KERNEL_FEATURE_RO_COMPAT_UNSUPPORTED = ~EXT2KERNEL_FEATURE_RO_COMPAT_SUPP;
-	public static final int EXT2KERNEL_FEATURE_INCOMPAT_UNSUPPORTED  = ~EXT2KERNEL_FEATURE_INCOMPAT_SUPP;
-
-	// Features supported by jext2
-	public static final int JEXT2_FEATURE_COMPAT_SUPP           = 0;
-	public static final int JEXT2_FEATURE_INCOMPAT_SUPP         = (EXT2_FEATURE_INCOMPAT_FILETYPE);
-	public static final int JEXT2_FEATURE_RO_COMPAT_SUPP        = (EXT2_FEATURE_RO_COMPAT_SPARSE_SUPER);
-	public static final int JEXT2_FEATURE_RO_COMPAT_UNSUPPORTED = ~JEXT2_FEATURE_RO_COMPAT_SUPP;
-	public static final int JEXT2_FEATURE_INCOMPAT_UNSUPPORTED  = ~JEXT2_FEATURE_INCOMPAT_SUPP;
-	
-	
 	// Default values for user and/or group using reserved blocks
 	public static final int	EXT2_DEF_RESUID = 0;
 	public static final int	EXT2_DEF_RESGID = 0;
