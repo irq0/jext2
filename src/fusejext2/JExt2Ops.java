@@ -6,7 +6,9 @@ import java.util.Date;
 
 import jext2.*;
 import jext2.exceptions.IoError;
+import jext2.exceptions.IsADirectory;
 import jext2.exceptions.JExt2Exception;
+import jext2.exceptions.NotADirectory;
 import fuse.*;
 import jlowfuse.*;
 import fuse.StatVFS;
@@ -450,8 +452,29 @@ public class JExt2Ops extends AbstractLowlevelOps {
         } catch (JExt2Exception e) {
             Reply.err(req, e.getErrno());
         }
+    }
+
+    public void link(FuseReq req, long ino, long newparent, String newname) {
+        if (ino == 1) ino = Constants.EXT2_ROOT_INO;
+        try {
+            Inode parent = inodes.get(newparent);
+            if (!(parent instanceof DirectoryInode))
+                throw new NotADirectory();
+            
+            Inode child = inodes.get(ino);
+            if (child instanceof DirectoryInode)
+                throw new IsADirectory();
+            
+//            FuseContext context = req.getContext();            
+            
+            ((DirectoryInode)parent).addLink(child, newname);
+            Reply.entry(req, makeEntryParam(child));    
+
+        } catch (JExt2Exception e) {
+            Reply.err(req, e.getErrno());
+        }
+
         
         
     }
-
 }
