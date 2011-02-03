@@ -90,8 +90,10 @@ public class DataInode extends Inode {
     }
 
     /**
-     * Write data in buffer to disk. May trigger an write() when data size 
-     * grows.
+     * Write data in buffer to disk. This works best when whole blocks which 
+     * are a multiple of blocksize in size are written. Partial blocks are
+     * written by first reading the block and then writing the new data 
+     * to that buffer than write that new buffer to disk.
      * @throws NoSpaceLeftOnDevice 
      * @throws FileTooLarge 
      */    
@@ -103,31 +105,35 @@ public class DataInode extends Inode {
          * accordingly. 
          */        
         
-        System.out.println("Starting to write from offset " + offset + " " + buf.capacity() + "bytes");
+//        System.out.println("Starting to write from offset " + offset + " " + buf.capacity() + "bytes");
         
         int blocksize = superblock.getBlocksize();
         long start = offset/blocksize;
         long end = (buf.capacity()+blocksize)/blocksize + start;
-        long startOff = offset%blocksize;
+        int startOff = (int)(offset%blocksize);
         
         if (startOff > 0)
             end++;
         
+        buf.rewind();
         
         while (start < end) {
-            LinkedList<Long> blockNrs = accessData().getBlocksAllocate(start, end-start);
-            int count = blockNrs.size();
-            
+            LinkedList<Long> blockNrs = accessData().getBlocksAllocate(start, 1);
             int bytesLeft = buf.capacity() - buf.position();
             
-            if (bytesLeft < count*blocksize) {
-                buf.limit(buf.position() + bytesLeft);
-            } else { 
-                buf.limit(buf.position() + count * blocksize);
-            }
+            if (bytesLeft < blocksize || startOff > 0) { /* write partial block */
+                ByteBuffer disk = blockAccess.read(blockNrs.getFirst().longValue());
+                disk.position(startOff);
                 
-            blockAccess.writeFromBuffer(
-                    (blockNrs.getFirst().longValue()) * blocksize + startOff, buf);
+                buf.limit(Math.min(buf.position() + bytesLeft, disk.remaining()));
+                disk.put(buf);
+                blockAccess.write(blockNrs.getFirst().longValue(), disk);
+            } else { /* write whole block */
+                buf.limit(buf.position() + blocksize);
+                blockAccess.writeFromBuffer(
+                        (blockNrs.getFirst().longValue()) * blocksize, buf);
+            }
+            
 //            System.out.println("Wrote to block " + blockNrs.getFirst().longValue()
 //                    + " buffer is now " + buf);
 //            System.out.println(accessData());
@@ -135,7 +141,7 @@ public class DataInode extends Inode {
 //            System.out.println(Arrays.toString(offsets));
 //            System.out.println(Arrays.toString(accessData().getBranch(offsets)));
             
-            start += count;
+            start += 1;
             startOff = 0;
         }
         int written = buf.position();
