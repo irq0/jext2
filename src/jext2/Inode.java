@@ -3,8 +3,9 @@ package jext2;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 import java.util.Date;
-import java.io.IOException;
 import java.nio.ByteBuffer;
+
+import jext2.exceptions.IoError;
 
 public class Inode extends PartialBlock {
     private int mode = 0;
@@ -172,7 +173,7 @@ public class Inode extends PartialBlock {
 	    return (this.deletionTime.after(new Date(0))); 
 	}
 	
-    protected void write(ByteBuffer buf) throws IOException {
+    protected void write(ByteBuffer buf) throws IoError {
 		Ext2fsDataTypes.putLE16U(buf, this.mode, 0);
 		Ext2fsDataTypes.putLE16U(buf, this.uidLow, 2);
 		Ext2fsDataTypes.putLE32U(buf, this.size, 4);
@@ -193,7 +194,7 @@ public class Inode extends PartialBlock {
 		super.write(buf);
 	}
 	
-	protected void read(ByteBuffer buf) throws IOException {
+	protected void read(ByteBuffer buf) throws IoError {
 		this.mode = Ext2fsDataTypes.getLE16U(buf, 0 + offset);
 		this.uidLow = Ext2fsDataTypes.getLE16U(buf, 2 + offset);
 		this.size = Ext2fsDataTypes.getLE32U(buf, 4 + offset);
@@ -224,7 +225,7 @@ public class Inode extends PartialBlock {
 		super(blockNr, offset);
 	}
 
-	public static Inode fromByteBuffer(ByteBuffer buf, int offset) throws IOException {		
+	public static Inode fromByteBuffer(ByteBuffer buf, int offset) throws IoError {		
 		Inode inode = new Inode(-1, offset);
 		inode.read(buf);
 		return inode;
@@ -246,7 +247,7 @@ public class Inode extends PartialBlock {
 		return buf;
 	}
 	
-	public void write() throws IOException {
+	public void write() throws IoError {
 		ByteBuffer buf = allocateByteBuffer();
 		write(buf);
 	}

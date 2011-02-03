@@ -1,14 +1,14 @@
 package jext2;
 import java.nio.ByteBuffer;
-import java.io.IOException;
 
 import jext2.exceptions.InvalidArgument;
+import jext2.exceptions.IoError;
 public class InodeAccess {
 	private static Superblock superblock = Superblock.getInstance();
 	private static BlockAccess blocks = BlockAccess.getInstance();
 	private static BlockGroupAccess blockGroups = BlockGroupAccess.getInstance();
 	
-	public static Inode readFromByteBuffer(ByteBuffer buf, int offset) throws IOException {
+	public static Inode readFromByteBuffer(ByteBuffer buf, int offset) throws IoError {
 		int mode = Ext2fsDataTypes.getLE16(buf, offset);
 
 		if (Mode.isDirectory(mode)) {
@@ -26,7 +26,7 @@ public class InodeAccess {
 		}
 	}
 
-	public static Inode readByIno(long ino) throws IOException, InvalidArgument {
+	public static Inode readByIno(long ino) throws IoError, InvalidArgument {
 		if (ino == 0 || ino > superblock.getInodesCount()) {
 			throw new InvalidArgument();
 		}
@@ -41,7 +41,7 @@ public class InodeAccess {
 		int relOffset = offset - (tblBlock * superblock.getBlocksize());
 		
 		if (absBlock < 0 || relOffset < 0) 
-		    throw new IOException(); 
+		    throw new IoError(); 
 		
 		ByteBuffer table = blocks.read(absBlock);
 		Inode inode = InodeAccess.readFromByteBuffer(table, relOffset);
@@ -58,7 +58,7 @@ public class InodeAccess {
 		
 	}
 	
-	public static Inode readRootInode() throws IOException {
+	public static Inode readRootInode() throws IoError {
 	    try {
 	        return readByIno(Constants.EXT2_ROOT_INO);
 	    } catch (InvalidArgument e) {

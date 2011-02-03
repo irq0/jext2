@@ -1,12 +1,13 @@
 package jext2;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import jext2.exceptions.IoError;
+
 public class Bitmap extends Block {
 	private ByteBuffer bmap = ByteBuffer.allocate(Superblock.getInstance().getBlocksize());
-	protected void read(ByteBuffer buf) throws IOException {
+	protected void read(ByteBuffer buf) throws IoError {
 	    this.bmap = buf;
 	    this.bmap.order(ByteOrder.LITTLE_ENDIAN);
 	}
@@ -136,13 +137,13 @@ public class Bitmap extends Block {
 		super(blockNr);
 	}
 	
-	public static Bitmap fromByteBuffer(ByteBuffer buf, long blockNr) throws IOException {
+	public static Bitmap fromByteBuffer(ByteBuffer buf, long blockNr) throws IoError {
 		Bitmap bmap = new Bitmap(blockNr);
 		bmap.read(buf);
 		return bmap;
 	}
 	
-	public void write() throws IOException {
+	public void write() throws IoError {
 		write(bmap);
 	}	    
 	

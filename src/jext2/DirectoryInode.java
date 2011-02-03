@@ -1,6 +1,5 @@
 package jext2;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.Iterator;
@@ -10,7 +9,7 @@ import jext2.exceptions.DirectoryNotEmpty;
 import jext2.exceptions.FileExists;
 import jext2.exceptions.FileNameTooLong;
 import jext2.exceptions.FileTooLarge;
-import jext2.exceptions.InvalidArgument;
+import jext2.exceptions.IoError;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 import jext2.exceptions.NoSuchFileOrDirectory;
 import jext2.exceptions.TooManyLinks;
@@ -75,7 +74,7 @@ public class DirectoryInode extends DataInode {
 				
 				// fetch next entry from block
 				return DirectoryEntry.fromByteBuffer(block, blockNr, offset);
-			} catch (IOException e) {
+			} catch (IoError e) {
 				return null;
 			}
 		}
@@ -104,7 +103,7 @@ public class DirectoryInode extends DataInode {
 	 * Checkt is performed before any allocation. 
 	 * @see addLink(DirectoryEntry newEntry) 
 	 */
-	public void addLink(Inode inode, String name) throws IOException, FileExists, NoSpaceLeftOnDevice, FileNameTooLong, TooManyLinks, FileTooLarge {
+	public void addLink(Inode inode, String name) throws IoError, FileExists, NoSpaceLeftOnDevice, FileNameTooLong, TooManyLinks, FileTooLarge {
 	    if (inode.getLinksCount() >= Constants.EXT2_LINK_MAX)
 	        throw new TooManyLinks();
 	    
@@ -128,7 +127,7 @@ public class DirectoryInode extends DataInode {
 	 * @throws FileExistsException      When we stumble upon an entry with same name
 	 */
 	// TODO rewrite addLink to use the directory iterator
-	private void addLink(DirectoryEntry newEntry) throws IOException, FileExists, NoSpaceLeftOnDevice, FileTooLarge {
+	private void addLink(DirectoryEntry newEntry) throws IoError, FileExists, NoSpaceLeftOnDevice, FileTooLarge {
        ByteBuffer block;
        int offset = 0;
        
@@ -144,7 +143,8 @@ public class DirectoryInode extends DataInode {
                if (currentEntry.getRecLen() == 0 ||
                        currentEntry.getRecLen() > superblock.getBlocksize()) {
                    throw new RuntimeException
-                       ("zero-length or bigger-than-blocksize directory entry");
+                       ("zero-length or bigger-than-blocksize directory entry"
+                               + "entry: " + currentEntry);
                }
                
                /* 
@@ -201,7 +201,7 @@ public class DirectoryInode extends DataInode {
            accessData().getBlocksAllocate(getBlocks()/(superblock.getBlocksize()/512), 1);       
        
        if (allocBlocks.size() == 0) 
-           throw new IOException();       
+           throw new IoError();       
        long blockNr = allocBlocks.getFirst();
        
        blocks.writePartial(blockNr, 0, newEntry.toByteBuffer());
@@ -262,14 +262,14 @@ public class DirectoryInode extends DataInode {
 		super(blockNr, offset);
 	}
 
-	public static DirectoryInode fromByteBuffer(ByteBuffer buf, int offset) throws IOException {
+	public static DirectoryInode fromByteBuffer(ByteBuffer buf, int offset) throws IoError {
 		DirectoryInode inode = new DirectoryInode(-1, offset);
 		inode.read(buf);
 		return inode;
 	}
 
 	public void addDotLinks(DirectoryInode parent) 
-	        throws IOException, FileExists, InvalidArgument, NoSpaceLeftOnDevice, TooManyLinks, FileTooLarge {        
+	        throws IoError, FileExists, NoSpaceLeftOnDevice, TooManyLinks, FileTooLarge {        
 	    try {        
 	        addLink(this, ".");
 	        addLink(parent, "..");
@@ -280,7 +280,7 @@ public class DirectoryInode extends DataInode {
 	/**
 	 *  Create new empty directory. Don not add ., .. entries. Use addDotLinks()
 	 */
-	public static DirectoryInode createEmpty() throws IOException {
+	public static DirectoryInode createEmpty() throws IoError {
 	    DirectoryInode inode = new DirectoryInode(-1, -1);
 	    Date now = new Date();
 	        
@@ -301,7 +301,7 @@ public class DirectoryInode extends DataInode {
 	/**
 	 * Unlink inode from directory. May cause inode destruction
 	 */ 
-	public void unLinkOther(Inode inode, String name) throws IOException {
+	public void unLinkOther(Inode inode, String name) throws IoError {
         if (inode instanceof DirectoryInode)
             throw new IllegalArgumentException("Use unLinkDir for directories");
         unlink(inode, name);
@@ -310,9 +310,11 @@ public class DirectoryInode extends DataInode {
 	/**
 	 * Remove a subdirectory inode from directory. May cause indoe destruction 
 	 */
-	public void unLinkDir(DirectoryInode inode, String name) throws IOException, DirectoryNotEmpty {
+	public void unLinkDir(DirectoryInode inode, String name) throws IoError, DirectoryNotEmpty {
 	    if (!inode.isEmptyDirectory())
 	        throw new DirectoryNotEmpty();
+	    inode.unlink(inode, ".");
+	    inode.unlink(this, "..");
 	    unlink(inode, name);
 	}
 	
@@ -320,7 +322,7 @@ public class DirectoryInode extends DataInode {
 	 * Unlink Inode from this directory. May cause freeInode() if link count
 	 * reaches zero. 
 	 */
-	private void unlink(Inode inode, String name) throws IOException {
+	private void unlink(Inode inode, String name) throws IoError {
 	    removeLink(name);
 	    inode.setLinksCount(inode.getLinksCount() - 1);
 	    setStatusChangeTime(new Date());
@@ -335,7 +337,7 @@ public class DirectoryInode extends DataInode {
 	 * Remove a directory entry. This is probably not what you want. We don't 
 	 * update the inode.linksCount here.
 	 */
-	private void removeLink(String name) throws IOException {
+	private void removeLink(String name) throws IoError {
 	    /* First: Find the entry and its predecessor */
 	    DirectoryEntry prev = null;
 	    DirectoryEntry toDelete = null;
@@ -347,9 +349,26 @@ public class DirectoryInode extends DataInode {
 	        prev = current;
 	    }
 
-	    /* set the record length of the predecessor to skip the toDelete entry */ 
-	    prev.setRecLen(prev.getRecLen() + toDelete.getRecLen());
-	    prev.write();
+	    System.out.println("Removing " + toDelete + " with prev " + prev);
+	    
+	    /* 
+	     * When we are at the beginning of a block there is 
+	     * no prev entry we can use 
+	     */
+	    if (toDelete.getOffset() == 0) {
+	        toDelete.setIno(0);
+	        toDelete.clearName();
+	        toDelete.setFileType(DirectoryEntry.FILETYPE_UNKNOWN);
+	        toDelete.write();
+	    /* 
+	     * set the record length of the predecessor to skip 
+	     * the toDelete entry 
+	     */ 
+	    } else {
+	        prev.setRecLen(prev.getRecLen() + toDelete.getRecLen());
+	        prev.write();
+	    }
+	    
 	    setModificationTime(new Date());
 	}
 }

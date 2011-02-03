@@ -1,11 +1,11 @@
 package fusejext2;
 
-import java.io.IOException;
 import java.util.Hashtable;
 
 import jext2.Inode;
 import jext2.InodeAccess;
 import jext2.exceptions.InvalidArgument;
+import jext2.exceptions.IoError;
 import jext2.exceptions.NoSuchFileOrDirectory;
 
 /**
@@ -22,7 +22,7 @@ public class InodeAccessProvider {
             return openInodes.get(ino);
     }
     
-    Inode get(long ino) throws IOException, NoSuchFileOrDirectory, InvalidArgument { 
+    Inode get(long ino) throws IoError, NoSuchFileOrDirectory, InvalidArgument { 
         if (openInodes.containsKey(ino)) {
             Inode inode = openInodes.get(ino);
             if (inode.isDeleted()) {

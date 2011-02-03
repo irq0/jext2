@@ -4,6 +4,8 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
+import jext2.exceptions.IoError;
+
 class JExt2 {
 	private String  blockDevFilename;
 	private RandomAccessFile blockDevFile;
@@ -27,8 +29,8 @@ class JExt2 {
 		} catch (java.io.FileNotFoundException e) {
 			System.out.println("Cannot open block device.. exiting");
 			System.exit(23);
-		} catch (java.io.IOException e) {
-			System.out.println("Unrecoverable IO error occured.. dying");
+		} catch (IoError e) {
+		    System.out.println("Unrecoverable IO error occured.. dying");
 			e.printStackTrace();			
 		}
 	}

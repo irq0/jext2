@@ -7,11 +7,11 @@ import java.util.LinkedList;
 import java.util.Iterator;
 import java.io.IOException;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
 import jext2.exceptions.FileTooLarge;
+import jext2.exceptions.IoError;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 
 public class DataBlockAccess {
@@ -74,7 +74,7 @@ public class DataBlockAccess {
 			           current += blocks.size();
 			       }
 			   }
-			} catch (IOException e) {
+			} catch (IoError e) {
 			}
 		}
 
@@ -139,7 +139,7 @@ public class DataBlockAccess {
 	 * 
 	 * If the chain is incomplete return.length < offsets.length
 	 */
-	public long[] getBranch(int[] offsets) throws IOException {
+	public long[] getBranch(int[] offsets) throws IoError {
 		int depth = offsets.length;
 		long[] blockNrs = new long[depth];
 		
@@ -171,7 +171,7 @@ public class DataBlockAccess {
 	 * @param  block   block we want
 	 * @return Preferrred place for a block (the goal)
 	 */
-	public long findGoal(long block, long[] blockNrs, int[] offsets) throws IOException {
+	public long findGoal(long block, long[] blockNrs, int[] offsets) throws IoError {
 	    if (block == (lastAllocLogicalBlock + 1) 
 	        && (lastAllocPhysicalBlock != 0)) {
 	            return (lastAllocPhysicalBlock + 1);
@@ -190,7 +190,7 @@ public class DataBlockAccess {
 	 *     - if pointer will live in indirect block - allocate near that block
 	 *     - if pointer will live in inode - allocate in the same cylinder group
 	 */
-	public long findNear(DataInode inode, long[] blockNrs, int[] offsets) throws IOException {
+	public long findNear(DataInode inode, long[] blockNrs, int[] offsets) throws IoError {
 	    int depth = blockNrs.length;
 	    
 	    /* Try to find previous block */
@@ -238,7 +238,7 @@ public class DataBlockAccess {
 	 */
 	public LinkedList<Long> allocBranch(int num, long goal, 
 	                                    int[] offsets, long[] blockNrs) 
-	                                           throws IOException, NoSpaceLeftOnDevice {
+	                                           throws IoError, NoSpaceLeftOnDevice {
 
 	    int n = 0;
 	    LinkedList<Long> result = new LinkedList<Long>();
@@ -285,7 +285,7 @@ public class DataBlockAccess {
 	 */
 	public void spliceBranch(long logicalBlock, 
 	                         int[] offsets, long[] blockNrs, LinkedList<Long> newBlockNrs) 
-	                         throws IOException {
+	                         throws IoError {
 	    
 	    int existDepth = blockNrs.length;
 	    
@@ -320,7 +320,7 @@ public class DataBlockAccess {
      * @throws IOException 
 	 */
 	public LinkedList<Long> getBlocks(long fileBlockNr, long maxBlocks) 
-	        throws IOException, FileTooLarge {
+	        throws IoError, FileTooLarge {
 	    try {
 	        return getBlocks(fileBlockNr, maxBlocks, false);
 	    } catch (NoSpaceLeftOnDevice e) {
@@ -342,7 +342,7 @@ public class DataBlockAccess {
      * @see #getBlocks(long fileBlockNr, long maxBlocks) 
      */
     public LinkedList<Long> getBlocksAllocate(long fileBlockNr, long maxBlocks) 
-            throws IOException, NoSpaceLeftOnDevice, FileTooLarge {
+            throws IoError, NoSpaceLeftOnDevice, FileTooLarge {
         return getBlocks(fileBlockNr, maxBlocks, true);
     }	
 
@@ -360,7 +360,7 @@ public class DataBlockAccess {
 	 * @throws IOException
 	 */
 	private LinkedList<Long> getBlocks(long fileBlockNr, long maxBlocks, boolean create) 
-	    throws IOException, NoSpaceLeftOnDevice, FileTooLarge {
+	    throws IoError, NoSpaceLeftOnDevice, FileTooLarge {
 	    
 		if (fileBlockNr < 0 || maxBlocks < 1) 
 			throw new IllegalArgumentException();
@@ -433,7 +433,7 @@ public class DataBlockAccess {
 	 * Try to allocate a block by looping over block groups and calling 
 	 * newBlockInGroup
 	 */ 
-    private static long newBlock(long goal) throws IOException, NoSpaceLeftOnDevice {        
+    private static long newBlock(long goal) throws IoError, NoSpaceLeftOnDevice {        
         if (! superblock.hasFreeBlocks()) {
             throw new NoSpaceLeftOnDevice();
         }
@@ -475,7 +475,7 @@ public class DataBlockAccess {
      * @throws IOException 
      * @throws NoSpaceLeftOnDevice 
      */    
-    public static long allocateBlock(long goal) throws NoSpaceLeftOnDevice, IOException {
+    public static long allocateBlock(long goal) throws NoSpaceLeftOnDevice, IoError {
         long blockNr = newBlock(goal);
         
         /* Finally return pointer to allocated block or an error */
@@ -491,7 +491,7 @@ public class DataBlockAccess {
      * @param       descr       group descriptor to search
      * @return      block number or -1 
      */
-    private static long newBlockInGroup(int start, BlockGroupDescriptor descr) throws IOException {
+    private static long newBlockInGroup(int start, BlockGroupDescriptor descr) throws IoError {
         Bitmap bitmap = Bitmap.fromByteBuffer(blocks.read(descr.getBlockBitmapPointer()),
                 descr.getBlockBitmapPointer());
 
@@ -540,7 +540,7 @@ public class DataBlockAccess {
 	 * Free single data block. Update inode.blocks.
 	 * @param  blockNr physical block to free
 	 */
-	public void freeDataBlock(long blockNr) throws IOException {
+	public void freeDataBlock(long blockNr) throws IoError {
 	    freeDataBlocksContiguous(blockNr, 1);
 	    
 	}
@@ -551,7 +551,7 @@ public class DataBlockAccess {
 	 * @param  count   number of blocks to free
 	 * @throws IOException 
 	 */
-	public void freeDataBlocksContiguous(long blockNr, long count) throws IOException {
+	public void freeDataBlocksContiguous(long blockNr, long count) throws IoError {
 	    /* counter to set {superblock|blockgroup}.freeBlocksCount */
 	    int groupFreed = 0; 
 	    int freed = 0;
@@ -623,7 +623,7 @@ public class DataBlockAccess {
 	 * Free array of data blocks and update inode.blocks appropriately. 
 	 * @param  blockNrs       array of block numbers
 	 */
-	public void freeBlocks(long[] blockNrs) throws IOException {
+	public void freeBlocks(long[] blockNrs) throws IoError {
 	    long blockToFree = 0;
 	    long count = 0;
 	    
@@ -655,7 +655,7 @@ public class DataBlockAccess {
 	 * @param  blockNrs    blockNrs to start
 	 * 
 	 */
-	private void freeBranches(int depth, long[] blockNrs) throws IOException {	    
+	private void freeBranches(int depth, long[] blockNrs) throws IoError {	    
 	    if (depth > 0) { /* indirection exists -> go down */
 	        depth -= 1;
 	        for (long nr : blockNrs) {
@@ -694,13 +694,13 @@ public class DataBlockAccess {
 	            sb.append((i+1) + "IND " + blockNr + "\n");
 	            dumpBranches(i, blockNrs, sb);
 	        }
-	    } catch (IOException e) {
+	    } catch (IoError e) {
 	    }
 	    return sb.toString();
 	}
 	
 	private void dumpBranches(int depth, LinkedList<Long> blockNrs, StringBuilder sb) 
-	        throws IOException {
+	        throws IoError {
 	    if (blockNrs.size() == 0) return;
 	    
 	    if (depth > 0) { /* indirection exists -> go down */
@@ -727,7 +727,7 @@ public class DataBlockAccess {
 	 * @throws FileTooLarge When you try to truncate to a size 
 	 *     beyond the max. blocks count
 	 */
-	void truncate(long toSize) throws IOException, FileTooLarge {
+	void truncate(long toSize) throws IoError, FileTooLarge {
 	    if (inode instanceof SymlinkInode && 
 	            ((SymlinkInode)inode).isFastSymlink())
 	        return;
@@ -797,7 +797,7 @@ public class DataBlockAccess {
 	}
 
 	public String toString() {
-	    return new ToStringBuilder(this)
+	    return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)
 	        .append("lastAllocLogicalBlock", lastAllocLogicalBlock)
 	        .append("lastAllocPhysicalBlock", lastAllocPhysicalBlock)
 	        .appendToString(dumpHierachy()).toString();

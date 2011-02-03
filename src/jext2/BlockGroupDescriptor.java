@@ -1,7 +1,8 @@
 package jext2;
 
 import java.nio.ByteBuffer;
-import java.io.IOException;
+
+import jext2.exceptions.IoError;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
@@ -63,7 +64,7 @@ public class BlockGroupDescriptor extends PartialBlock {
 		this.inodeTable = inodeTable;
 	}
 	
-	protected void read(ByteBuffer buf) throws IOException {
+	protected void read(ByteBuffer buf) throws IoError {
 		this.blockBitmap = Ext2fsDataTypes.getLE32U(buf, 0 + offset);
 		this.inodeBitmap = Ext2fsDataTypes.getLE32U(buf, 4 + offset);
 		this.inodeTable = Ext2fsDataTypes.getLE32U(buf, 8 + offset);
@@ -72,7 +73,7 @@ public class BlockGroupDescriptor extends PartialBlock {
 		this.usedDirsCount = Ext2fsDataTypes.getLE16U(buf, 16 + offset);
 	}
 
-	protected void write(ByteBuffer buf) throws IOException {
+	protected void write(ByteBuffer buf) throws IoError {
 		Ext2fsDataTypes.putLE32U(buf, this.blockBitmap, 0);
 		Ext2fsDataTypes.putLE32U(buf, this.inodeBitmap, 4);
 		Ext2fsDataTypes.putLE32U(buf, this.inodeTable, 8);
@@ -82,7 +83,7 @@ public class BlockGroupDescriptor extends PartialBlock {
 		super.write(buf);
 	}
 	
-	public void write() throws IOException {
+	public void write() throws IoError {
 		ByteBuffer buf = allocateByteBuffer();
 		write(buf);		
 	}
@@ -102,7 +103,7 @@ public class BlockGroupDescriptor extends PartialBlock {
 		try {
 			b.read(buf);
 			return b;
-		} catch (IOException e) {
+		} catch (IoError e) {
 			throw new RuntimeException("IOException in BlockGroupDescriptor->fromByteBuffer");
 		}
 	}

@@ -1,10 +1,10 @@
 package jext2;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Date;
 
 import jext2.exceptions.FileTooLarge;
+import jext2.exceptions.IoError;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 
 public class SymlinkInode extends DataInode {
@@ -13,22 +13,22 @@ public class SymlinkInode extends DataInode {
 	public int FAST_SYMLINK_MAX=Constants.EXT2_N_BLOCKS * 4;
 
 	  
-    private String readSlowSymlink() throws IOException, FileTooLarge {
+    private String readSlowSymlink() throws IoError, FileTooLarge {
         ByteBuffer buf = readData((int)getSize(), 0);
         return Ext2fsDataTypes.getString(buf, 0, buf.limit());
     }       
-    private void writeSlowSymlink(String link) throws IOException, NoSpaceLeftOnDevice, FileTooLarge {
+    private void writeSlowSymlink(String link) throws IoError, NoSpaceLeftOnDevice, FileTooLarge {
         ByteBuffer buf = ByteBuffer.allocate(Ext2fsDataTypes.getStringByteLength(link));
         Ext2fsDataTypes.putString(buf, link, buf.capacity(), 0);
         buf.rewind();
         writeData(buf, 0);
     }
     
-    private String readFastSymlink(ByteBuffer buf) throws IOException {
+    private String readFastSymlink(ByteBuffer buf) throws IoError {
         return Ext2fsDataTypes.getString(buf, 40 + offset, (int)getSize());
     }
     
-	public final String getSymlink() throws IOException, FileTooLarge {
+	public final String getSymlink() throws IoError, FileTooLarge {
 	    if (isFastSymlink())
 	        return symlink;
 	    else
@@ -41,7 +41,7 @@ public class SymlinkInode extends DataInode {
 	 * @throws FileTooLarge This is unlikely to happen because is requires 
 	 *     a symlink spanning thousands of blocks. 
 	 */
-	public void setSymlink(String link) throws NoSpaceLeftOnDevice, IOException, FileTooLarge {
+	public void setSymlink(String link) throws NoSpaceLeftOnDevice, IoError, FileTooLarge {
 	    int newSize = Ext2fsDataTypes.getStringByteLength(link);
 	    
 	    setSize(0);
@@ -69,7 +69,7 @@ public class SymlinkInode extends DataInode {
 	    setStatusChangeTime(new Date());
 	}
 	
-	protected SymlinkInode(long blockNr, int offset) throws IOException {
+	protected SymlinkInode(long blockNr, int offset) throws IoError {
 		super(blockNr, offset);
 	}
 
@@ -83,25 +83,25 @@ public class SymlinkInode extends DataInode {
 	    return (getBlocks() == 0);
 	}
     
-	protected void read(ByteBuffer buf) throws IOException {
+	protected void read(ByteBuffer buf) throws IoError {
         super.read(buf);
         
         if (isFastSymlink()) 
             this.symlink = readFastSymlink(buf); 
     }
     
-    protected void write(ByteBuffer buf) throws IOException {
+    protected void write(ByteBuffer buf) throws IoError {
         if (isFastSymlink() && getSize() > 0) 
             Ext2fsDataTypes.putString(buf, symlink, (int)getSize(), 40);
         super.write(buf);
     }
     
-    public void write() throws IOException {
+    public void write() throws IoError {
         ByteBuffer buf = allocateByteBuffer();
         write(buf);
     }
 	
-	public static SymlinkInode fromByteBuffer(ByteBuffer buf, int offset) throws IOException {
+	public static SymlinkInode fromByteBuffer(ByteBuffer buf, int offset) throws IoError {
 		SymlinkInode inode = new SymlinkInode(-1, offset);
 		inode.read(buf);
 		return inode;
@@ -114,7 +114,7 @@ public class SymlinkInode extends DataInode {
     /**
      * Create empty Inode. Initialize *Times, block array.
      */
-    public static SymlinkInode createEmpty() throws IOException {
+    public static SymlinkInode createEmpty() throws IoError {
         SymlinkInode inode = new SymlinkInode(-1, -1);
         Date now = new Date();
         

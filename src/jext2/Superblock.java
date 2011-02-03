@@ -12,6 +12,8 @@ import java.nio.channels.FileChannel;
 import java.util.UUID;
 import java.util.Date;
 
+import jext2.exceptions.IoError;
+
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
@@ -224,7 +226,7 @@ public class Superblock extends Block {
 	    return true;
 	}
 	
-	protected void read(ByteBuffer buf) throws IOException {		
+	protected void read(ByteBuffer buf) throws IoError {		
 		this.inodesCount = Ext2fsDataTypes.getLE32U(buf, 0);
 		this.blocksCount = Ext2fsDataTypes.getLE32U(buf, 4);
 		this.resevedBlocksCount = Ext2fsDataTypes.getLE32U(buf, 8);
@@ -272,7 +274,7 @@ public class Superblock extends Block {
 	}
 
 	
-	protected void write(ByteBuffer buf) throws IOException {
+	protected void write(ByteBuffer buf) throws IoError {
 		Ext2fsDataTypes.putLE32U(buf, this.inodesCount, 0);
 		Ext2fsDataTypes.putLE32U(buf, this.blocksCount, 4);
 		Ext2fsDataTypes.putLE32U(buf, this.resevedBlocksCount, 8);
@@ -348,7 +350,7 @@ public class Superblock extends Block {
 	}
 	
 	
-	public void write() throws IOException {
+	public void write() throws IoError {
 		ByteBuffer buf = allocateByteBuffer();
 		write(buf);
 	}	
@@ -372,7 +374,7 @@ public class Superblock extends Block {
 	 * Read superblock using a BlockAccess Object. Use this for filesystem
 	 * initialization.
 	 */
-	public static Superblock fromBlockAccess(BlockAccess blocks) throws IOException {
+	public static Superblock fromBlockAccess(BlockAccess blocks) throws IoError {
 		Superblock sb = new Superblock(1);
 		ByteBuffer buf = blocks.read(1);
 		sb.read(buf);
@@ -385,12 +387,16 @@ public class Superblock extends Block {
 	 * Read superblock using a FileChannel. This is intended for testing and code
 	 * that just needs the superblock not any file system access.  
 	 */
-	public static Superblock fromFileChannel(FileChannel chan) throws IOException {
+	public static Superblock fromFileChannel(FileChannel chan) throws IoError {
 		
 		Superblock sb = new Superblock(-1);
 		ByteBuffer buf = ByteBuffer.allocate(Constants.EXT2_MIN_BLOCK_SIZE);
-		chan.position(1024);
-		chan.read(buf);
+		try {
+		    chan.position(1024);
+		    chan.read(buf);
+		} catch (IOException e) {
+		    throw new IoError();
+		}
 		sb.read(buf);
 		
 	    Superblock.instance = sb;		

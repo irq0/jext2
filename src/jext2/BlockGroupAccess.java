@@ -1,8 +1,9 @@
 package jext2;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
+
+import jext2.exceptions.IoError;
 
 /** provide access to block group descriptors */
 public class BlockGroupAccess {
@@ -24,7 +25,7 @@ public class BlockGroupAccess {
 	 * to the first descriptor table. The backup tables will therefore no be updated. 
 	 */
 	// TODO reimplement with block iterator
-	public void readDescriptors() throws IOException {
+	public void readDescriptors() throws IoError {
 		int blockCount = (superblock.getGroupsCount() + 
 						  superblock.getGroupDescrPerBlock() - 1) /
 						  superblock.getGroupDescrPerBlock();
@@ -89,14 +90,14 @@ public class BlockGroupAccess {
 	
 	
 	
-	private Bitmap readBitmapAtBlock(long nr) throws IOException {
+	private Bitmap readBitmapAtBlock(long nr) throws IoError {
 		ByteBuffer buf = blocks.read(nr);
 		Bitmap bmap = Bitmap.fromByteBuffer(buf, nr);
 		
 		return bmap;
 	}
 	
-	public Bitmap readInodeBitmapOf(BlockGroupDescriptor group) throws IOException {
+	public Bitmap readInodeBitmapOf(BlockGroupDescriptor group) throws IoError {
 		return readBitmapAtBlock(group.getInodeBitmapPointer());
 	}
 	

@@ -1,9 +1,9 @@
 package jext2;
 
-import java.io.IOException;
 import java.util.Date;
 
 import jext2.exceptions.FileTooLarge;
+import jext2.exceptions.IoError;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 
 /** 
@@ -146,7 +146,7 @@ public class InodeAlloc {
 	/**
 	 * Free Inode: Remove data blocks and set bit to 0
 	 */
-	public static void freeInode(Inode inode) throws IOException {
+	public static void freeInode(Inode inode) throws IoError {
 	    if (inode.getLinksCount() > 0)
 	        return;
 	    	    
@@ -196,7 +196,7 @@ public class InodeAlloc {
 	 * for the Inode. Finally set location data in Inode
 	 * @throws NoSpaceLeftOnDevice 
 	 */
-	public static void registerInode(Inode dir, Inode inode) throws IOException, NoSpaceLeftOnDevice {
+	public static void registerInode(Inode dir, Inode inode) throws IoError, NoSpaceLeftOnDevice {
 		/* find best suitable block group */
 		int group;
 		

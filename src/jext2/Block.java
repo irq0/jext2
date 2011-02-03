@@ -5,8 +5,9 @@
 
 package jext2;
 
-import java.io.IOException;
 import java.nio.*;
+
+import jext2.exceptions.IoError;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
@@ -22,7 +23,7 @@ public abstract class Block {
 		this.nr = blockNr;
 	}
 
-	protected void write(ByteBuffer buf) throws IOException {
+	protected void write(ByteBuffer buf) throws IoError {
 		if (getBlockNr() == -1) 
 			throw new IllegalArgumentException("data structure is unregistered");
 
@@ -30,10 +31,10 @@ public abstract class Block {
 	}
 	
 	/** write data to disk */
-	public abstract void write() throws IOException;
+	public abstract void write() throws IoError;
 	
 	/** read data structure from a ByteBuffer representing a block */
-	protected abstract void read(ByteBuffer buf) throws IOException;
+	protected abstract void read(ByteBuffer buf) throws IoError;
 		
 	protected Block(long blockNr) {
 		this.nr = blockNr;

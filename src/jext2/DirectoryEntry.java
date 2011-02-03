@@ -1,9 +1,9 @@
 package jext2;
 
 import java.nio.ByteBuffer;
-import java.io.IOException;
 
 import jext2.exceptions.FileNameTooLong;
+import jext2.exceptions.IoError;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -74,12 +74,16 @@ public class DirectoryEntry extends PartialBlock {
         this.recLen = minSizeNeeded(this.nameLen);
     }
     
+    public final void clearName() {
+        this.name = "";
+        this.nameLen = 0;
+    }
     
     public final boolean isUnused() {
         return (this.ino == 0);
     }
     
-	protected void read(ByteBuffer buf) throws IOException {
+	protected void read(ByteBuffer buf) throws IoError {
 		this.ino = Ext2fsDataTypes.getLE32U(buf, 0 + offset);
 		this.recLen = Ext2fsDataTypes.getLE16U(buf, 4 + offset);
 		this.nameLen = Ext2fsDataTypes.getLE8U(buf, 6 + offset);
@@ -148,7 +152,7 @@ public class DirectoryEntry extends PartialBlock {
 	    return 8 + nameLen + numPadBytes(nameLen);
 	}
 
-	public static DirectoryEntry fromByteBuffer(ByteBuffer buf, long blockNr, int offset) throws IOException {				
+	public static DirectoryEntry fromByteBuffer(ByteBuffer buf, long blockNr, int offset) throws IoError {				
 		DirectoryEntry dir = new DirectoryEntry(blockNr, offset);
 		dir.read(buf);
 		return dir;
@@ -162,7 +166,7 @@ public class DirectoryEntry extends PartialBlock {
 	 * Export data structure to ByteBuffer which in turn can be written
 	 * to disk
 	 */
-    public ByteBuffer toByteBuffer() throws IOException {
+    public ByteBuffer toByteBuffer() throws IoError {
         ByteBuffer buf = ByteBuffer.allocate(4 + 2 + 1 + 1 + this.nameLen);
         
         Ext2fsDataTypes.putLE32U(buf, this.ino, 0);
@@ -175,7 +179,7 @@ public class DirectoryEntry extends PartialBlock {
         return buf;
     }
 
-    public void write() throws IOException {
+    public void write() throws IoError {
         super.write(this.toByteBuffer());
     }
 

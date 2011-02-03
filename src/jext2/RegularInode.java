@@ -1,20 +1,20 @@
 package jext2;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Date;
 
 import jext2.exceptions.FileTooLarge;
+import jext2.exceptions.IoError;
 
 /**
  * Inode for regular files. 
  */
 public class RegularInode extends DataInode {
-    protected RegularInode(long blockNr, int offset) throws IOException {
+    protected RegularInode(long blockNr, int offset) throws IoError {
         super(blockNr, offset);
     }
 	
-	public static RegularInode fromByteBuffer(ByteBuffer buf, int offset) throws IOException {
+	public static RegularInode fromByteBuffer(ByteBuffer buf, int offset) throws IoError {
 		RegularInode inode = new RegularInode(-1, offset);
 		inode.read(buf);
 		return inode;
@@ -42,7 +42,7 @@ public class RegularInode extends DataInode {
      * @param   size    new size
      * @throws FileTooLarge 
      */
-    public void setSizeAndTruncate(long size) throws IOException, FileTooLarge {
+    public void setSizeAndTruncate(long size) throws IoError, FileTooLarge {
         if (size < 0) 
             throw new IllegalArgumentException("Try to set negative file size");
         long oldSize = getSize();
@@ -54,7 +54,7 @@ public class RegularInode extends DataInode {
     /**
      * Create empty Inode. Initialize *Times, block array.
      */
-    public static RegularInode createEmpty() throws IOException {
+    public static RegularInode createEmpty() throws IoError {
     	RegularInode inode = new RegularInode(-1, -1);
     	Date now = new Date();
     	

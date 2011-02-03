@@ -1,12 +1,11 @@
 package jext2;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 
 import jext2.exceptions.FileTooLarge;
+import jext2.exceptions.IoError;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 
 /**
@@ -52,7 +51,7 @@ public class DataInode extends Inode {
      * @throws FileTooLarge 
      * @throws InvalidArgument 
      */ 
-    public ByteBuffer readData(int size, long offset) throws IOException, FileTooLarge {
+    public ByteBuffer readData(int size, long offset) throws IoError, FileTooLarge {
         ByteBuffer result = ByteBuffer.allocateDirect(size);
     
         int blocksize = superblock.getBlocksize();
@@ -96,7 +95,7 @@ public class DataInode extends Inode {
      * @throws NoSpaceLeftOnDevice 
      * @throws FileTooLarge 
      */    
-    public int writeData(ByteBuffer buf, long offset) throws IOException, NoSpaceLeftOnDevice, FileTooLarge {
+    public int writeData(ByteBuffer buf, long offset) throws IoError, NoSpaceLeftOnDevice, FileTooLarge {
         /*
          * Note on sparse file support:
          * getBlocksAllocate does not care if there are holes. Just write as much 
@@ -157,7 +156,7 @@ public class DataInode extends Inode {
         super(blockNr, offset);
     }
     
-    protected void read(ByteBuffer buf) throws IOException {
+    protected void read(ByteBuffer buf) throws IoError {
         super.read(buf);
         this.blocks = Ext2fsDataTypes.getLE32U(buf, 28 + offset);
         
@@ -170,7 +169,7 @@ public class DataInode extends Inode {
     }
     
     
-    protected void write(ByteBuffer buf) throws IOException {
+    protected void write(ByteBuffer buf) throws IoError {
         if (!(this instanceof SymlinkInode)) {
             for (int i=0; i<Constants.EXT2_N_BLOCKS; i++) {
                 Ext2fsDataTypes.putLE32U(buf, this.block[i], 40 + (i*4));
@@ -180,7 +179,7 @@ public class DataInode extends Inode {
         super.write(buf);
     }
     
-    public void write() throws IOException {
+    public void write() throws IoError {
         ByteBuffer buf = allocateByteBuffer();
         write(buf);
     }
