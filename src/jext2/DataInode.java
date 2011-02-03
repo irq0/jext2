@@ -2,6 +2,7 @@ package jext2;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 
@@ -78,9 +79,7 @@ public class DataInode extends Inode {
             } else { /* blocks */
                 count = b.size();
                 result.limit(result.position() + count * blocksize);
-                blockAccess.readToBuffer(
-                        (((long)(b.getFirst() & 0xffffffff)) * blocksize)
-                        + offset, result);
+                blockAccess.readToBuffer(b.getFirst() * blocksize + offset, result);
             }
 
             start += count;          
@@ -104,24 +103,42 @@ public class DataInode extends Inode {
          * blocks as the buffer requires at the desired location an set inode.size
          * accordingly. 
          */        
+        
+        System.out.println("Starting to write from offset " + offset + " " + buf.capacity() + "bytes");
+        
         int blocksize = superblock.getBlocksize();
-        long start = offset / blocksize;
-        long max = Math.max(start+1, (long)Math.ceil((double)buf.limit() / (double)blocksize) + start);        
-        long bufOffset = offset % blocksize;        
-
-        while (start < max) { 
-            LinkedList<Long> b = accessData().getBlocksAllocate(start, max-start);
+        long start = offset/blocksize;
+        long end = (buf.capacity()+blocksize)/blocksize + start;
+        long startOff = offset%blocksize;
         
-            int count = b.size();
-            buf.limit(Math.min(buf.position() + count * blocksize,
-                               buf.capacity()));
+        if (startOff > 0)
+            end++;
+        
+        
+        while (start < end) {
+            LinkedList<Long> blockNrs = accessData().getBlocksAllocate(start, end-start);
+            int count = blockNrs.size();
             
-            blockAccess.writeFromBuffer(b.getFirst() * blocksize + bufOffset, buf);
-                        
-            start += b.size();          
-            bufOffset = 0;
+            int bytesLeft = buf.capacity() - buf.position();
+            
+            if (bytesLeft < count*blocksize) {
+                buf.limit(buf.position() + bytesLeft);
+            } else { 
+                buf.limit(buf.position() + count * blocksize);
+            }
+                
+            blockAccess.writeFromBuffer(
+                    (blockNrs.getFirst().longValue()) * blocksize + startOff, buf);
+            System.out.println("Wrote to block " + blockNrs.getFirst().longValue()
+                    + " buffer is now " + buf);
+            System.out.println(accessData());
+            int[] offsets = DataBlockAccess.blockToPath(start);
+            System.out.println(Arrays.toString(offsets));
+            System.out.println(Arrays.toString(accessData().getBranch(offsets)));
+            
+            start += count;
+            startOff = 0;
         }
-        
         int written = buf.position();
         
         /* increase inode.size if we grew the file */
@@ -131,6 +148,8 @@ public class DataInode extends Inode {
             write();
         } 
 
+        assert buf.position() == buf.limit();
+        
         return buf.position();
     }  
     
