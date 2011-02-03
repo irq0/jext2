@@ -296,6 +296,7 @@ public class DataBlockAccess {
 	        ByteBuffer buf = blocks.read(blockNrs[existDepth-1]);
 	        Ext2fsDataTypes.putLE32U(buf, newBlockNrs.getFirst().longValue(), 
 	                                     offsets[existDepth]*4);
+	        buf.rewind();
 	        blocks.write(blockNrs[existDepth-1], buf);	        
 	    }
 	    

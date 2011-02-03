@@ -129,12 +129,12 @@ public class DataInode extends Inode {
                 
             blockAccess.writeFromBuffer(
                     (blockNrs.getFirst().longValue()) * blocksize + startOff, buf);
-            System.out.println("Wrote to block " + blockNrs.getFirst().longValue()
-                    + " buffer is now " + buf);
-            System.out.println(accessData());
-            int[] offsets = DataBlockAccess.blockToPath(start);
-            System.out.println(Arrays.toString(offsets));
-            System.out.println(Arrays.toString(accessData().getBranch(offsets)));
+//            System.out.println("Wrote to block " + blockNrs.getFirst().longValue()
+//                    + " buffer is now " + buf);
+//            System.out.println(accessData());
+//            int[] offsets = DataBlockAccess.blockToPath(start);
+//            System.out.println(Arrays.toString(offsets));
+//            System.out.println(Arrays.toString(accessData().getBranch(offsets)));
             
             start += count;
             startOff = 0;
