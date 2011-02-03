@@ -27,10 +27,11 @@ public class InodeAccessProvider {
             Inode inode = openInodes.get(ino);
             if (inode.isDeleted()) {
                 openInodes.remove(ino);
-                throw new NoSuchFileOrDirectory();
-            } else {
-                return openInodes.get(ino);
-            }
+                inode = InodeAccess.readByIno(ino);
+                openInodes.put(ino, inode);
+            }                
+            
+            return openInodes.get(ino);
         } else {
             Inode inode = InodeAccess.readByIno(ino);
             openInodes.put(ino, inode);
