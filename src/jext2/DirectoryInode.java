@@ -20,12 +20,19 @@ public class DirectoryInode extends DataInode {
 	private static BlockAccess blocks = BlockAccess.getInstance();
 	private static Superblock superblock = Superblock.getInstance();
 
+	/**
+	 * Get the directory iterator. Please note: A directory entry 
+	 * is everything found that fits the datastructure. Though "fill" entries
+	 * are allways included. You may want do do a #DirectoryEntry.isUnused 
+	 * to check that.
+	 * @returns Directory iterator for this inode
+	 */
 	public DirectoryIterator iterateDirectory() {
 		return new DirectoryIterator();
 	}
 	
 	/**
-	 * iterates directory entries.
+	 * Iterate directory entries. 
 	 */
 	public class DirectoryIterator implements Iterator<DirectoryEntry>, Iterable<DirectoryEntry> {
 		private ByteBuffer block;
@@ -229,7 +236,7 @@ public class DirectoryInode extends DataInode {
 	 * Lookup name in directory. This is done by iterating each entry and
 	 * comparing the names. 
 	 * 
-	 * @return     DirectoryEntry or null in case its not found
+	 * @return DirectoryEntry or null in case its not found
 	 * @throws NoSuchFileOrDirectory 
 	 * @throws FileNameTooLong 
 	 */
@@ -277,8 +284,29 @@ public class DirectoryInode extends DataInode {
 	        throw new RuntimeException("should not happen");
         }    
 	}
+	
 	/**
-	 *  Create new empty directory. Don not add ., .. entries. Use addDotLinks()
+	 * Remove "." and ".." entry from the directory. Should be called before
+	 * a unlink on a directory.
+	 * @praram parent parent inode. Used to resolve the ".." link
+	 */
+	public void removeDotLinks(DirectoryInode parent) throws IoError {
+	    removeDirectoryEntry(".");
+	    removeDirectoryEntry("..");
+	    
+	    setStatusChangeTime(new Date());
+	    
+	    setLinksCount(getLinksCount() - 1);
+	    parent.setLinksCount(parent.getLinksCount() - 1);
+	    
+	    write();
+	    parent.write();
+	}
+
+	
+	/**
+	 *  Create new empty directory. Don't add "." and .." entries. 
+	 *  Use #addDotLinks() for this.
 	 */
 	public static DirectoryInode createEmpty() throws IoError {
 	    DirectoryInode inode = new DirectoryInode(-1, -1);
@@ -299,7 +327,11 @@ public class DirectoryInode extends DataInode {
 	}
 	
 	/**
-	 * Unlink inode from directory. May cause inode destruction
+	 * Unlink inode from directory. May cause inode destruction. Inode can 
+	 * be any kind of inode except directories.
+	 * 
+	 * @param  inode   inode to unlink
+	 * @param  name    name of the directory entry
 	 */ 
 	public void unLinkOther(Inode inode, String name) throws IoError {
         if (inode instanceof DirectoryInode)
@@ -308,13 +340,17 @@ public class DirectoryInode extends DataInode {
 	}
 	
 	/**
-	 * Remove a subdirectory inode from directory. May cause indoe destruction 
+	 * Remove a subdirectory inode from directory. May cause inode destruction
+	 *
+	 * @see #isEmptyDirectory()
+	 * @param  inode   Subdirectory inode to be unlinked
+	 * @param  name    name of the directory entry
+	 * @throws DirectoryNotEmpty Well, you can't unlink non-empty directories. 
+	 *  "." and ".." entries don't count.
 	 */
 	public void unLinkDir(DirectoryInode inode, String name) throws IoError, DirectoryNotEmpty {
 	    if (!inode.isEmptyDirectory())
 	        throw new DirectoryNotEmpty();
-	    inode.unlink(inode, ".");
-	    inode.unlink(this, "..");
 	    unlink(inode, name);
 	}
 	
@@ -323,11 +359,11 @@ public class DirectoryInode extends DataInode {
 	 * reaches zero. 
 	 */
 	private void unlink(Inode inode, String name) throws IoError {
-	    removeLink(name);
+	    removeDirectoryEntry(name);
 	    inode.setLinksCount(inode.getLinksCount() - 1);
 	    setStatusChangeTime(new Date());
 
-	    if (inode.getLinksCount() == 0) {
+	    if (inode.getLinksCount() <= 0) {
 	        InodeAlloc.freeInode(inode);
 	    }
 	    
@@ -336,8 +372,10 @@ public class DirectoryInode extends DataInode {
 	/**
 	 * Remove a directory entry. This is probably not what you want. We don't 
 	 * update the inode.linksCount here.
+	 * @see #unlink(Inode inode, String name)
+	 * @param name Name of the entry
 	 */
-	private void removeLink(String name) throws IoError {
+	private void removeDirectoryEntry(String name) throws IoError {
 	    /* First: Find the entry and its predecessor */
 	    DirectoryEntry prev = null;
 	    DirectoryEntry toDelete = null;
@@ -349,8 +387,6 @@ public class DirectoryInode extends DataInode {
 	        prev = current;
 	    }
 
-	    System.out.println("Removing " + toDelete + " with prev " + prev);
-	    
 	    /* 
 	     * When we are at the beginning of a block there is 
 	     * no prev entry we can use 

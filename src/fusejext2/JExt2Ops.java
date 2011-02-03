@@ -272,6 +272,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		Dirbuf buf = new Dirbuf();
 
 		for (DirectoryEntry d : inode.iterateDirectory()) {
+		    if (d.isUnused()) continue;
 			FuseExtra.dirbufAdd(req, 
 					buf,
 					d.getName(),
@@ -395,8 +396,9 @@ public class JExt2Ops extends AbstractLowlevelOps {
             DirectoryInode child = 
                 (DirectoryInode)inodes.get(parentInode.lookup(name).getIno());
             
+            child.removeDotLinks(parentInode);
             parentInode.unLinkDir(child, name);
-            
+
             Reply.err(req, 0);
 
         } catch (JExt2Exception e) {
@@ -446,7 +448,6 @@ public class JExt2Ops extends AbstractLowlevelOps {
             Reply.entry(req, makeEntryParam(inode));    
 
         } catch (JExt2Exception e) {
-            System.out.println(":)");
             Reply.err(req, e.getErrno());
         }
         
