@@ -106,7 +106,7 @@ public class DataInode extends Inode {
          */        
         int blocksize = superblock.getBlocksize();
         long start = offset / blocksize;
-        long max = Math.max(start+1, (buf.limit() / blocksize) + start);        
+        long max = Math.max(start+1, (long)Math.ceil((double)buf.limit() / (double)blocksize) + start);        
         long bufOffset = offset % blocksize;        
 
         while (start < max) { 
@@ -115,10 +115,9 @@ public class DataInode extends Inode {
             int count = b.size();
             buf.limit(Math.min(buf.position() + count * blocksize,
                                buf.capacity()));
-            blockAccess.writeFromBuffer(
-                    (((long)(b.getFirst() & 0xffffffff)) * blocksize) + bufOffset,
-                    buf);
             
+            blockAccess.writeFromBuffer(b.getFirst() * blocksize + bufOffset, buf);
+                        
             start += b.size();          
             bufOffset = 0;
         }

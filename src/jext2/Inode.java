@@ -215,7 +215,9 @@ public class Inode extends PartialBlock {
 
 	public String toString() {
 		return ToStringBuilder.reflectionToString(this,
-		                                          ToStringStyle.MULTI_LINE_STYLE);
+		            ToStringStyle.MULTI_LINE_STYLE,
+		            false,
+		            Inode.class);
 	}
 	
 	protected Inode(long blockNr, int offset) {

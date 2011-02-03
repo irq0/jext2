@@ -7,6 +7,10 @@ import java.util.LinkedList;
 import java.util.Iterator;
 import java.io.IOException;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+
 import jext2.exceptions.FileTooLarge;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 
@@ -251,7 +255,7 @@ public class DataBlockAccess {
                         result.addLast(nr);
                         
                         ByteBuffer buf = ByteBuffer.allocate(superblock.getBlocksize());
-                        Ext2fsDataTypes.putLE32U(buf, nr, offsets[n]*4);                        
+                        Ext2fsDataTypes.putLE32U(buf, nr, offsets[n-1]*4);                        
                         blocks.write(parent, buf);	        
                     } else {	                
                         break;
@@ -289,8 +293,8 @@ public class DataBlockAccess {
 	        directBlocks[offsets[0]] = newBlockNrs.getFirst().longValue();
 	    } else {
 	        ByteBuffer buf = blocks.read(blockNrs[existDepth-1]);
-	        Ext2fsDataTypes.putLE32U(buf, newBlockNrs.getFirst().longValue()*4, 
-	                                     offsets[existDepth]);
+	        Ext2fsDataTypes.putLE32U(buf, newBlockNrs.getFirst().longValue(), 
+	                                     offsets[existDepth]*4);
 	        blocks.write(blockNrs[existDepth-1], buf);	        
 	    }
 	    
@@ -665,6 +669,45 @@ public class DataBlockAccess {
 	    }
 	}
 	
+	public String dumpHierachy() {
+	    StringBuilder sb = 
+	        new StringBuilder("Inode has " + inode.getBlocks() + " blocks");
+	    
+	    long[] direct = inode.getBlock();
+	    /* direct blocks */
+	    for (int i=0; i<Constants.EXT2_NDIR_BLOCKS; i++) {
+	        sb.append("[" + i + "] " + direct[i] + "\n");
+	    }
+	    
+	    /* indirection */
+	    try {
+	        for (int i=0; i<3; i++) {
+	            long blockNr = direct[Constants.EXT2_IND_BLOCK+i];
+	            LinkedList<Long> blockNrs = blocks.readAllBlockNumbersFromBlockSkipZero(blockNr);	        
+	            sb.append((i+1) + "IND " + blockNr + "\n");
+	            dumpBranches(i, blockNrs, sb);
+	        }
+	    } catch (IOException e) {
+	    }
+	    return sb.toString();
+	}
+	
+	public void dumpBranches(int depth, LinkedList<Long> blockNrs, StringBuilder sb) throws IOException {
+	    if (blockNrs.size() == 0) return;
+	    if (depth > 0) { /* indirection exists -> go down */
+	        depth -= 1;
+	        for (long nr : blockNrs) {
+	            if (nr == 0) continue;
+
+	            LinkedList<Long> nextBlockNrs = blocks.readAllBlockNumbersFromBlockSkipZero(nr);
+
+	            sb.append(String.format("%" + ((depth+1)*10) + "s \\_ %10s \n", " ", nr));
+	            dumpBranches(depth, nextBlockNrs, sb);
+	        }
+	    } else { /* just data pointers left */
+	        sb.append(String.format("%" + ((depth+2)*10) + "s -> %10s \n", " ", blockNrs));
+	    }
+	}	
 
 	/**
 	 * Truncate data blocks toSize. 
@@ -740,6 +783,14 @@ public class DataBlockAccess {
 	    
 	    inode.write();
 	}
+
+	public String toString() {
+	    return new ToStringBuilder(this)
+	        .append("lastAllocLogicalBlock", lastAllocLogicalBlock)
+	        .append("lastAllocPhysicalBlock", lastAllocPhysicalBlock)
+	        .appendToString(dumpHierachy()).toString();
+	}
+
 }
 
 
