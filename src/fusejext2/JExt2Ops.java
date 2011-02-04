@@ -465,16 +465,11 @@ public class JExt2Ops extends AbstractLowlevelOps {
             if (child instanceof DirectoryInode)
                 throw new IsADirectory();
             
-//            FuseContext context = req.getContext();            
-            
             ((DirectoryInode)parent).addLink(child, newname);
             Reply.entry(req, makeEntryParam(child));    
 
         } catch (JExt2Exception e) {
             Reply.err(req, e.getErrno());
         }
-
-        
-        
-    }
+    }    
 }
