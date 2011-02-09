@@ -122,7 +122,6 @@ public class DirectoryInode extends DataInode {
         addLink(newDir);
         
         inode.setLinksCount(inode.getLinksCount() + 1);
-        inode.write();
 	}
 	
 	/**
@@ -299,8 +298,8 @@ public class DirectoryInode extends DataInode {
 	    setLinksCount(getLinksCount() - 1);
 	    parent.setLinksCount(parent.getLinksCount() - 1);
 	    
-	    write();
-	    parent.write();
+//	    write();
+//	    parent.write();
 	}
 
 	
@@ -402,7 +401,7 @@ public class DirectoryInode extends DataInode {
 	     */ 
 	    } else {
 	        prev.setRecLen(prev.getRecLen() + toDelete.getRecLen());
-	        prev.write();
+	        prev.write(); // ok here: is meta data
 	    }
 	    
 	    setModificationTime(new Date());

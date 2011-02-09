@@ -160,7 +160,7 @@ public class InodeAlloc {
             }
         }
 	    
-        inode.write();
+        inode.write(); // ok here: deleted inodes will not get any sync calls i guess
 
         long ino = inode.getIno();
         
@@ -186,9 +186,6 @@ public class InodeAlloc {
         if (inode instanceof DirectoryInode) {
             groupDescr.setUsedDirsCount(groupDescr.getUsedDirsCount() - 1);
             superblock.setDirsCount(superblock.getDirsCount() - 1);
-            
-            groupDescr.write();
-            superblock.write();
         }
 	}
 	
@@ -248,9 +245,6 @@ public class InodeAlloc {
 			superblock.setDirsCount(superblock.getDirsCount() + 1);
 			descr.setUsedDirsCount(descr.getUsedDirsCount() + 1);
 		}
-		
-		superblock.write();
-		descr.write();
 		
 		/* set location metadata of inode */
 		int offset = (ino * superblock.getInodeSize()) % superblock.getBlocksize();

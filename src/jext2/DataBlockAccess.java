@@ -305,7 +305,6 @@ public class DataBlockAccess {
 	    inode.setBlocks(inode.getBlocks() + 
 	            newBlockNrs.size() * (superblock.getBlocksize()/ 512));
 	    inode.setModificationTime(new Date());
-	    inode.write();
 	}
 	
 	
@@ -478,9 +477,7 @@ public class DataBlockAccess {
         long blockNr = newBlock(goal);
         
         /* Finally return pointer to allocated block or an error */
-        superblock.setFreeBlocksCount(superblock.getFreeBlocksCount() - 1);
-        superblock.write();
-            
+        superblock.setFreeBlocksCount(superblock.getFreeBlocksCount() - 1);            
         return blockNr;
     }
 
@@ -512,7 +509,6 @@ public class DataBlockAccess {
                 bitmap.write();
 
                 descr.setFreeBlocksCount(descr.getFreeBlocksCount() - 1);
-                descr.write();            
 
                 return Calculations.blockNrOfLocal(freeIndex, descr.getBlockGroup());
             } else {
@@ -604,7 +600,6 @@ public class DataBlockAccess {
 	        bitmap.write();
 	    
 	        groupDescr.setFreeBlocksCount(groupDescr.getFreeBlocksCount() + groupFreed);
-	        groupDescr.write();
 	        freed += groupFreed;
 	        
 	        blockNr += count;
@@ -615,7 +610,6 @@ public class DataBlockAccess {
 	    inode.setBlocks(inode.getBlocks() - freed * (superblock.getBlocksize()/ 512));
 	    inode.setModificationTime(new Date());
 	    superblock.setFreeBlocksCount(superblock.getFreeBlocksCount() + freed);
-	    superblock.write();
 	}
 	
 	/**
@@ -792,7 +786,7 @@ public class DataBlockAccess {
 	        ;
 	    }
 	    
-	    inode.write();
+//	    inode.write();
 	}
 
 	public String toString() {

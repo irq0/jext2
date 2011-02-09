@@ -14,7 +14,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
 public abstract class Block {
-    int notDirtyHashCode = 0;
+    int cleanHashCode = 0;
     
     /** block location on filesystem */
 	protected long nr;
@@ -58,13 +58,13 @@ public abstract class Block {
 	 */
 	public boolean isDirty() {
 	    int newHashCode = hashCode();
-	    return notDirtyHashCode != newHashCode;
+	    return cleanHashCode != newHashCode;
 	}
 	
 	/**
-	 * Reset the dirty state
+	 * Mark data clean: Reset the dirty state
 	 */
 	public void cleanDirty() {
-	    this.notDirtyHashCode = hashCode();
+	    this.cleanHashCode = hashCode();
 	}
 }

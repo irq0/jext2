@@ -152,7 +152,7 @@ public class DataInode extends Inode {
         if (offset + written > getSize()) { /* file grew */
             setStatusChangeTime(new Date());
             setSize(offset + written);
-            write();
+//            write();
         } 
 
         assert buf.position() == buf.limit();
