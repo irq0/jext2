@@ -119,7 +119,7 @@ public class DirectoryInode extends DataInode {
         newDir.setFileType(inode.getFileType());
 
         
-        addLink(newDir);
+        addDirectoryEntry(newDir);
         
         inode.setLinksCount(inode.getLinksCount() + 1);
 	}
@@ -133,7 +133,7 @@ public class DirectoryInode extends DataInode {
 	 * @throws FileExistsException      When we stumble upon an entry with same name
 	 */
 	// TODO rewrite addLink to use the directory iterator
-	private void addLink(DirectoryEntry newEntry) throws IoError, FileExists, NoSpaceLeftOnDevice, FileTooLarge {
+	public void addDirectoryEntry(DirectoryEntry newEntry) throws IoError, FileExists, NoSpaceLeftOnDevice, FileTooLarge {
        ByteBuffer block;
        int offset = 0;
        
@@ -215,6 +215,7 @@ public class DirectoryInode extends DataInode {
        DirectoryEntry rest = DirectoryEntry.createRestDummy(newEntry);
        blocks.writePartial(blockNr, newEntry.getRecLen(), rest.toByteBuffer());
        
+       setSize(getSize() + superblock.getBlocksize());
        setStatusChangeTime(new Date());
 
 	}
@@ -374,7 +375,7 @@ public class DirectoryInode extends DataInode {
 	 * @see #unlink(Inode inode, String name)
 	 * @param name Name of the entry
 	 */
-	private void removeDirectoryEntry(String name) throws IoError {
+	public void removeDirectoryEntry(String name) throws IoError {
 	    /* First: Find the entry and its predecessor */
 	    DirectoryEntry prev = null;
 	    DirectoryEntry toDelete = null;

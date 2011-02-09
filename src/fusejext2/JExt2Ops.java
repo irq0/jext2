@@ -8,6 +8,7 @@ import jext2.*;
 import jext2.exceptions.IoError;
 import jext2.exceptions.IsADirectory;
 import jext2.exceptions.JExt2Exception;
+import jext2.exceptions.NoSuchFileOrDirectory;
 import jext2.exceptions.NotADirectory;
 import fuse.*;
 import jlowfuse.*;
@@ -175,10 +176,33 @@ public class JExt2Ops extends AbstractLowlevelOps {
 	    
 	}
 	
-	public void release(FuseReq req, long ino, FileInfo fi) {
+	// TODO implement handling of nlookup
+    public void forget(FuseReq req, long ino, long nlookup) {
+        if (ino == 1) ino = Constants.EXT2_ROOT_INO;
+        
+        // try to sync if inode is open - which it shouldn't be
+        try {
+            Inode inode = inodes.getOpen(ino);
+            if (inode != null)
+                inode.sync();
+        } catch (JExt2Exception e) {
+        }
+        
+        
+        inodes.close(ino);
+        Reply.none(req);
+    }
+
+    public void release(FuseReq req, long ino, FileInfo fi) {
 	    if (ino == 1) ino = Constants.EXT2_ROOT_INO;
-	    inodes.close(ino);
-		Reply.err(req, 0);
+	    
+	    try {
+	        Inode inode = inodes.get(ino);
+	        inode.sync();
+	        Reply.err(req, 0);
+	    } catch (JExt2Exception e) {
+	        Reply.err(req, e.getErrno());
+	    }	    
 	}
 	
 	public void releasedir(FuseReq req, long ino, FileInfo fi) {
@@ -342,9 +366,9 @@ public class JExt2Ops extends AbstractLowlevelOps {
             inode.setUid(context.getUid());
             inode.setGid(context.getGid());
             InodeAlloc.registerInode(parentInode, inode);
-            inode.write();
             
             ((DirectoryInode)parentInode).addLink(inode, name);            
+            inode.sync();
             Reply.entry(req, makeEntryParam(inode));    
 
         } catch (JExt2Exception e) {
@@ -369,9 +393,9 @@ public class JExt2Ops extends AbstractLowlevelOps {
             inode.setGid(context.getGid());
             InodeAlloc.registerInode(parentInode, inode);
             inode.addDotLinks((DirectoryInode)parentInode);
-            inode.write();
             
             ((DirectoryInode)parentInode).addLink(inode, name);
+            inode.sync();
             Reply.entry(req, makeEntryParam(inode));    
 
         } catch (JExt2Exception e) {
@@ -516,7 +540,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
             
             inode.sync();
             blocks.sync();
-            
+            Reply.err(req, 0);
         } catch (JExt2Exception e) {
             Reply.err(req, e.getErrno());
         }
@@ -533,5 +557,81 @@ public class JExt2Ops extends AbstractLowlevelOps {
 
     public void fsyncdir(FuseReq req, long ino, int datasync, FileInfo fi) {
         fsync(req, ino, datasync, fi);
+    }
+
+    public void rename(FuseReq req, long parentIno, String name, long newParentIno,
+            String newname) {
+        if (parentIno == 1) parentIno = Constants.EXT2_ROOT_INO;
+        if (newParentIno == 1) newParentIno = Constants.EXT2_ROOT_INO;
+
+        try {
+            DirectoryInode parent = (DirectoryInode)inodes.get(parentIno);
+            DirectoryInode newparent = (DirectoryInode)inodes.get(newParentIno);
+          
+            /* create entries */
+            DirectoryEntry entry = parent.lookup(name);
+
+            DirectoryEntry newEntry = DirectoryEntry.create(newname);
+            newEntry.setIno(entry.getIno());
+            newEntry.setFileType(entry.getFileType());
+            
+            /* 
+             * When NEW directory entry already exists try to 
+             * delete it. 
+             */
+            try {
+                DirectoryEntry existingEntry = newparent.lookup(newname);
+                if (existingEntry.getFileType() == DirectoryEntry.FILETYPE_DIR) {
+                    DirectoryInode existingDir = 
+                        (DirectoryInode)(inodes.get(existingEntry.getIno()));
+                   
+                    newparent.unLinkDir(existingDir, newname);
+                } else {
+                    Inode existing = inodes.get(existingEntry.getIno());
+                    newparent.unLinkOther(existing, newname);
+                }
+            } catch (NoSuchFileOrDirectory e) {
+            }
+           
+            /*
+             * When we move a directory we need to update the dot-dot entry
+             * and the nlinks of the parents.
+             */
+            if (newEntry.getFileType() == DirectoryEntry.FILETYPE_DIR) {
+                DirectoryInode newDir = 
+                    (DirectoryInode)(inodes.get(newEntry.getIno()));
+
+                DirectoryEntry dotdot = newDir.lookup("..");
+                dotdot.setIno(newparent.getIno());
+                dotdot.sync();
+
+                newparent.setLinksCount(newparent.getLinksCount() + 1);
+                parent.setLinksCount(parent.getLinksCount() - 1);
+            }
+            
+            /*
+             * Finally: Change the Directories 
+             */
+            newparent.addDirectoryEntry(newEntry);
+            parent.removeDirectoryEntry(name);
+            
+            Reply.err(req, 0);
+        } catch (JExt2Exception e) {
+            Reply.err(req, e.getErrno());
+        }
     }    
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

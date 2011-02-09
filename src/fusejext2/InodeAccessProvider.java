@@ -1,6 +1,6 @@
 package fusejext2;
 
-import java.util.Hashtable;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import jext2.Inode;
 import jext2.InodeAccess;
@@ -13,11 +13,11 @@ import jext2.exceptions.NoSuchFileOrDirectory;
  * with the same number. 
  */
 public class InodeAccessProvider {
-    private Hashtable<Long,Inode> openInodes = new Hashtable<Long,Inode>();
+    private ConcurrentSkipListMap<Long,Inode> openInodes = new ConcurrentSkipListMap<Long,Inode>();
     
     Inode getOpen(long ino)  {
         if (!openInodes.containsKey(ino))
-            throw new RuntimeException("should not happen");
+            return null;
         else
             return openInodes.get(ino);
     }
@@ -31,7 +31,7 @@ public class InodeAccessProvider {
                 openInodes.put(ino, inode);
             }                
             
-            return openInodes.get(ino);
+            return openInodes.get(new Long(ino));
         } else {
             Inode inode = InodeAccess.readByIno(ino);
             openInodes.put(ino, inode);

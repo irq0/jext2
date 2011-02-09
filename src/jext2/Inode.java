@@ -1,5 +1,6 @@
 package jext2;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
@@ -251,6 +252,20 @@ public class Inode extends PartialBlock {
 	
 	public short getFileType() {
 	    return DirectoryEntry.FILETYPE_UNKNOWN;
+	}
+	
+	/**
+	 * An inode is equal if its ino number is the same
+	 */
+	public boolean equals(Object otherObj) {
+	    if (!(otherObj instanceof Inode)) 
+	        return false;	    
+
+	    Inode other = (Inode)otherObj; 
+	    
+	    return new EqualsBuilder()
+	        .append(ino, other.ino)
+	        .isEquals();
 	}
 	
 	public int hashCode() {
