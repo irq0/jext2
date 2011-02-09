@@ -2,6 +2,8 @@ package jext2;
 
 import java.nio.ByteBuffer;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import jext2.exceptions.IoError;
 
 /**
@@ -34,6 +36,11 @@ public abstract class PartialBlock extends Block {
         super(blockNr);
         this.offset = offset;
     }
-    
 
+    
+    public int hashCode() {
+        return new HashCodeBuilder()
+            .appendSuper(super.hashCode())
+            .append(offset).toHashCode();
+    }
 }

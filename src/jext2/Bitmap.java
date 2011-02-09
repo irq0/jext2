@@ -6,6 +6,8 @@ import java.nio.ByteOrder;
 import jext2.exceptions.IoError;
 
 public class Bitmap extends Block {
+    private boolean dirty = false;
+    
 	private ByteBuffer bmap = ByteBuffer.allocate(Superblock.getInstance().getBlocksize());
 	protected void read(ByteBuffer buf) throws IoError {
 	    this.bmap = buf;
@@ -100,6 +102,8 @@ public class Bitmap extends Block {
 		    assert isSet(pos);
 		else
 		    assert !isSet(pos);
+		
+		this.dirty = true;
 	}
 
 	/**
@@ -164,5 +168,13 @@ public class Bitmap extends Block {
 	    
 	    sb.append("]");
 	    return sb.toString();
+	}
+	
+	public boolean isDirty() {
+	    return dirty;
+	}
+	
+	public void cleanDirty() {
+	    this.dirty = false;
 	}
 }

@@ -14,6 +14,7 @@ import java.util.Date;
 
 import jext2.exceptions.IoError;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
@@ -406,5 +407,19 @@ public class Superblock extends Block {
 	public String toString() {
 		return ToStringBuilder.reflectionToString(this,
 		                                          ToStringStyle.MULTI_LINE_STYLE);
+	}
+	
+	public int hashCode() {
+	    return new HashCodeBuilder()
+	        .appendSuper(super.hashCode())
+	        .append(inodesCount)
+	        .append(blocksCount)
+	        .append(freeBlocksCount)
+	        .append(freeInodesCount)
+	        .append(firstDataBlock)
+	        .append(dirsCount)
+	        .append(uuid.getLeastSignificantBits())
+	        .append(uuid.getMostSignificantBits())
+	        .toHashCode();
 	}
 }

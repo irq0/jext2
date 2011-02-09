@@ -1,5 +1,6 @@
 package jext2;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 import java.util.Date;
@@ -235,10 +236,6 @@ public class Inode extends PartialBlock {
 		return (this.nr == other.nr) &&
 			(this.offset == other.offset);
 	}
-
-	public int hashCode() {
-		return (int)(this.nr ^ this.offset);
-	}
 	
 	/** allocate a ByteBuffer big enaugh for a Inode */
 	protected ByteBuffer allocateByteBuffer() {		
@@ -256,6 +253,26 @@ public class Inode extends PartialBlock {
 	    return DirectoryEntry.FILETYPE_UNKNOWN;
 	}
 	
+	public int hashCode() {
+	    return new HashCodeBuilder()
+	        .appendSuper(super.hashCode())
+	        .append(mode)
+	        .append(getGid())
+	        .append(getUid())
+	        .append(size)
+	        .append(accessTime)
+	        .append(changeTime)
+	        .append(modificationTime)
+	        .append(deletionTime)
+	        .append(linksCount)
+	        .append(flags)
+	        .append(generation)
+	        .append(fileAcl)
+	        .append(dirAcl)
+	        .append(fragmentAddress)
+	        .append(blockGroup)
+	        .append(ino).toHashCode();
+	}
 }
 
 

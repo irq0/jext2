@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 
 import jext2.exceptions.IoError;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
@@ -216,4 +217,16 @@ public class BlockGroupDescriptor extends PartialBlock {
 		return num == a;
 	}
 	
+	public int hashCode() {
+	    return new HashCodeBuilder()
+	        .appendSuper(super.hashCode())
+	        .append(blockBitmap)
+	        .append(inodeBitmap)
+	        .append(inodeTable)
+	        .append(freeBlocksCount)
+	        .append(freeInodesCount)
+	        .append(usedDirsCount)
+	        .append(blockGroup)
+	        .toHashCode();
+	}
 }		

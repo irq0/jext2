@@ -9,11 +9,14 @@ import java.nio.*;
 
 import jext2.exceptions.IoError;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
 public abstract class Block {
-	/** block location on filesystem */
+    int notDirtyHashCode = 0;
+    
+    /** block location on filesystem */
 	protected long nr;
 	public long getBlockNr() {
 		return nr;
@@ -23,6 +26,11 @@ public abstract class Block {
 		this.nr = blockNr;
 	}
 
+	public int hashCode() {
+	    return new HashCodeBuilder()
+	        .append(nr).toHashCode();
+	}
+	
 	protected void write(ByteBuffer buf) throws IoError {
 		if (getBlockNr() == -1) 
 			throw new IllegalArgumentException("data structure is unregistered");
@@ -43,5 +51,20 @@ public abstract class Block {
 	public String toString() {
 		return ToStringBuilder.reflectionToString(this,
 		                                          ToStringStyle.MULTI_LINE_STYLE);
+	}
+	
+	/**
+	 * Return dirty if data changed. Relies on hashCode() 
+	 */
+	public boolean isDirty() {
+	    int newHashCode = hashCode();
+	    return notDirtyHashCode != newHashCode;
+	}
+	
+	/**
+	 * Reset the dirty state
+	 */
+	public void cleanDirty() {
+	    this.notDirtyHashCode = hashCode();
 	}
 }

@@ -4,6 +4,8 @@ import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.LinkedList;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import jext2.exceptions.FileTooLarge;
 import jext2.exceptions.IoError;
 import jext2.exceptions.NoSpaceLeftOnDevice;
@@ -190,4 +192,12 @@ public class DataInode extends Inode {
         write(buf);
     }
 
+    public int hashCode() {
+        return new HashCodeBuilder()
+            .appendSuper(super.hashCode())
+            .append(blocks)
+            .append(block)
+            .toHashCode();
+    }
+    
 }

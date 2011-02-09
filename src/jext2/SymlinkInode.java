@@ -3,6 +3,8 @@ package jext2;
 import java.nio.ByteBuffer;
 import java.util.Date;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import jext2.exceptions.FileTooLarge;
 import jext2.exceptions.IoError;
 import jext2.exceptions.NoSpaceLeftOnDevice;
@@ -129,5 +131,11 @@ public class SymlinkInode extends DataInode {
         inode.setSize(0);
         
         return inode;
+    }
+
+    public int hashCode() {
+        return new HashCodeBuilder()
+            .appendSuper(super.hashCode())
+            .append(symlink).toHashCode();
     }
 }

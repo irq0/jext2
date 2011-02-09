@@ -6,6 +6,7 @@ import jext2.exceptions.FileNameTooLong;
 import jext2.exceptions.IoError;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
@@ -182,7 +183,17 @@ public class DirectoryEntry extends PartialBlock {
     public void write() throws IoError {
         super.write(this.toByteBuffer());
     }
-
+    
+    
+    public int hashCode() {
+        return new HashCodeBuilder()
+            .appendSuper(super.hashCode())
+            .append(ino)
+            .append(recLen)
+            .append(nameLen)
+            .append(fileType)
+            .append(name).toHashCode();
+    }
 }
 	
 	
