@@ -69,6 +69,8 @@ public class Constants {
 	public static final int EXT2_CURRENT_REV=	EXT2_GOOD_OLD_REV;
 	public static final int EXT2_MAX_SUPP_REV=	EXT2_DYNAMIC_REV;
 
+	public static final int JEXT2_MAX_SUPP_REV= EXT2_DYNAMIC_REV;
+	
 	public static final int EXT2_GOOD_OLD_INODE_SIZE= 128;
 
 	// Default values for user and/or group using reserved blocks

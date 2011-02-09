@@ -48,6 +48,12 @@ public class BlockGroupAccess {
 		}
 	}
 	
+	public void syncDescriptors() throws IoError { 
+	    for (BlockGroupDescriptor descr : iterateBlockGroups()) {
+	        descr.sync();
+	    }
+	}
+	
 	public BlockGroupDescriptor getGroupDescriptor(int group) {
 		return descriptors[group];
 	}

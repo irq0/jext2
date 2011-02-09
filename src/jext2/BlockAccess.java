@@ -98,6 +98,17 @@ public class BlockAccess {
 	    }
 	}   
 	
+    /**
+     * Force changes to disc
+     */
+    public void sync() throws IoError {
+        try {
+            blockdev.force(false);
+        } catch (IOException e) {
+            throw new IoError();
+        }
+    }
+    
 	
 	/** 
 	 * Write partial buffer to a disk block. It is not possible to write over 

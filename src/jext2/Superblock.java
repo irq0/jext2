@@ -215,7 +215,22 @@ public class Superblock extends Block {
 		return 31 - Integer.numberOfLeadingZeros(getAddressesPerBlock());
 	}
 	
-	public boolean hasFreeBlocks() {
+	public final void setMountCount(int mountCount) {
+        this.mountCount = mountCount;
+    }
+    public final void setMaxMountCount(int maxMountCount) {
+        this.maxMountCount = maxMountCount;
+    }
+    public final void setLastMount(Date lastMount) {
+        this.lastMount = lastMount;
+    }
+    public final void setLastWrite(Date lastWrite) {
+        this.lastWrite = lastWrite;
+    }
+    public final void setLastMounted(String lastMounted) {
+        this.lastMounted = lastMounted;
+    }
+    public boolean hasFreeBlocks() {
 	    long freeBlocks = this.freeBlocksCount;
 	    long rootBlocks = this.resevedBlocksCount;
 	    

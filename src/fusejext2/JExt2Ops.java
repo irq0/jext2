@@ -43,8 +43,28 @@ public class JExt2Ops extends AbstractLowlevelOps {
 	            System.exit(23);
 	        }
 	        
-	        // TODO set times, volume name, etc in  superblock
+	        /* ext2_setup_super */
+	        if (superblock.getRevLevel() > Constants.JEXT2_MAX_SUPP_REV) {
+	            System.out.println("Error: Revision level too high, exiting");
+	            System.exit(23);
+	        }
+	            
+	        if ((superblock.getState() & Constants.EXT2_VALID_FS) == 0)
+	            System.out.println("Mounting uncheckt fs");	        
+	        else if ((superblock.getState() & Constants.EXT2_ERROR_FS) > 0) 
+	            System.out.println("Mounting fs with errors");
+	        else if ((superblock.getMaxMountCount() >= 0) &&
+	                 (superblock.getMountCount() >= superblock.getMaxMountCount()))
+	            System.out.println("Maximal mount count reached");
 	        
+	        if (superblock.getMaxMountCount() == 0)
+	            superblock.setMaxMountCount(Constants.EXT2_DFL_MAX_MNT_COUNT);
+	        
+	        superblock.setMountCount(superblock.getMountCount() + 1);
+	        superblock.setLastMount(new Date());
+	        superblock.setLastMounted("jext2");
+	        
+	        // TODO set times, volume name, etc in  superblock
 			blockGroups = new BlockGroupAccess();
 			blockGroups.readDescriptors();
 		} catch (IoError e) {
@@ -54,7 +74,20 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		
 	}
 	
-	private Date timespecToDate(Timespec time) {
+    public void destroy() {
+        System.out.println("DESTROY");
+        try {
+            superblock.setLastWrite(new Date());
+            superblock.sync();
+            blockGroups.syncDescriptors();
+            
+            blocks.sync();
+        } catch (IoError e) {
+            System.out.println("IoError on final superblock/block group descr sync");
+        }
+    }
+
+    private Date timespecToDate(Timespec time) {
 	    Date date = new Date(time.getSec()*1000 + time.getNsec()/1000); 
 	    return date;
 	}
@@ -143,10 +176,15 @@ public class JExt2Ops extends AbstractLowlevelOps {
 	}
 	
 	public void release(FuseReq req, long ino, FileInfo fi) {
+	    if (ino == 1) ino = Constants.EXT2_ROOT_INO;
 	    inodes.close(ino);
 		Reply.err(req, 0);
 	}
 	
+	public void releasedir(FuseReq req, long ino, FileInfo fi) {
+        release(req, ino, fi);
+    }
+
 	public void readlink(FuseReq req, long ino) {
 	    if (ino == 1) ino = Constants.EXT2_ROOT_INO;
 		try {
@@ -162,10 +200,6 @@ public class JExt2Ops extends AbstractLowlevelOps {
             Reply.err(req, e.getErrno());
         }
 		
-	}
-	
-	public void flush(FuseReq req, long ino, FileInfo fi) {
-		Reply.err(req, 0);
 	}
 	
 	public void getattr(FuseReq req, long ino, FileInfo fi) {
@@ -285,13 +319,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
 		Reply.dirBufLimited(req, buf, off, size);
 	}
 	
-	public void releasedir(FuseReq req, long ino, FileInfo fi) {
-	    if (ino == 1) ino = Constants.EXT2_ROOT_INO;
-        inodes.close(ino);
-		Reply.err(req, 0);		
-	}
-
-    public void mknod(FuseReq req, long parent, String name, short umode, short dev) {
+	public void mknod(FuseReq req, long parent, String name, short umode, short dev) {
         if (parent == 1) parent = Constants.EXT2_ROOT_INO;
         try {
             int mode = umode & 0xFFFF;
@@ -471,5 +499,39 @@ public class JExt2Ops extends AbstractLowlevelOps {
         } catch (JExt2Exception e) {
             Reply.err(req, e.getErrno());
         }
+    }
+
+    public void fsync(FuseReq req, long ino, int datasync, FileInfo fi) {
+        if (ino == 1) ino = Constants.EXT2_ROOT_INO;
+        try {
+            /*
+             * Do a full disk flush:
+             * Since we are in userland and have no control over blocks 
+             * and disks, just sync the inode and force the file channel
+             * to flush
+             */
+            
+            Inode inode = inodes.get(ino);
+            assert inode != null;
+            
+            inode.sync();
+            blocks.sync();
+            
+        } catch (JExt2Exception e) {
+            Reply.err(req, e.getErrno());
+        }
+    }
+
+    /*
+     * FUSE: This is called on each close() of the opened file.
+     * I think its best to write the inode meta data and force the 
+     * file channel 
+     */	
+    public void flush(FuseReq req, long ino, FileInfo fi) {
+        fsync(req, ino, 0, fi);
+    }
+
+    public void fsyncdir(FuseReq req, long ino, int datasync, FileInfo fi) {
+        fsync(req, ino, datasync, fi);
     }    
 }

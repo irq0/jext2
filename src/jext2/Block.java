@@ -67,4 +67,11 @@ public abstract class Block {
 	public void cleanDirty() {
 	    this.cleanHashCode = hashCode();
 	}
+	
+	public void sync() throws IoError {
+	    write();
+	    cleanDirty();
+	}
+	    
+	    
 }

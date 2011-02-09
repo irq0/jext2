@@ -33,11 +33,28 @@ public class FuseJExt2 {
 	private static boolean daemon = false;
 	private static String fuseCommandline = "-o foo,subtype=jext2";
 	
+	private static JExt2Ops ops;
+	
 	static class FuseShutdownHook extends Thread {
 		public void run() {
+		    System.out.println("Shutdown ");
+		    
+		    /* this should not be nesseccrry but fuse/jlowfuse does not call 
+		     * DESTROY
+		     */
+		    ops.destroy();
+		    
 			Session.removeChan(chan);
 			Session.exit(sess);
 			Fuse.unmount(mountpoint, chan);
+			
+			try {
+			    blockDev.force(false);
+			    blockDev.close();
+			} catch (IOException e) {
+			    System.err.println(e.getStackTrace());
+                System.err.println(e.getLocalizedMessage());
+			}
 		}
 	}	
 	
@@ -147,12 +164,13 @@ public class FuseJExt2 {
 	        System.exit(1);
         }
 
-		sess = JLowFuse.lowlevelNew(fuseArgs, new JExt2Ops(blockDev));
-        
-        Session.addChan(sess, chan);
-        
         FuseShutdownHook hook = new FuseShutdownHook();
         Runtime.getRuntime().addShutdownHook(hook);
+        
+        ops = new JExt2Ops(blockDev);        
+        sess = JLowFuse.lowlevelNew(fuseArgs, ops);
+        
+        Session.addChan(sess, chan);
         
         Session.loopSingle(sess);
         // Session.loopMulti(sess);
