@@ -36,7 +36,7 @@ public class InodeAlloc {
 	 */
 	public static int findGroupDir(Inode parent) throws NoSpaceLeftOnDevice {
 		int groupsCount = superblock.getGroupsCount();
-		long averageFreeInodes = countFreeInodes() / groupsCount;
+		long averageFreeInodes = superblock.getFreeInodesCount() / groupsCount;
 		BlockGroupDescriptor bestGroup = null;
 		int bestNr = -1;
 
