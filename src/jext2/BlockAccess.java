@@ -141,14 +141,14 @@ public class BlockAccess {
      * @return  array containing all block numbers in block 
      */
     public long[] readBlockNrsFromBlock(long dataBlock, int start, int end) throws IoError {
-        long[] result = new long[(end-start)+1];
-        ByteBuffer buffer;
-
-        buffer = read(dataBlock);
-        buffer.limit((end+1) * 4);
-
-        for (int i=0; i<=(end-start); i++) {
-            result[i] = Ext2fsDataTypes.getLE32U(buffer, (start+i)*4);
+        int numEntries = (end-start)+1;
+        long[] result = new long[numEntries];
+        ByteBuffer buffer = ByteBuffer.allocate(numEntries*4);
+        
+        readToBuffer(dataBlock*blocksize + start*4, buffer);
+        
+        for (int i=0; i<numEntries; i++) {
+            result[i] = Ext2fsDataTypes.getLE32U(buffer, i*4);
         }
         
         return result;
@@ -165,14 +165,14 @@ public class BlockAccess {
      */
     public LinkedList<Long> 
     readBlockNrsFromBlockSkipZeros(long dataBlock, int start, int end) throws IoError {
+        int numEntries = (end-start)+1;
         LinkedList<Long> result = new LinkedList<Long>();
-        ByteBuffer buffer;
+        ByteBuffer buffer = ByteBuffer.allocate(numEntries*4);
+
+        readToBuffer(dataBlock*blocksize + start*4, buffer);
         
-        buffer = read(dataBlock);
-        buffer.limit((end+1) * 4);
-        
-        for (int i=0; i<=(end-start); i++) {
-            long tmp = Ext2fsDataTypes.getLE32U(buffer, (start+i)*4);
+        for (int i=0; i<numEntries; i++) {
+            long tmp = Ext2fsDataTypes.getLE32U(buffer, i*4);
             if (tmp > 0)
                 result.add(tmp);
         }
@@ -211,9 +211,4 @@ public class BlockAccess {
     public static BlockAccess getInstance() {
 		return BlockAccess.instance;
 	}
-	
-
-	
-	
-	
 }
