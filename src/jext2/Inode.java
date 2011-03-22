@@ -154,7 +154,7 @@ public class Inode extends PartialBlock {
 		this.deletionTime = deletionTime;
 	}
 	public final void setLinksCount(int linksCount) {
-		this.linksCount = linksCount;
+		this.linksCount = (linksCount < 0) ? 0 : linksCount  ;
 	}
 	public final void setFlags(long flags) {
 		this.flags = flags;
