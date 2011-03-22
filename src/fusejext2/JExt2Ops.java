@@ -552,7 +552,8 @@ public class JExt2Ops extends AbstractLowlevelOps {
      * file channel 
      */	
     public void flush(FuseReq req, long ino, FileInfo fi) {
-        fsync(req, ino, 0, fi);
+        Reply.err(req,0);
+        //fsync(req, ino, 0, fi);
     }
 
     public void fsyncdir(FuseReq req, long ino, int datasync, FileInfo fi) {
