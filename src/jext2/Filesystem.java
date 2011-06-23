@@ -14,12 +14,11 @@ import java.util.logging.SimpleFormatter;
 public class Filesystem {
     private static Charset charset = Charset.defaultCharset();
     private static Logger logger = null;
-    private static FileHandler handler;
-    
-    public static final Charset getCharset() {
+
+	public static Charset getCharset() {
         return charset;
     }
-    public static final void setCharset(Charset charset) {
+    public static void setCharset(Charset charset) {
         Filesystem.charset = charset;
     }
 
@@ -29,14 +28,13 @@ public class Filesystem {
     public static long getPID() {
         String appName = ManagementFactory.getRuntimeMXBean().getName();
         String strPid = appName.substring(0, appName.indexOf('@')-1); 
-        long pid = Long.parseLong(strPid);
-        return pid;     
+        return Long.parseLong(strPid);
     }
     
     public static void initializeLoggingToFile(String logfile) throws IOException {
         logger = Logger.getLogger("jext2");
 
-        handler = new FileHandler(logfile);
+	    FileHandler handler = new FileHandler(logfile);
         handler.setFormatter(new SimpleFormatter());
         
         logger.addHandler(handler);

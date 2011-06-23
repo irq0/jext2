@@ -98,9 +98,7 @@ public class BlockGroupAccess {
 	
 	private Bitmap readBitmapAtBlock(long nr) throws IoError {
 		ByteBuffer buf = blocks.read(nr);
-		Bitmap bmap = Bitmap.fromByteBuffer(buf, nr);
-		
-		return bmap;
+		return Bitmap.fromByteBuffer(buf, nr);
 	}
 	
 	public Bitmap readInodeBitmapOf(BlockGroupDescriptor group) throws IoError {

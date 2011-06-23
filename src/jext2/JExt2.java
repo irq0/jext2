@@ -8,18 +8,15 @@ import jext2.exceptions.IoError;
 
 class JExt2 {
 	private String  blockDevFilename;
-	private RandomAccessFile blockDevFile;
-	private FileChannel blockDev;
-	private BlockAccess blocks;
 	private Superblock superblock;
 	private BlockGroupAccess blockGroups;
 	
 	private void initializeFilesystem(String filename) {
 		try {
 			blockDevFilename = filename;
-			blockDevFile = new RandomAccessFile(filename, "rw");
-			blockDev = blockDevFile.getChannel();
-			blocks = new BlockAccess(blockDev);
+			RandomAccessFile blockDevFile = new RandomAccessFile(filename, "rw");
+			FileChannel blockDev = blockDevFile.getChannel();
+			BlockAccess blocks = new BlockAccess(blockDev);
 			superblock = Superblock.fromBlockAccess(blocks);
 			blocks.initialize(superblock);
 
@@ -30,7 +27,7 @@ class JExt2 {
 			System.out.println("Cannot open block device.. exiting");
 			System.exit(23);
 		} catch (IoError e) {
-		    System.out.println("Unrecoverable IO error occured.. dying");
+		    System.out.println("Unrecoverable IO error occurred.. dying");
 			e.printStackTrace();			
 		}
 	}
@@ -53,13 +50,13 @@ class JExt2 {
 			System.out.println(InodeAccess.readByIno(14));
 			System.out.println(InodeAccess.readByIno(15));
 
-		} catch (Exception e) {
+		} catch (Exception ignored) {
 		}
 	}
 	
 	private void checkFeatures() {
 		if (Feature.incompatUnsupported() || Feature.roCompatUnsupported()) {
-			System.out.println("Featureset incompatible with JExt2 :(");
+			System.out.println("Feature set incompatible with JExt2 :(");
 			System.exit(23);
 		}		
 	}
@@ -73,7 +70,7 @@ class JExt2 {
 			fs.printMeta();		
 			
 		} catch (Exception e) {
-			System.err.println("Some error occured :(");
+			System.err.println("Some error occurred :(");
 			System.err.println("MESSAGE: " + e.getMessage());
 			e.printStackTrace();
 		}

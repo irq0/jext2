@@ -91,7 +91,7 @@ public class Bitmap extends Block {
 		byte offset = (byte) (pos % 8);
 		byte chunk = bmap.get(byteNum);
 		
-		if (value == true) // set to 1
+		if (value) // set to 1
 			chunk = (byte) (chunk | (1 << offset));
 		else  // set to 0
 			chunk = (byte) (chunk & (0xFF ^ (1 << offset))); 
@@ -152,15 +152,17 @@ public class Bitmap extends Block {
 	}	    
 	
 	public String toString() {
-	    StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 	    sb.append(this.getClass());
 	    sb.append("[\n");
-	    sb.append("  blockNr=" + getBlockNr() + "\n");
+	    sb.append("  blockNr=");
+		sb.append(getBlockNr());
+		sb.append("\n");
 	    sb.append("  bitmap=\n");
 	    
 	    bmap.rewind();
 	    for (int i=0; i<bmap.limit()/(Integer.SIZE/8); i++) {
-	        StringBuffer binstr = new StringBuffer();
+		    StringBuilder binstr = new StringBuilder();
 	        binstr.append(String.format("%1$#23s", (Integer.toBinaryString(bmap.getInt())).replace(' ','0')));
 	        sb.append(binstr.reverse());
 	        sb.append("\n");

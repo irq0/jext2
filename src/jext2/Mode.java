@@ -3,6 +3,7 @@ package jext2;
 /**
  * Handle the Linux mode flags. Values were taken from e2fsprogs
  */ 
+@SuppressWarnings( {"OctalInteger"})
 public class Mode {
 
     public static boolean mask(int mode, int mask) {

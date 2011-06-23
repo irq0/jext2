@@ -24,8 +24,8 @@ public class JExt2Exception extends Exception {
         if (logger == null) return;
         
         StackTraceElement[] stack = getStackTrace();
-        
-        StringBuffer log = new StringBuffer(80); 
+
+	    StringBuilder log = new StringBuilder(80);
         
         log.append(this.getClass().getSimpleName());
         log.append(" IN ");

@@ -69,7 +69,7 @@ public class Feature {
 	/** Return a String with supported features. For simplicity this is 
 	 * a list of all methods returning true of this class */
 	public static String supportedFeatures() {
-		StringBuffer buf = new StringBuffer("Filesystem features: ");
+		StringBuilder buf = new StringBuilder("Filesystem features: ");
 				
 		Class<Feature> c = Feature.class;
 		for (Method m : c.getDeclaredMethods()) {
@@ -83,9 +83,9 @@ public class Feature {
 							buf.append(m.getName());
 							buf.append(" ");
 						}
-					} catch (IllegalArgumentException e) {
-					} catch (IllegalAccessException e) {
-					} catch (InvocationTargetException e) {
+					} catch (IllegalArgumentException ignored) {
+					} catch (IllegalAccessException ignored) {
+					} catch (InvocationTargetException ignored) {
 					}
 
 			}

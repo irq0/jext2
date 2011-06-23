@@ -50,7 +50,7 @@ public abstract class Block {
 	
 	public String toString() {
 		return ToStringBuilder.reflectionToString(this,
-		                                          ToStringStyle.MULTI_LINE_STYLE);
+				                                         ToStringStyle.MULTI_LINE_STYLE);
 	}
 	
 	/**

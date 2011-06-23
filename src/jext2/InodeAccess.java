@@ -12,17 +12,13 @@ public class InodeAccess {
 		int mode = Ext2fsDataTypes.getLE16(buf, offset);
 
 		if (Mode.isDirectory(mode)) {
-			DirectoryInode inode = DirectoryInode.fromByteBuffer(buf, offset);
-			return inode;
+			return DirectoryInode.fromByteBuffer(buf, offset);
 		} else if (Mode.isRegular(mode)) {
-			RegularInode inode = RegularInode.fromByteBuffer(buf, offset);
-			return inode;
+			return RegularInode.fromByteBuffer(buf, offset);
 		} else if (Mode.isSymlink(mode)) {
-			SymlinkInode inode = SymlinkInode.fromByteBuffer(buf, offset);
-			return inode;
+			return SymlinkInode.fromByteBuffer(buf, offset);
 		} else {
-			Inode inode = Inode.fromByteBuffer(buf, offset);
-			return inode;
+			return Inode.fromByteBuffer(buf, offset);
 		}
 	}
 

@@ -7,9 +7,9 @@ import jext2.exceptions.IoError;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 
 /** 
- * Inode allocation and deallocation routines 
+ * Inode allocation and deallocation routines
  * Adapted from the linux kernel implementation. The long comments on 
- * funcionality are mostly copied from linux or e2fsprogs   
+ * functionality are mostly copied from linux or e2fsprogs
  */
 public class InodeAlloc {
 	private static Superblock superblock = Superblock.getInstance();
@@ -59,23 +59,21 @@ public class InodeAlloc {
 
 	public static int findGroupOther(Inode parent) throws NoSpaceLeftOnDevice {
 		int groupsCount = superblock.getGroupsCount();
-		int group = -1;
-		BlockGroupDescriptor desc = null;
-		
+
 		// Try to place inode in its parent directory
-		group = parent.getBlockGroup();
-		desc = blockGroups.getGroupDescriptor(parent.getBlockGroup());
+		int group = parent.getBlockGroup();
+		BlockGroupDescriptor desc = blockGroups.getGroupDescriptor(parent.getBlockGroup());
 		if (desc != null && desc.getFreeInodesCount() > 0 &&
 		    desc.getFreeBlocksCount() > 0) {
 			return group;
 		}
 			
 		/*
-		 * We're going to place this inode in a different blockgroup from its
+		 * We're going to place this inode in a different block group from its
 		 * parent.	We want to cause files in a common directory to all land in
-		 * the same blockgroup.	 But we want files which are in a different
-		 * directory which shares a blockgroup with our parent to land in a
-		 * different blockgroup.
+		 * the same block group. But we want files which are in a different
+		 * directory which shares a block group with our parent to land in a
+		 * different block group.
 		 *
 		 * So add our directory's i_ino into the starting point for the hash.
 		 */
@@ -118,7 +116,7 @@ public class InodeAlloc {
 	 * 
 	 * We always try to spread first-level directories.
 	 *
-	 * If there are blockgroups with both free inodes and free blocks counts 
+	 * If there are block groups with both free inodes and free blocks counts
 	 * not worse than average we return one with smallest directory count. 
 	 * Otherwise we simply return a random group. 
 	 * 

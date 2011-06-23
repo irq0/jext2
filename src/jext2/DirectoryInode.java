@@ -61,7 +61,8 @@ public class DirectoryInode extends DataInode {
 			        block = blocks.read(blockNr);
 			        return DirectoryEntry.fromByteBuffer(block, blockNr, 0);
 			    }
-			    
+
+				assert last != null;
 				if (last.getRecLen() != 0) {
 					offset += last.getRecLen();
 				} /*else {
@@ -253,7 +254,7 @@ public class DirectoryInode extends DataInode {
 	}
 
 	public String toString() {
-		StringBuffer sb = new StringBuffer(super.toString());
+		StringBuilder sb = new StringBuilder(super.toString());
 
 		sb.append(" DIRECTORY=[");		
 		for (DirectoryEntry dir : iterateDirectory()) {
@@ -391,7 +392,8 @@ public class DirectoryInode extends DataInode {
 	     * When we are at the beginning of a block there is 
 	     * no prev entry we can use 
 	     */
-	    if (toDelete.getOffset() == 0) {
+		assert toDelete != null;
+		if (toDelete.getOffset() == 0) {
 	        toDelete.setIno(0);
 	        toDelete.clearName();
 	        toDelete.setFileType(DirectoryEntry.FILETYPE_UNKNOWN);
@@ -401,7 +403,8 @@ public class DirectoryInode extends DataInode {
 	     * the toDelete entry 
 	     */ 
 	    } else {
-	        prev.setRecLen(prev.getRecLen() + toDelete.getRecLen());
+		    assert prev != null;
+		    prev.setRecLen(prev.getRecLen() + toDelete.getRecLen());
 	        prev.write(); // ok here: is meta data
 	    }
 	    

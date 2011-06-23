@@ -23,7 +23,7 @@ public class Superblock extends Block {
 	
 	private long inodesCount;
 	private long blocksCount;
-	private long resevedBlocksCount;
+	private long reservedBlocksCount;
 	private long freeBlocksCount;
 	private long freeInodesCount;
 	private long firstDataBlock;
@@ -72,8 +72,8 @@ public class Superblock extends Block {
     public final long getBlocksCount() {
         return blocksCount;
     }
-    public final long getResevedBlocksCount() {
-        return resevedBlocksCount;
+    public final long getReservedBlocksCount() {
+        return reservedBlocksCount;
     }
     public final long getFreeBlocksCount() {
         return freeBlocksCount;
@@ -232,8 +232,8 @@ public class Superblock extends Block {
     }
     public boolean hasFreeBlocks() {
 	    long freeBlocks = this.freeBlocksCount;
-	    long rootBlocks = this.resevedBlocksCount;
-	    
+	    long rootBlocks = this.reservedBlocksCount;
+
 	    if (freeBlocks < rootBlocks + 1) {
 	        // TODO support reserve blocks
 	        return false;
@@ -245,7 +245,7 @@ public class Superblock extends Block {
 	protected void read(ByteBuffer buf) throws IoError {		
 		this.inodesCount = Ext2fsDataTypes.getLE32U(buf, 0);
 		this.blocksCount = Ext2fsDataTypes.getLE32U(buf, 4);
-		this.resevedBlocksCount = Ext2fsDataTypes.getLE32U(buf, 8);
+		this.reservedBlocksCount = Ext2fsDataTypes.getLE32U(buf, 8);
 		this.freeBlocksCount = Ext2fsDataTypes.getLE32U(buf, 12);
 		this.freeInodesCount = Ext2fsDataTypes.getLE32U(buf, 16);
 		this.firstDataBlock = Ext2fsDataTypes.getLE32U(buf, 20);
@@ -280,7 +280,7 @@ public class Superblock extends Block {
 		this.lastMounted = Ext2fsDataTypes.getString(buf, 136, 64);	   	
 		
 		this.blocksize = (1024 << this.logBlockSize);
-		this.groupDescrPerBlock = this.blocksize / 32; // 32 = sizeof (struct ext2_group_desc);
+		this.groupDescrPerBlock = this.blocksize / 32;
 		this.groupsCount = (int)( ((this.blocksCount - this.firstDataBlock) - 1) /
 						   this.blocksPerGroup + 1);
 		this.groupDescrBlocks = (this.groupsCount + this.groupDescrPerBlock -1) / 
@@ -293,7 +293,7 @@ public class Superblock extends Block {
 	protected void write(ByteBuffer buf) throws IoError {
 		Ext2fsDataTypes.putLE32U(buf, this.inodesCount, 0);
 		Ext2fsDataTypes.putLE32U(buf, this.blocksCount, 4);
-		Ext2fsDataTypes.putLE32U(buf, this.resevedBlocksCount, 8);
+		Ext2fsDataTypes.putLE32U(buf, this.reservedBlocksCount, 8);
 		Ext2fsDataTypes.putLE32U(buf, this.freeBlocksCount, 12);
 		Ext2fsDataTypes.putLE32U(buf, this.freeInodesCount, 16);
 		Ext2fsDataTypes.putLE32U(buf, this.firstDataBlock, 20);

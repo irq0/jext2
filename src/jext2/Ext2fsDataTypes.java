@@ -42,7 +42,7 @@ public class Ext2fsDataTypes {
 
 	public static int getLE16U(ByteBuffer buffer, int offset) {
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
-		int result = (int)(buffer.getShort(offset) & 0xffff);
+		int result = buffer.getShort(offset) & 0xffff;
 		assert result >= LE16_MIN && result <= LE16_MAX;
 		return result;
 	}

@@ -197,7 +197,7 @@ public class Inode extends PartialBlock {
 	}
 	
 	protected void read(ByteBuffer buf) throws IoError {
-		this.mode = Ext2fsDataTypes.getLE16U(buf, 0 + offset);
+		this.mode = Ext2fsDataTypes.getLE16U(buf, offset);
 		this.uidLow = Ext2fsDataTypes.getLE16U(buf, 2 + offset);
 		this.size = Ext2fsDataTypes.getLE32U(buf, 4 + offset);
 		this.accessTime = Ext2fsDataTypes.getDate(buf, 8 + offset);
@@ -238,7 +238,7 @@ public class Inode extends PartialBlock {
 			(this.offset == other.offset);
 	}
 	
-	/** allocate a ByteBuffer big enaugh for a Inode */
+	/** allocate a ByteBuffer big enough for a Inode */
 	protected ByteBuffer allocateByteBuffer() {		
 		ByteBuffer buf = ByteBuffer.allocate(Superblock.getInstance().getInodeSize());
 		buf.rewind();

@@ -85,7 +85,7 @@ public class DirectoryEntry extends PartialBlock {
     }
     
 	protected void read(ByteBuffer buf) throws IoError {
-		this.ino = Ext2fsDataTypes.getLE32U(buf, 0 + offset);
+		this.ino = Ext2fsDataTypes.getLE32U(buf, offset);
 		this.recLen = Ext2fsDataTypes.getLE16U(buf, 4 + offset);
 		this.nameLen = Ext2fsDataTypes.getLE8U(buf, 6 + offset);
 		this.fileType = Ext2fsDataTypes.getLE8U(buf, 7 + offset);

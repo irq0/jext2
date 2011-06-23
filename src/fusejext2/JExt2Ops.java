@@ -89,8 +89,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
     }
 
     private Date timespecToDate(Timespec time) {
-	    Date date = new Date(time.getSec()*1000 + time.getNsec()/1000); 
-	    return date;
+	    return new Date(time.getSec()*1000 + time.getNsec()/1000);
 	}
 	
 	private Timespec dateToTimespec(Date date) {
@@ -185,7 +184,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
             Inode inode = inodes.getOpen(ino);
             if (inode != null)
                 inode.sync();
-        } catch (JExt2Exception e) {
+        } catch (JExt2Exception ignored) {
         }
         
         
@@ -260,7 +259,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
                 inode.setGid(attr.getGid());
             }            
             if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_MODE)) {
-                inode.setMode((int)attr.getMode());
+                inode.setMode(attr.getMode());
             }            
             if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_MTIME)) {
                 inode.setModificationTime(timespecToDate(attr.getMtim()));
@@ -362,7 +361,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
             
             FuseContext context = req.getContext();           
             RegularInode inode = RegularInode.createEmpty();            
-            inode.setMode(Mode.IFREG | (mode & ~(int)(context.getUmask())));
+            inode.setMode(Mode.IFREG | (mode & ~context.getUmask()));
             inode.setUid(context.getUid());
             inode.setGid(context.getGid());
             InodeAlloc.registerInode(parentInode, inode);
@@ -388,7 +387,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
             FuseContext context = req.getContext();            
             DirectoryInode inode = 
                 DirectoryInode.createEmpty();            
-            inode.setMode(Mode.IFDIR | (mode & ~(int)(context.getUmask())));
+            inode.setMode(Mode.IFDIR | (mode & ~context.getUmask()));
             inode.setUid(context.getUid());
             inode.setGid(context.getGid());
             InodeAlloc.registerInode(parentInode, inode);
@@ -412,8 +411,8 @@ public class JExt2Ops extends AbstractLowlevelOps {
         s.setBlocks(superblock.getBlocksCount() - superblock.getOverhead());
         s.setBfree(superblock.getFreeBlocksCount());
         
-        if (s.getBfree() >= superblock.getResevedBlocksCount())
-            s.setBavail(superblock.getFreeBlocksCount() - superblock.getResevedBlocksCount());
+        if (s.getBfree() >= superblock.getReservedBlocksCount())
+            s.setBavail(superblock.getFreeBlocksCount() - superblock.getReservedBlocksCount());
         else 
         	s.setBavail(0);
         
@@ -496,7 +495,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
             InodeAlloc.registerInode(parentInode, inode);
             inode.write();
             
-            ((DirectoryInode)parentInode).addLink(inode, name);            
+	        parentInode.addLink(inode, name);
             inode.setSymlink(link);
             
             Reply.entry(req, makeEntryParam(inode));    
@@ -591,7 +590,7 @@ public class JExt2Ops extends AbstractLowlevelOps {
                     Inode existing = inodes.get(existingEntry.getIno());
                     newparent.unLinkOther(existing, newname);
                 }
-            } catch (NoSuchFileOrDirectory e) {
+            } catch (NoSuchFileOrDirectory ignored) {
             }
            
             /*

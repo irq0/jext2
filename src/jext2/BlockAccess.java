@@ -11,6 +11,7 @@ import jext2.exceptions.IoError;
 /**
  * Access to the filesystem blocks  
  */
+@SuppressWarnings( {"ALL"})
 public class BlockAccess {
 	private int blocksize = Constants.EXT2_MIN_BLOCK_SIZE;
 	private FileChannel blockdev;
@@ -86,15 +87,14 @@ public class BlockAccess {
 	
     public void dumpByteBuffer(ByteBuffer buf) {
 	    try {
-	    while (buf.hasRemaining()) {
-	        for (int i=0; i<8; i++) {
-	            System.out.print(buf.get());
-	            System.out.print("\t\t");
-	        }
-	        System.out.println();
-	    }
+		    while (buf.hasRemaining()) {
+			    for (int i=0; i<8; i++) {
+				    System.out.print(buf.get());
+				    System.out.print("\t\t");
+			    }
+			    System.out.println();
+		    }
 	    } catch (Exception e) {
-	        return;
 	    }
 	}   
 	

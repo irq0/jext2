@@ -48,10 +48,10 @@ public class DataInode extends Inode {
     /**
      * Read Inode data 
      * @param  size    size of the data to be read
-     * @param  offset  start adress in data area
+     * @param  offset  start address in data area
      * @return buffer of size size containing data.
-     * @throws FileTooLarge 
-     * @throws InvalidArgument 
+     * @throws FileTooLarge
+     * @throws IoError
      */ 
     public ByteBuffer readData(int size, long offset) throws IoError, FileTooLarge {
         ByteBuffer result = ByteBuffer.allocateDirect(size);
@@ -65,7 +65,7 @@ public class DataInode extends Inode {
         
         while (start < max) { 
             LinkedList<Long> b = accessData().getBlocks(start, max-start);
-            int count = 0;
+            int count;
             
             /**
              * Sparse file support:
@@ -107,8 +107,6 @@ public class DataInode extends Inode {
          * accordingly. 
          */        
         
-//        System.out.println("Starting to write from offset " + offset + " " + buf.capacity() + "bytes");
-        
         int blocksize = superblock.getBlocksize();
         long start = offset/blocksize;
         long end = (buf.capacity()+blocksize)/blocksize + start;
@@ -124,24 +122,17 @@ public class DataInode extends Inode {
             int bytesLeft = buf.capacity() - buf.position();
             
             if (bytesLeft < blocksize || startOff > 0) { /* write partial block */
-                ByteBuffer disk = blockAccess.read(blockNrs.getFirst().longValue());
+                ByteBuffer disk = blockAccess.read(blockNrs.getFirst());
                 disk.position(startOff);
                 
                 buf.limit(Math.min(buf.position() + bytesLeft, disk.remaining()));
                 disk.put(buf);
-                blockAccess.write(blockNrs.getFirst().longValue(), disk);
+                blockAccess.write(blockNrs.getFirst(), disk);
             } else { /* write whole block */
                 buf.limit(buf.position() + blocksize);
                 blockAccess.writeFromBuffer(
-                        (blockNrs.getFirst().longValue()) * blocksize, buf);
+                        (blockNrs.getFirst()) * blocksize, buf);
             }
-            
-//            System.out.println("Wrote to block " + blockNrs.getFirst().longValue()
-//                    + " buffer is now " + buf);
-//            System.out.println(accessData());
-//            int[] offsets = DataBlockAccess.blockToPath(start);
-//            System.out.println(Arrays.toString(offsets));
-//            System.out.println(Arrays.toString(accessData().getBranch(offsets)));
             
             start += 1;
             startOff = 0;
@@ -152,8 +143,7 @@ public class DataInode extends Inode {
         if (offset + written > getSize()) { /* file grew */
             setStatusChangeTime(new Date());
             setSize(offset + written);
-//            write();
-        } 
+        }
 
         assert buf.position() == buf.limit();
         

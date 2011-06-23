@@ -13,6 +13,7 @@ import jext2.exceptions.FileTooLarge;
 import jext2.exceptions.IoError;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 
+@SuppressWarnings( {"ALL"})
 public class DataBlockAccess {
 	protected static Superblock superblock = Superblock.getInstance();
 	protected static BlockAccess blocks = BlockAccess.getInstance();
@@ -527,8 +528,7 @@ public class DataBlockAccess {
 	 * Create access provider to inode data 
 	 */ 
 	public static DataBlockAccess fromInode(DataInode inode) {
-	    DataBlockAccess access = new DataBlockAccess(inode);
-	    return access;
+	    return new DataBlockAccess(inode);
 	}
     
 	/**
@@ -733,7 +733,7 @@ public class DataBlockAccess {
 	    long blockToKill = (toSize + blocksize-1) / blocksize;
 
 	    int[] offsets = blockToPath(blockToKill);
-	    int depth = offsets.length;;
+	    int depth = offsets.length;
 
         /* kill direct blocks */
 	    if (depth == 1) { 
@@ -783,10 +783,7 @@ public class DataBlockAccess {
                 freeBranches(3, new long[] {nr});
             }
 	    case Constants.EXT2_TIND_BLOCK:
-	        ;
 	    }
-	    
-//	    inode.write();
 	}
 
 	public String toString() {

@@ -7,6 +7,7 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 import java.io.File;
+import java.util.Arrays;
 
 import jext2.Filesystem;
 
@@ -21,7 +22,6 @@ import jlowfuse.JLowFuseArgs;
 import org.apache.commons.cli.*;
 
 public class FuseJExt2 {
-	private static RandomAccessFile blockDevFile;
 	private static FileChannel blockDev;
 
 	private static SWIGTYPE_p_fuse_chan chan = null;
@@ -52,7 +52,7 @@ public class FuseJExt2 {
 			    blockDev.force(false);
 			    blockDev.close();
 			} catch (IOException e) {
-			    System.err.println(e.getStackTrace());
+			    System.err.println(Arrays.toString(e.getStackTrace()));
                 System.err.println(e.getLocalizedMessage());
 			}
 		}
@@ -129,9 +129,7 @@ public class FuseJExt2 {
 
 	private static File getPidFile() {
 		String filename = System.getProperty("daemon.pidfile");
-		File pidfile = new File(filename);
-
-		return pidfile;
+		return new File(filename);
 	}
 	
 	private static void daemonize() {
@@ -150,7 +148,7 @@ public class FuseJExt2 {
 			
 		
         try {
-    		blockDevFile = new RandomAccessFile(filename, "rw");
+	        RandomAccessFile blockDevFile = new RandomAccessFile(filename, "rw");
     		blockDev = blockDevFile.getChannel();		
         } catch (FileNotFoundException e) {
         	System.out.println("Can't open block device / file");
