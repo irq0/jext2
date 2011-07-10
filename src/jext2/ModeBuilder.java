@@ -1,5 +1,8 @@
 package jext2;
 
+/**
+ * Builder class for Mode
+ */
 public class ModeBuilder {
 
 	int mode = 0;

@@ -1,8 +1,8 @@
 package jext2;
 
 /**
- * Handle the Linux mode flags. Values were taken from e2fsprogs
- */ 
+ * UNIX Mode representation
+ */
 public class Mode {
 	protected int mode = 0;
 
@@ -18,6 +18,10 @@ public class Mode {
     public static boolean mask(int mode, int mask) {
     	return (mode & IFMT) == mask;
     }
+
+	public boolean isMaskSet(int mask) {
+		return mask(mode, mask);
+	}
 
     public static final int IFMT  = 00170000;
     public static final int IFSOC = 0140000;
@@ -59,25 +63,115 @@ public class Mode {
     /** Execute by others */
     public static final int IXOTH = 00001;
        
-    public static boolean isSocket(int mode) {
-        return (mode & IFMT) == IFSOC;
+    public boolean isSocket() {
+        return isMaskSet(IFSOC);
     }    
-    public static boolean isSymlink(int mode) {     
-        return (mode & IFMT) == IFLNK;
+    public boolean isSymlink() {
+        return isMaskSet(IFLNK);
     }    
-    public static boolean isRegular(int mode) {
-        return (mode & IFMT) == IFREG;
+    public boolean isRegular() {
+        return isMaskSet(IFREG);
     }
-    public static boolean isBlockdev(int mode) {
-        return (mode & IFMT) == IFBLK;
+    public boolean isBlockdev() {
+        return isMaskSet(IFBLK);
     }
-    public static boolean isDirectory(int mode) {
-        return (mode & IFMT) == IFDIR;
+    public boolean isDirectory() {
+        return isMaskSet(IFDIR);
     }
-    public static boolean isChardev(int mode) {
-        return (mode & IFMT) == IFCHR;
+    public boolean isChardev() {
+        return isMaskSet(IFCHR);
     }
-    public static boolean isFifo(int mode) {
-        return (mode & IFMT) == IFIFO;
+    public boolean isFifo() {
+        return isMaskSet(IFIFO);
     }
+	public boolean isSetUid() {
+		return isMaskSet(ISUID);
+	}
+	public boolean isSetGid() {
+		return isMaskSet(ISGID);
+	}
+	public boolean isSticky() {
+		return isMaskSet(ISVTX);
+	}
+	public boolean isOwnerReadable() {
+		return isMaskSet(IRUSR);
+	}
+	public boolean isOwnerWritable() {
+		return isMaskSet(IWUSR);
+	}
+	public boolean isOwnerExecutable() {
+		return isMaskSet(IXUSR);
+	}
+	public boolean isGroupReadable() {
+		return isMaskSet(IRGRP);
+	}
+	public boolean isGroupWritable() {
+		return isMaskSet(IWGRP);
+	}
+	public boolean isGroupExecutable() {
+		return isMaskSet(IXGRP);
+	}
+	public boolean isOtherReadable() {
+		return isMaskSet(IROTH);
+	}
+	public boolean isOtherWritable() {
+		return isMaskSet(IWOTH);
+	}
+	public boolean isOtherExecutable() {
+		return isMaskSet(IXOTH);
+	}
+
+	private char charIfTrue(char chr, boolean truth) {
+		return (truth) ? chr : '-';
+	}
+
+	public char filetypeAsCharacter() {
+		char c = '?';
+		if (isDirectory())
+			c = 'd';
+		else if (isBlockdev())
+			c = 'b';
+		else if (isChardev())
+			c = 'c';
+		else if (isSymlink())
+			c = 'l';
+		else if (isSocket())
+			c = 's';
+		else if (isFifo())
+			c = 'p';
+		else if (isRegular())
+			c = '-';
+
+		return c;
+	}
+
+	public String unixStringRepresentation() {
+		StringBuilder s = new StringBuilder();
+		s.append(filetypeAsCharacter());
+		s.append(charIfTrue('r', isOwnerReadable()));
+		s.append(charIfTrue('w', isOwnerWritable()));
+		s.append(charIfTrue('x', isOwnerExecutable()));
+		s.append(charIfTrue('r', isGroupReadable()));
+		s.append(charIfTrue('w', isGroupWritable()));
+		s.append(charIfTrue('x', isGroupExecutable()));
+		s.append(charIfTrue('r', isOtherReadable()));
+		s.append(charIfTrue('w', isOtherWritable()));
+		s.append(charIfTrue('x', isOtherExecutable()));
+
+		return s.toString();
+	}
+
+	public int numeric() {
+		return mode;
+	}
+
+	public String toString() {
+		StringBuilder s = new StringBuilder();
+		s.append("Mode: ");
+		s.append(unixStringRepresentation());
+		s.append("  ");
+		s.append(Integer.toOctalString(mode));
+
+		return s.toString();
+	}
 }
