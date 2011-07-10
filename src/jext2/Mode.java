@@ -3,8 +3,17 @@ package jext2;
 /**
  * Handle the Linux mode flags. Values were taken from e2fsprogs
  */ 
-@SuppressWarnings( {"OctalInteger"})
 public class Mode {
+	protected int mode = 0;
+
+	private Mode() {
+	}
+
+	public static Mode createWithNumericValue(int mode) {
+		Mode m = new Mode();
+		m.mode = mode;
+		return m;
+	}
 
     public static boolean mask(int mode, int mask) {
     	return (mode & IFMT) == mask;
