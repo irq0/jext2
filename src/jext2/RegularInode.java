@@ -62,7 +62,7 @@ public class RegularInode extends DataInode {
     	inode.setAccessTime(now);
     	inode.setStatusChangeTime(now);
     	inode.setDeletionTime(new Date(0));
-    	inode.setMode(Mode.IFREG);
+    	inode.setMode(ModeBuilder.regularFile().create());
     	inode.setBlock(new long[Constants.EXT2_N_BLOCKS]);
     	
     	return inode;
