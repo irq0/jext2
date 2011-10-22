@@ -13,7 +13,6 @@ import jext2.exceptions.FileTooLarge;
 import jext2.exceptions.IoError;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 
-@SuppressWarnings( {"ALL"})
 public class DataBlockAccess {
 	protected static Superblock superblock = Superblock.getInstance();
 	protected static BlockAccess blocks = BlockAccess.getInstance();
