@@ -9,7 +9,6 @@ import jext2.RegularInode;
 import jext2.exceptions.JExt2Exception;
 import jlowfuse.FuseReq;
 import jlowfuse.Reply;
-import fuse.Errno;
 import fuse.FileInfo;
 import fuse.FuseConstants;
 import fuse.Stat;
