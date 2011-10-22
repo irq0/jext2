@@ -8,6 +8,10 @@ import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 import java.io.File;
 import java.util.Arrays;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import jext2.Filesystem;
 
@@ -18,6 +22,8 @@ import fuse.Session;
 
 import jlowfuse.JLowFuse;
 import jlowfuse.JLowFuseArgs;
+import jlowfuse.async.DefaultTaskImplementations;
+import jlowfuse.async.TaskImplementations;
 
 import org.apache.commons.cli.*;
 
@@ -165,12 +171,44 @@ public class FuseJExt2 {
         FuseShutdownHook hook = new FuseShutdownHook();
         Runtime.getRuntime().addShutdownHook(hook);
         
-        ops = new JExt2Ops(blockDev);        
-        sess = JLowFuse.lowlevelNew(fuseArgs, ops);
+		Jext2Context context = new Jext2Context(blockDev);
+		DefaultTaskImplementations<Jext2Context> impls = 
+			new DefaultTaskImplementations<Jext2Context>();
+		
+		// for i in *.java; do n=${i%.*}; c=${n,*}; echo impls.${c}Impl = TaskImplementations.getImpl\(\"fusejext2.tasks.$n\"\)\;>
+		impls.accessImpl = TaskImplementations.getImpl("fusejext2.tasks.Access");
+		impls.destroyImpl = TaskImplementations.getImpl("fusejext2.tasks.Destroy");
+		impls.forgetImpl = TaskImplementations.getImpl("fusejext2.tasks.Forget");
+		impls.fsyncImpl = TaskImplementations.getImpl("fusejext2.tasks.Fsync");
+		impls.fsyncdirImpl = TaskImplementations.getImpl("fusejext2.tasks.Fsyncdir");
+		impls.getattrImpl = TaskImplementations.getImpl("fusejext2.tasks.Getattr");
+		impls.initImpl = TaskImplementations.getImpl("fusejext2.tasks.Init");
+		impls.linkImpl = TaskImplementations.getImpl("fusejext2.tasks.Link");
+		impls.lookupImpl = TaskImplementations.getImpl("fusejext2.tasks.Lookup");
+		impls.mkdirImpl = TaskImplementations.getImpl("fusejext2.tasks.Mkdir");
+		impls.mknodImpl = TaskImplementations.getImpl("fusejext2.tasks.Mknod");
+		impls.openImpl = TaskImplementations.getImpl("fusejext2.tasks.Open");
+		impls.opendirImpl = TaskImplementations.getImpl("fusejext2.tasks.Opendir");
+		impls.readImpl = TaskImplementations.getImpl("fusejext2.tasks.Read");
+		impls.readdirImpl = TaskImplementations.getImpl("fusejext2.tasks.Readdir");
+		impls.readlinkImpl = TaskImplementations.getImpl("fusejext2.tasks.Readlink");
+		impls.releaseImpl = TaskImplementations.getImpl("fusejext2.tasks.Release");
+		impls.releasedirImpl = TaskImplementations.getImpl("fusejext2.tasks.Releasedir");
+		impls.renameImpl = TaskImplementations.getImpl("fusejext2.tasks.Rename");
+		impls.rmdirImpl = TaskImplementations.getImpl("fusejext2.tasks.Rmdir");
+		impls.setattrImpl = TaskImplementations.getImpl("fusejext2.tasks.Setattr");
+		impls.statfsImpl = TaskImplementations.getImpl("fusejext2.tasks.Statfs");
+		impls.symlinkImpl = TaskImplementations.getImpl("fusejext2.tasks.Symlink");
+		impls.unlinkImpl = TaskImplementations.getImpl("fusejext2.tasks.Unlink");
+		impls.writeImpl = TaskImplementations.getImpl("fusejext2.tasks.Write");
+		
+		ExecutorService service = new ThreadPoolExecutor(10, 20, 5,
+				TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(100));
+		
+		SWIGTYPE_p_fuse_session sess = JLowFuse.asyncTasksNew(fuseArgs, impls,
+				service, context);
         
-        Session.addChan(sess, chan);
-        
+        Session.addChan(sess, chan);     
         Session.loopSingle(sess);
-        // Session.loopMulti(sess);
     }
 }
