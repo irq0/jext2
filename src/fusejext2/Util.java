@@ -4,6 +4,7 @@ import java.util.Date;
 
 import jext2.DataInode;
 import jext2.Inode;
+import jext2.Superblock;
 import fuse.Stat;
 import fuse.Timespec;
 
@@ -13,6 +14,10 @@ public class Util {
 	    tim.setSec((int)(date.getTime() / 1000));
 	    tim.setNsec(0);
 	    return tim;
+	}
+	
+    public static Date timespecToDate(Timespec time) {
+	    return new Date(time.getSec()*1000 + time.getNsec()/1000);
 	}
 	
 	public static Stat inodeToStat(Superblock superblock, Inode inode) {
