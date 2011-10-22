@@ -9,13 +9,13 @@ public class InodeAccess {
 	private static BlockGroupAccess blockGroups = BlockGroupAccess.getInstance();
 	
 	public static Inode readFromByteBuffer(ByteBuffer buf, int offset) throws IoError {
-		int mode = Ext2fsDataTypes.getLE16(buf, offset);
+		Mode mode = Mode.createWithNumericValue(Ext2fsDataTypes.getLE16(buf, offset));
 
-		if (Mode.isDirectory(mode)) {
+		if (mode.isDirectory()) {
 			return DirectoryInode.fromByteBuffer(buf, offset);
-		} else if (Mode.isRegular(mode)) {
+		} else if (mode.isRegular()) {
 			return RegularInode.fromByteBuffer(buf, offset);
-		} else if (Mode.isSymlink(mode)) {
+		} else if (mode.isSymlink()) {
 			return SymlinkInode.fromByteBuffer(buf, offset);
 		} else {
 			return Inode.fromByteBuffer(buf, offset);
