@@ -9,20 +9,20 @@ import jext2.exceptions.IoError;
 import jext2.exceptions.NoSuchFileOrDirectory;
 
 /**
- * Kind of inode table, that enshures that there are no inodes in memory
+ * Kind of inode table, that ensures that there are no inodes in memory
  * with the same number. 
  */
 public class InodeAccessProvider {
     private ConcurrentSkipListMap<Long,Inode> openInodes = new ConcurrentSkipListMap<Long,Inode>();
     
-    Inode getOpen(long ino)  {
+    public Inode getOpen(long ino)  {
         if (!openInodes.containsKey(ino))
             return null;
         else
             return openInodes.get(ino);
     }
     
-    Inode get(long ino) throws IoError, NoSuchFileOrDirectory, InvalidArgument { 
+    public Inode get(long ino) throws IoError, NoSuchFileOrDirectory, InvalidArgument { 
         if (openInodes.containsKey(ino)) {
             Inode inode = openInodes.get(ino);
             if (inode.isDeleted()) {
@@ -39,7 +39,7 @@ public class InodeAccessProvider {
         }
     }
         
-    void close(long ino) {
+    public void close(long ino) {
         openInodes.remove(ino);
     }
     
