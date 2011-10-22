@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 import jext2.exceptions.IoError;
 
 public class Inode extends PartialBlock {
-    private int mode = 0;
+    private Mode mode;
 	private int gidLow = 0;
 	private int uidLow = 0;
 	private long size = 0;
@@ -36,7 +36,7 @@ public class Inode extends PartialBlock {
 	private long ino = -1;
 	
 	
-	public final int getMode() {
+	public final Mode getMode() {
 		return this.mode;
 	}
 	public final int getGidLow() {
@@ -125,11 +125,7 @@ public class Inode extends PartialBlock {
 	    this.gidHigh = (int)((gid >> Ext2fsDataTypes.LE32_SIZE) & 0xFFFFFFFF);
 	}
 	
-	/** OR mode onto */
-	public final void orMode(int mode) {
-	    this.mode |=  mode;
-	}
-	public final void setMode(int mode) {
+	public final void setMode(Mode mode) {
 		this.mode = mode;
 	}
 	public final void setGidLow(int gidLow) {
@@ -176,7 +172,7 @@ public class Inode extends PartialBlock {
 	}
 	
     protected void write(ByteBuffer buf) throws IoError {
-		Ext2fsDataTypes.putLE16U(buf, this.mode, 0);
+		Ext2fsDataTypes.putLE16U(buf, this.mode.numeric(), 0);
 		Ext2fsDataTypes.putLE16U(buf, this.uidLow, 2);
 		Ext2fsDataTypes.putLE32U(buf, this.size, 4);
 		Ext2fsDataTypes.putDate(buf, this.accessTime, 8);
@@ -197,7 +193,7 @@ public class Inode extends PartialBlock {
 	}
 	
 	protected void read(ByteBuffer buf) throws IoError {
-		this.mode = Ext2fsDataTypes.getLE16U(buf, offset);
+		this.mode = Mode.createWithNumericValue(Ext2fsDataTypes.getLE16U(buf, offset));
 		this.uidLow = Ext2fsDataTypes.getLE16U(buf, 2 + offset);
 		this.size = Ext2fsDataTypes.getLE32U(buf, 4 + offset);
 		this.accessTime = Ext2fsDataTypes.getDate(buf, 8 + offset);
@@ -271,7 +267,7 @@ public class Inode extends PartialBlock {
 	public int hashCode() {
 	    return new HashCodeBuilder()
 	        .appendSuper(super.hashCode())
-	        .append(mode)
+	        .append(mode.numeric())
 	        .append(getGid())
 	        .append(getUid())
 	        .append(size)

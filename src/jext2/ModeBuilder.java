@@ -9,26 +9,36 @@ public class ModeBuilder {
 	boolean filetypeApplied = false;
 	private static ModeBuilder myInstance = new ModeBuilder();
 
-	private void applyToMode(int mask) {
+	private void maskMode(int mask) {
 		this.mode = this.mode & mask;
 	}
 
-	private void applyToModeAndCheckFiletype(int mask) {
+	private void addToMode(int add) {
+		this.mode = this.mode | add;
+	}
+
+	private void addToModeAndCheckFiletype(int mask) {
 		if (filetypeApplied)
 			throw new IllegalArgumentException("A file can only have one filetype");
 
-		applyToMode(mask);
+		addToMode(mask);
 	}
 
-	private static ModeBuilder lucidApplyToMode(int mask) {
+	private static ModeBuilder lucidAddToMode(int add) {
 		ModeBuilder m = instance();
-		m.applyToMode(mask);
+		m.addToMode(add);
 		return m;
 	}
 
-	private static ModeBuilder lucidApplyToModeAndCheckFiletype(int mask) {
+	private static ModeBuilder lucidMaskMode(int mask) {
 		ModeBuilder m = instance();
-		m.applyToModeAndCheckFiletype(mask);
+		m.maskMode(mask);
+		return m;
+	}
+
+	private static ModeBuilder lucidAddToModeAndCheckFiletype(int mask) {
+		ModeBuilder m = instance();
+		m.addToModeAndCheckFiletype(mask);
 		return m;
 	}
 
@@ -42,89 +52,92 @@ public class ModeBuilder {
 	}
 
 	public static ModeBuilder regularFile() {
-		return lucidApplyToModeAndCheckFiletype(Mode.IFREG);
+		return lucidAddToModeAndCheckFiletype(Mode.IFREG);
 	}
 
 	public static ModeBuilder directory() {
-		return lucidApplyToModeAndCheckFiletype(Mode.IFDIR);
+		return lucidAddToModeAndCheckFiletype(Mode.IFDIR);
 	}
 
 	public static ModeBuilder socket() {
-		return lucidApplyToModeAndCheckFiletype(Mode.IFSOC);
+		return lucidAddToModeAndCheckFiletype(Mode.IFSOC);
 	}
 
 	public static ModeBuilder link() {
-		return lucidApplyToModeAndCheckFiletype(Mode.IFLNK);
+		return lucidAddToModeAndCheckFiletype(Mode.IFLNK);
 	}
 
 	public static ModeBuilder blockDevice() {
-		return lucidApplyToModeAndCheckInterface(Mode.IFBLK);
+		return lucidAddToModeAndCheckFiletype(Mode.IFBLK);
 	}
 
 	public static ModeBuilder characterDevice() {
-		return lucidApplyToModeAndCheckInterface(Mode.IFCHR);
+		return lucidAddToModeAndCheckFiletype(Mode.IFCHR);
 	}
 
 	public static ModeBuilder fifo() {
-		return lucidApplyToModeAndCheckInterface(Mode.IFIFO);
+		return lucidAddToModeAndCheckFiletype(Mode.IFIFO);
 	}
 
-	public static ModeBuilder setUid() {
-		return lucidApplyToMode(Mode.ISUID);
+	public ModeBuilder setUid() {
+		return lucidAddToMode(Mode.ISUID);
 	}
 
-	public static ModeBuilder setGid() {
-		return lucidApplyToMode(Mode.ISGID);
+	public ModeBuilder setGid() {
+		return lucidAddToMode(Mode.ISGID);
 	}
 
-	public static ModeBuilder sticky() {
-		return lucidApplyToMode(Mode.ISVTX);
+	public ModeBuilder sticky() {
+		return lucidAddToMode(Mode.ISVTX);
 	}
 
-	public static ModeBuilder ownerRead() {
-		return lucidApplyToMode(Mode.IRUSR);
+	public ModeBuilder ownerRead() {
+		return lucidAddToMode(Mode.IRUSR);
 	}
 
-	public static ModeBuilder ownerWrite() {
-		return lucidApplyToMode(Mode.IWUSR);
+	public ModeBuilder ownerWrite() {
+		return lucidAddToMode(Mode.IWUSR);
 	}
 
-	public static ModeBuilder ownerExecute() {
-		return lucidApplyToMode(Mode.IXUSR);
+	public ModeBuilder ownerExecute() {
+		return lucidAddToMode(Mode.IXUSR);
 	}
 
-	public static ModeBuilder groupRead() {
-		return lucidApplyToMode(Mode.IRGRP);
+	public ModeBuilder groupRead() {
+		return lucidAddToMode(Mode.IRGRP);
 	}
 
-	public static ModeBuilder groupWrite() {
-		return lucidApplyToMode(Mode.IWGRP);
+	public ModeBuilder groupWrite() {
+		return lucidAddToMode(Mode.IWGRP);
 	}
 
-	public static ModeBuilder groupExecute() {
-		return lucidApplyToMode(Mode.IXGRP);
+	public ModeBuilder groupExecute() {
+		return lucidAddToMode(Mode.IXGRP);
 	}
 
-	public static ModeBuilder othersRead() {
-		return lucidApplyToMode(Mode.IROTH);
+	public ModeBuilder othersRead() {
+		return lucidAddToMode(Mode.IROTH);
 	}
 
-	public static ModeBuilder othersWrite() {
-		return lucidApplyToMode(Mode.IWOTH);
+	public ModeBuilder othersWrite() {
+		return lucidAddToMode(Mode.IWOTH);
 	}
 
-	public static ModeBuilder othersExecute() {
-		return lucidApplyToMode(Mode.IXOTH);
+	public ModeBuilder othersExecute() {
+		return lucidAddToMode(Mode.IXOTH);
 	}
 
-	public static ModeBuilder numeric(int mask) {
-		return lucidApplyToMode(mask);
+	public ModeBuilder numeric(int add) {
+		return lucidAddToMode(add);
 	}
 
-	public static Mode create() {
-		ModeBuilder builder = instance();
-		Mode m = Mode.createWithNumericValue(builder.mode);
-		builder.reset();
+	public ModeBuilder mask(int mask) {
+		return lucidMaskMode(mask);
+	}
+
+	public Mode create() {
+		Mode m = Mode.createWithNumericValue(mode);
+		reset();
 		return m;
 	}
 }
