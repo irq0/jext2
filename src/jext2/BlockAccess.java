@@ -11,7 +11,6 @@ import jext2.exceptions.IoError;
 /**
  * Access to the filesystem blocks  
  */
-@SuppressWarnings( {"ALL"})
 public class BlockAccess {
 	private int blocksize = Constants.EXT2_MIN_BLOCK_SIZE;
 	private FileChannel blockdev;
