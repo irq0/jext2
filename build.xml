@@ -6,8 +6,8 @@
   <property name="build" location="bin"/>
   <property name="dist" location="dist"/>
   <property name="jlowfuse" location="${user.home}/opt/share/java/jlowfuse.jar"/>
-  <property name="apache-common-lang" location="${user.home}/opt/share/java/commons-lang-2.5.jar"/>
-  <property name="apache-common-cli" location="${user.home}/opt/share/java/commons-cli-1.2.jar"/>
+  <property name="apache-common-lang" location="/usr/share/java/commons-lang.jar"/>
+  <property name="apache-common-cli" location="/usr/share/java/commons-cli.jar"/>
 
   <target name="init">
     <tstamp/>
