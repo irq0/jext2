@@ -38,9 +38,7 @@ public class FuseJExt2 {
 
 	private static boolean daemon = false;
 	private static String fuseCommandline = "-o foo,subtype=jext2";
-	
-	private static JExt2Ops ops;
-	
+		
 	static class FuseShutdownHook extends Thread {
 		public void run() {
 		    System.out.println("Shutdown ");
@@ -48,7 +46,7 @@ public class FuseJExt2 {
 		    /* this should not be nesseccrry but fuse/jlowfuse does not call 
 		     * DESTROY
 		     */
-		    ops.destroy();
+		    //ops.destroy();
 		    
 			Session.removeChan(chan);
 			Session.exit(sess);
