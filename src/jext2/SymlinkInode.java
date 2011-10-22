@@ -9,7 +9,6 @@ import jext2.exceptions.FileTooLarge;
 import jext2.exceptions.IoError;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 
-@SuppressWarnings( {"OctalInteger"})
 public class SymlinkInode extends DataInode {
 	private String symlink = "";
 
@@ -125,7 +124,7 @@ public class SymlinkInode extends DataInode {
         inode.setAccessTime(now);
         inode.setStatusChangeTime(now);
         inode.setDeletionTime(new Date(0));
-	    inode.setMode(Mode.IFLNK | 0777);
+	    inode.setMode(ModeBuilder.link().allReadWriteExecute().create());
         inode.setBlock(new long[Constants.EXT2_N_BLOCKS]);
         inode.setBlocks(0);
         inode.symlink = "";
