@@ -5,6 +5,7 @@ import java.util.Date;
 import jext2.DataInode;
 import jext2.Inode;
 import jext2.Superblock;
+import fuse.EntryParam;
 import fuse.Stat;
 import fuse.Timespec;
 
@@ -41,4 +42,15 @@ public class Util {
 		
 		return s;
 	}	
+	
+	public static EntryParam inodeToEntryParam(Superblock superblock, Inode inode) {
+        EntryParam e = new EntryParam();
+        e.setAttr(inodeToStat(superblock, inode));
+        e.setGeneration(inode.getGeneration());
+        e.setAttr_timeout(0.0);
+        e.setEntry_timeout(0.0);
+        e.setIno(inode.getIno());
+        return e;
+	}
+	
 }
