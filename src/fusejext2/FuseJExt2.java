@@ -1,31 +1,34 @@
 package fusejext2;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
-import java.io.File;
 import java.util.Arrays;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executors;
 
 import jext2.Filesystem;
-
-import fuse.Fuse;
-import fuse.SWIGTYPE_p_fuse_chan;
-import fuse.SWIGTYPE_p_fuse_session;
-import fuse.Session;
-
 import jlowfuse.JLowFuse;
 import jlowfuse.JLowFuseArgs;
 import jlowfuse.async.DefaultTaskImplementations;
 import jlowfuse.async.TaskImplementations;
 
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.PosixParser;
+
+import fuse.Fuse;
+import fuse.SWIGTYPE_p_fuse_chan;
+import fuse.SWIGTYPE_p_fuse_session;
+import fuse.Session;
 
 public class FuseJExt2 {
 	private static FileChannel blockDev;
@@ -200,8 +203,7 @@ public class FuseJExt2 {
 		impls.unlinkImpl = TaskImplementations.getImpl("fusejext2.tasks.Unlink");
 		impls.writeImpl = TaskImplementations.getImpl("fusejext2.tasks.Write");
 		
-		ExecutorService service = new ThreadPoolExecutor(10, 20, 5,
-				TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(100));
+		ExecutorService service = Executors.newFixedThreadPool(10);
 		
 		SWIGTYPE_p_fuse_session sess = JLowFuse.asyncTasksNew(fuseArgs, impls,
 				service, context);
