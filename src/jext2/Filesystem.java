@@ -13,7 +13,7 @@ import java.util.logging.SimpleFormatter;
 //      This then should replace the direct superblock, etc. references in each class
 public class Filesystem {
     private static Charset charset = Charset.defaultCharset();
-    private static Logger logger = null;
+    private static Logger logger = Logger.getLogger("jext2");
 
 	public static Charset getCharset() {
         return charset;
@@ -31,9 +31,7 @@ public class Filesystem {
         return Long.parseLong(strPid);
     }
     
-    public static void initializeLoggingToFile(String logfile) throws IOException {
-        logger = Logger.getLogger("jext2");
-
+    public static void initializeLoggingToFile(String logfile) throws IOException { 
 	    FileHandler handler = new FileHandler(logfile);
         handler.setFormatter(new SimpleFormatter());
         
