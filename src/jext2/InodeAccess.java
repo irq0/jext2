@@ -61,7 +61,7 @@ public class InodeAccess extends DataStructureAccessProvider<Long, Inode>{
 		
 	}
 	
-	public InodeAccess getInstance() {
+	public static InodeAccess getInstance() {
 		return _instance;
 	}
 	

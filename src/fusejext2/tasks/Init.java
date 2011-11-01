@@ -77,9 +77,9 @@ public class Init extends jlowfuse.async.tasks.Init<Jext2Context> {
 	        markExt2AsMounted();        
 	        // TODO set times, volume name, etc in  superblock
 	        
-	        context.blockGroups = new BlockGroupAccess();
+	        context.blockGroups = BlockGroupAccess.getInstance();
 	        context.blockGroups.readDescriptors();
-		    context.inodes = new InodeAccess();
+		    context.inodes = InodeAccess.getInstance();
 
 		} catch (IoError e) {
 			System.out.println("init() failed :(");

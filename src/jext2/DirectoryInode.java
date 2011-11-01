@@ -112,7 +112,7 @@ public class DirectoryInode extends DataInode {
 	 * Checkt is performed before any allocation. 
 	 * @see addLink(DirectoryEntry newEntry) 
 	 */
-	public void addLink(Inode inode, String name) throws IoError, FileExists, NoSpaceLeftOnDevice, FileNameTooLong, TooManyLinks, FileTooLarge {
+	public void addLink(Inode inode, String name) throws JExt2Exception, FileExists, NoSpaceLeftOnDevice, FileNameTooLong, TooManyLinks, FileTooLarge {
 	    if (inode.getLinksCount() >= Constants.EXT2_LINK_MAX)
 	        throw new TooManyLinks();
 	    
@@ -135,7 +135,7 @@ public class DirectoryInode extends DataInode {
 	 * @throws FileExistsException      When we stumble upon an entry with same name
 	 */
 	// TODO rewrite addLink to use the directory iterator
-	public void addDirectoryEntry(DirectoryEntry newEntry) throws IoError, FileExists, NoSpaceLeftOnDevice, FileTooLarge {
+	public void addDirectoryEntry(DirectoryEntry newEntry) throws JExt2Exception, FileExists, NoSpaceLeftOnDevice, FileTooLarge {
        ByteBuffer block;
        int offset = 0;
        
@@ -278,7 +278,7 @@ public class DirectoryInode extends DataInode {
 	}
 
 	public void addDotLinks(DirectoryInode parent) 
-	        throws IoError, FileExists, NoSpaceLeftOnDevice, TooManyLinks, FileTooLarge {        
+	        throws JExt2Exception, FileExists, NoSpaceLeftOnDevice, TooManyLinks, FileTooLarge {        
 	    try {        
 	        addLink(this, ".");
 	        addLink(parent, "..");

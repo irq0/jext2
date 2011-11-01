@@ -5,6 +5,7 @@ import java.util.Date;
 
 import jext2.exceptions.FileTooLarge;
 import jext2.exceptions.IoError;
+import jext2.exceptions.JExt2Exception;
 
 /**
  * Inode for regular files. 
@@ -42,7 +43,7 @@ public class RegularInode extends DataInode {
      * @param   size    new size
      * @throws FileTooLarge 
      */
-    public void setSizeAndTruncate(long size) throws IoError, FileTooLarge {
+    public void setSizeAndTruncate(long size) throws JExt2Exception, FileTooLarge {
         if (size < 0) 
             throw new IllegalArgumentException("Try to set negative file size");
         long oldSize = getSize();

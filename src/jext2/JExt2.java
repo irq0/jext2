@@ -20,7 +20,7 @@ class JExt2 {
 			superblock = Superblock.fromBlockAccess(blocks);
 			blocks.initialize(superblock);
 
-			blockGroups = new BlockGroupAccess();
+			blockGroups = BlockGroupAccess.getInstance();
 			blockGroups.readDescriptors();
 			
 		} catch (java.io.FileNotFoundException e) {

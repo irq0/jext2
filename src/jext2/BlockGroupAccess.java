@@ -11,7 +11,7 @@ public class BlockGroupAccess {
 	private static Superblock superblock = Superblock.getInstance();
 	
 	private BlockGroupDescriptor[] descriptors;
-	private static BlockGroupAccess instance = null;
+	private static BlockGroupAccess instance = new BlockGroupAccess();
 	
 	private BlockGroupAccess() {
 	}
