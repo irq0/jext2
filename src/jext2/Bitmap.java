@@ -110,7 +110,7 @@ public class Bitmap extends Block {
 	 * Find position of first zero bit from the left
 	 * "00111111" -> 0
 	 */
-	public int findLeftMostZeroBitInByte(byte b) {
+	public static int findLeftMostZeroBitInByte(byte b) {
 	    byte mask = -0x80; /* sign bit is 128 */
 		for (int i=0; i<8; i++) {
 		    if ((mask & b) == 0) {
@@ -125,7 +125,7 @@ public class Bitmap extends Block {
      * Find position of first zero bit from the right
      * "00111111" -> 6
      */
-    public int findRightModeZeroBitInByte(byte b) {
+    public static int findRightModeZeroBitInByte(byte b) {
         byte mask = 0x01;
         for (int i=0; i<8; i++) {
             if ((mask & b) == 0) {
