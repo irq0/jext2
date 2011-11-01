@@ -8,6 +8,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import jext2.exceptions.FileTooLarge;
 import jext2.exceptions.IoError;
+import jext2.exceptions.JExt2Exception;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 
 /**
@@ -53,7 +54,7 @@ public class DataInode extends Inode {
      * @throws FileTooLarge
      * @throws IoError
      */ 
-    public ByteBuffer readData(int size, long offset) throws IoError, FileTooLarge {
+    public ByteBuffer readData(int size, long offset) throws JExt2Exception, FileTooLarge {
         ByteBuffer result = ByteBuffer.allocateDirect(size);
     
         int blocksize = superblock.getBlocksize();
@@ -99,7 +100,7 @@ public class DataInode extends Inode {
      * @throws NoSpaceLeftOnDevice 
      * @throws FileTooLarge 
      */    
-    public int writeData(ByteBuffer buf, long offset) throws IoError, NoSpaceLeftOnDevice, FileTooLarge {
+    public int writeData(ByteBuffer buf, long offset) throws JExt2Exception, NoSpaceLeftOnDevice, FileTooLarge {
         /*
          * Note on sparse file support:
          * getBlocksAllocate does not care if there are holes. Just write as much 

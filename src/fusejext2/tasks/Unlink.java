@@ -26,9 +26,9 @@ public class Unlink extends jlowfuse.async.tasks.Unlink<Jext2Context> {
         }
             
         try {
-            DirectoryInode parentInode = (DirectoryInode)(context.inodes.get(parent));
+            DirectoryInode parentInode = (DirectoryInode)(context.inodes.openInode(parent));
             Inode child = 
-                    context.inodes.get(parentInode.lookup(name).getIno());
+                    context.inodes.openInode(parentInode.lookup(name).getIno());
                 
             parentInode.unLinkOther(child, name);
                 

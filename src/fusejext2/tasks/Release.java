@@ -19,7 +19,7 @@ public class Release extends jlowfuse.async.tasks.Release<Jext2Context> {
 	    if (ino == 1) ino = Constants.EXT2_ROOT_INO;
 	    
 	    try {
-	        Inode inode = context.inodes.get(ino);
+	        Inode inode = context.inodes.openInode(ino);
 	        inode.sync();
 	        Reply.err(req, 0);
 	    } catch (JExt2Exception e) {

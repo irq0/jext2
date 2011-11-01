@@ -20,14 +20,14 @@ public class Lookup extends jlowfuse.async.tasks.Lookup<Jext2Context> {
 	public void run() {
 		if (parent == 1) parent = Constants.EXT2_ROOT_INO;
 		try {		
-		    Inode parentInode = context.inodes.get(parent);
+		    Inode parentInode = context.inodes.openInode(parent);
 			if (!(parentInode instanceof DirectoryInode)) { 
 				Reply.err(req, Errno.ENOTDIR);
 				return;
 			}
 			
 			DirectoryEntry entry = ((DirectoryInode)parentInode).lookup(name);			
-			Inode child = context.inodes.get(entry.getIno());			
+			Inode child = context.inodes.openInode(entry.getIno());			
 			Reply.entry(req, Util.inodeToEntryParam(context.superblock, child));			
 
 		} catch (JExt2Exception e) {

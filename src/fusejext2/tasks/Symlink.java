@@ -21,7 +21,7 @@ public class Symlink extends jlowfuse.async.tasks.Symlink<Jext2Context> {
 	public void run() {
         if (parent == 1) parent = Constants.EXT2_ROOT_INO;
         try {
-            DirectoryInode parentInode = (DirectoryInode)context.inodes.get(parent);
+            DirectoryInode parentInode = (DirectoryInode)context.inodes.openInode(parent);
 
             FuseContext fuseContext = req.getContext();           
             SymlinkInode inode = SymlinkInode.createEmpty();            

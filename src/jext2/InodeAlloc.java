@@ -3,7 +3,7 @@ package jext2;
 import java.util.Date;
 
 import jext2.exceptions.FileTooLarge;
-import jext2.exceptions.IoError;
+import jext2.exceptions.JExt2Exception;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 
 /** 
@@ -14,6 +14,8 @@ import jext2.exceptions.NoSpaceLeftOnDevice;
 public class InodeAlloc {
 	private static Superblock superblock = Superblock.getInstance();
 	private static BlockGroupAccess blockGroups = BlockGroupAccess.getInstance();
+	private static BitmapAccess bitmaps = BitmapAccess.getInstance();
+	
 	
 	public static long countFreeInodes() {
 		long count = 0;
@@ -143,8 +145,9 @@ public class InodeAlloc {
 
 	/**
 	 * Free Inode: Remove data blocks and set bit to 0
+	 * @throws JExt2Exception 
 	 */
-	public static void freeInode(Inode inode) throws IoError {
+	public static void freeInode(Inode inode) throws JExt2Exception {
 	    if (inode.getLinksCount() > 0)
 	        return;
 	    	    
@@ -169,7 +172,7 @@ public class InodeAlloc {
         
         BlockGroupDescriptor groupDescr = 
             blockGroups.getGroupDescriptor(Calculations.groupOfIno(ino));
-        Bitmap bitmap = blockGroups.readInodeBitmapOf(groupDescr);
+        Bitmap bitmap = bitmaps.openInodeBitmap(groupDescr);
         int bit = Calculations.localInodeIndex(ino);
         
         if (!bitmap.isSet(bit)) {
@@ -178,6 +181,8 @@ public class InodeAlloc {
             bitmap.setBit(bit, false);
             bitmap.write();
         }
+        
+        bitmaps.closeBitmap(bitmap);
         
         groupDescr.setFreeBlocksCount(groupDescr.getFreeInodesCount() + 1);
         
@@ -189,9 +194,9 @@ public class InodeAlloc {
 	
 	/** Register Inode on disk. Find suitable position an reserve this position
 	 * for the Inode. Finally set location data in Inode
-	 * @throws NoSpaceLeftOnDevice 
+	 * @throws JExt2Exception 
 	 */
-	public static void registerInode(Inode dir, Inode inode) throws IoError, NoSpaceLeftOnDevice {
+	public static void registerInode(Inode dir, Inode inode) throws JExt2Exception {
 		/* find best suitable block group */
 		int group;
 		
@@ -216,7 +221,7 @@ public class InodeAlloc {
 		
 		while (true) {
 			BlockGroupDescriptor bgroup = blockGroups.getGroupDescriptor(group);
-			Bitmap bmap = blockGroups.readInodeBitmapOf(bgroup);
+			Bitmap bmap = bitmaps.openInodeBitmap(bgroup);
 			
 			ino = bmap.getNextZeroBitPos(ino);			
 			if (ino > superblock.getInodesPerGroup()) {
@@ -232,9 +237,10 @@ public class InodeAlloc {
 			
 			bmap.setBit(ino, true);
 			bmap.write();
+			bitmaps.closeBitmap(bmap);
 			break;			
 		} 
-		
+				
 		/* apply changes to meta data */
 		superblock.setFreeInodesCount(superblock.getFreeInodesCount() - 1);
 		descr.setFreeInodesCount(descr.getFreeInodesCount() - 1);

@@ -20,7 +20,7 @@ public class Readdir extends jlowfuse.async.tasks.Readdir<Jext2Context> {
 	public void run() {
 	    if (ino == 1) ino = Constants.EXT2_ROOT_INO;
 
-        DirectoryInode inode = (DirectoryInode)(context.inodes.getOpen(ino));
+        DirectoryInode inode = (DirectoryInode)(context.inodes.getOpened(ino));
         
 		Dirbuf buf = new Dirbuf();
 

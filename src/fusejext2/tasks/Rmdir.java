@@ -25,9 +25,9 @@ public class Rmdir extends jlowfuse.async.tasks.Rmdir<Jext2Context> {
         }
         
         try {
-            DirectoryInode parentInode = (DirectoryInode)(context.inodes.get(parent));
+            DirectoryInode parentInode = (DirectoryInode)(context.inodes.openInode(parent));
             DirectoryInode child = 
-                (DirectoryInode)context.inodes.get(parentInode.lookup(name).getIno());
+                (DirectoryInode)context.inodes.openInode(parentInode.lookup(name).getIno());
             
             child.removeDotLinks(parentInode);
             parentInode.unLinkDir(child, name);

@@ -18,7 +18,7 @@ public class Write extends jlowfuse.async.tasks.Write<Jext2Context> {
 	
 	public void run() {
 	    try {
-	        RegularInode inode = (RegularInode)(context.inodes.getOpen(ino));
+	        RegularInode inode = (RegularInode)(context.inodes.getOpened(ino));
 	        buf.rewind();
 	        int count = inode.writeData(buf, off);
 	        

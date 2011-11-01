@@ -2,7 +2,6 @@ package fusejext2.tasks;
 
 import java.util.Date;
 
-import fusejext2.InodeAccessProvider;
 import fusejext2.Jext2Context;
 
 import jext2.BlockAccess;
@@ -11,6 +10,7 @@ import jext2.Constants;
 import jext2.Feature;
 import jext2.Superblock;
 import jext2.exceptions.IoError;
+import jext2.InodeAccess;
 
 public class Init extends jlowfuse.async.tasks.Init<Jext2Context> {
 

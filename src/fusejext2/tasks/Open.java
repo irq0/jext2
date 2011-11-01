@@ -17,7 +17,7 @@ public class Open extends jlowfuse.async.tasks.Open<Jext2Context> {
 
 	public void run() {
 		try {
-			Inode inode = context.inodes.get(ino);
+			Inode inode = context.inodes.openInode(ino);
 			if (! (inode instanceof RegularInode)) {
 			    Reply.err(req, Errno.EPERM);
 			}

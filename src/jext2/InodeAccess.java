@@ -1,17 +1,19 @@
 package jext2;
 import java.nio.ByteBuffer;
-import java.util.concurrent.ConcurrentSkipListMap;
 
 import jext2.exceptions.InvalidArgument;
 import jext2.exceptions.IoError;
-import jext2.exceptions.NoSuchFileOrDirectory;
+import jext2.exceptions.JExt2Exception;
 
-public class InodeAccess {
+public class InodeAccess extends DataStructureAccessProvider<Long, Inode>{
+	private static InodeAccess _instance = new InodeAccess();
+	
 	private static Superblock superblock = Superblock.getInstance();
 	private static BlockAccess blocks = BlockAccess.getInstance();
 	private static BlockGroupAccess blockGroups = BlockGroupAccess.getInstance();
 	
-	private ConcurrentSkipListMap<Long,Inode> openInodes = new ConcurrentSkipListMap<Long,Inode>();
+	private InodeAccess() {
+	}
 	
 	public static Inode readFromByteBuffer(ByteBuffer buf, int offset) throws IoError {
 		Mode mode = Mode.createWithNumericValue(Ext2fsDataTypes.getLE16(buf, offset));
@@ -59,6 +61,10 @@ public class InodeAccess {
 		
 	}
 	
+	public InodeAccess getInstance() {
+		return _instance;
+	}
+	
 	public static Inode readRootInode() throws IoError {
 	    try {
 	        return readByIno(Constants.EXT2_ROOT_INO);
@@ -68,31 +74,24 @@ public class InodeAccess {
 	}
 
 
-	public Inode getOpen(long ino)  {
-	    if (!openInodes.containsKey(ino))
-	        return null;
-	    else
-	        return openInodes.get(ino);
+	public Inode getOpened(long ino)  {
+		return get(ino);
 	}
 
-	public Inode get(long ino) throws IoError, NoSuchFileOrDirectory, InvalidArgument { 
-	    if (openInodes.containsKey(ino)) {
-	        Inode inode = openInodes.get(ino);
-	        if (inode.isDeleted()) {
-	            openInodes.remove(ino);
-	            inode = InodeAccess.readByIno(ino);
-	            openInodes.put(ino, inode);
-	        }                
-	        
-	        return openInodes.get(new Long(ino));
-	    } else {
-	        Inode inode = InodeAccess.readByIno(ino);
-	        openInodes.put(ino, inode);
-	        return inode;
-	    }
+	public Inode openInode(long ino) throws JExt2Exception { 
+		Inode inode = open(ino);
+
+		assert !inode.isDeleted();
+
+		return inode;
 	}
 
-	public void close(long ino) {
-	    openInodes.remove(ino);
+	public void closeInode(long ino) {
+		close(ino);
+	}
+
+	@Override
+	protected Inode createInstance(Long ino) throws JExt2Exception {
+		return InodeAccess.readByIno(ino);
 	}
 }

@@ -24,7 +24,7 @@ public class Fsyncdir extends jlowfuse.async.tasks.Fsync<Jext2Context> {
 			 * to flush
 			 */
 
-			Inode inode = context.inodes.get(ino);
+			Inode inode = context.inodes.openInode(ino);
 			assert inode != null;
 
 			inode.sync();

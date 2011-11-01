@@ -32,7 +32,7 @@ public class Mknod extends jlowfuse.async.tasks.Mknod<Jext2Context> {
                 return;
             }
 
-            Inode parentInode = context.inodes.get(parent);
+            Inode parentInode = context.inodes.openInode(parent);
             if (!(parentInode instanceof DirectoryInode)) {
                 Reply.err(req, Errno.ENOTDIR);
                 return;

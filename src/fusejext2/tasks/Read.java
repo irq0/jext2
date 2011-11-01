@@ -18,7 +18,7 @@ public class Read extends jlowfuse.async.tasks.Read<Jext2Context> {
 	
 	public void run() {
 		try {
-		    RegularInode inode = (RegularInode)(context.inodes.getOpen(ino));
+		    RegularInode inode = (RegularInode)(context.inodes.getOpened(ino));
 		    // TODO the (int) cast is due to the java-no-unsigned problem. handle this better here
 			ByteBuffer buf = inode.readData((int)size, off);
 			Reply.byteBuffer(req, buf, 0, size);

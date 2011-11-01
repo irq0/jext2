@@ -11,12 +11,14 @@ import org.apache.commons.lang.builder.ToStringStyle;
 
 import jext2.exceptions.FileTooLarge;
 import jext2.exceptions.IoError;
+import jext2.exceptions.JExt2Exception;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 
 public class DataBlockAccess {
 	protected static Superblock superblock = Superblock.getInstance();
 	protected static BlockAccess blocks = BlockAccess.getInstance();
 	protected static BlockGroupAccess blockGroups = BlockGroupAccess.getInstance();
+	protected static BitmapAccess bitmaps = BitmapAccess.getInstance();
 	protected DataInode inode = null;
 
 	// used by findGoal 
@@ -73,7 +75,8 @@ public class DataBlockAccess {
 			           current += blocks.size();
 			       }
 			   }
-			} catch (IoError e) {
+			} catch (JExt2Exception e) {
+				// XXX this is potentially to broad
 			}
 		}
 
@@ -237,7 +240,7 @@ public class DataBlockAccess {
 	 */
 	public LinkedList<Long> allocBranch(int num, long goal, 
 	                                    int[] offsets, long[] blockNrs) 
-	                                           throws IoError, NoSpaceLeftOnDevice {
+	                                           throws JExt2Exception, NoSpaceLeftOnDevice {
 
 	    int n = 0;
 	    LinkedList<Long> result = new LinkedList<Long>();
@@ -318,7 +321,7 @@ public class DataBlockAccess {
      * @throws IOException 
 	 */
 	public LinkedList<Long> getBlocks(long fileBlockNr, long maxBlocks) 
-	        throws IoError, FileTooLarge {
+	        throws JExt2Exception, FileTooLarge {
 	    try {
 	        return getBlocks(fileBlockNr, maxBlocks, false);
 	    } catch (NoSpaceLeftOnDevice e) {
@@ -340,7 +343,7 @@ public class DataBlockAccess {
      * @see #getBlocks(long fileBlockNr, long maxBlocks) 
      */
     public LinkedList<Long> getBlocksAllocate(long fileBlockNr, long maxBlocks) 
-            throws IoError, NoSpaceLeftOnDevice, FileTooLarge {
+            throws JExt2Exception, NoSpaceLeftOnDevice, FileTooLarge {
         return getBlocks(fileBlockNr, maxBlocks, true);
     }	
 
@@ -358,7 +361,7 @@ public class DataBlockAccess {
 	 * @throws IOException
 	 */
 	private LinkedList<Long> getBlocks(long fileBlockNr, long maxBlocks, boolean create) 
-	    throws IoError, NoSpaceLeftOnDevice, FileTooLarge {
+	    throws JExt2Exception, NoSpaceLeftOnDevice, FileTooLarge {
 	    
 		if (fileBlockNr < 0 || maxBlocks < 1) 
 			throw new IllegalArgumentException();
@@ -431,7 +434,7 @@ public class DataBlockAccess {
 	 * Try to allocate a block by looping over block groups and calling 
 	 * newBlockInGroup
 	 */ 
-    private static long newBlock(long goal) throws IoError, NoSpaceLeftOnDevice {        
+    private static long newBlock(long goal) throws JExt2Exception, NoSpaceLeftOnDevice {        
         if (! superblock.hasFreeBlocks()) {
             throw new NoSpaceLeftOnDevice();
         }
@@ -473,7 +476,7 @@ public class DataBlockAccess {
      * @throws IOException 
      * @throws NoSpaceLeftOnDevice 
      */    
-    public static long allocateBlock(long goal) throws NoSpaceLeftOnDevice, IoError {
+    public static long allocateBlock(long goal) throws NoSpaceLeftOnDevice, JExt2Exception {
         long blockNr = newBlock(goal);
         
         /* Finally return pointer to allocated block or an error */
@@ -486,10 +489,10 @@ public class DataBlockAccess {
      * @param       start       bitmap index to begin (think of goal)
      * @param       descr       group descriptor to search
      * @return      block number or -1 
+     * @throws JExt2Exception 
      */
-    private static long newBlockInGroup(int start, BlockGroupDescriptor descr) throws IoError {
-        Bitmap bitmap = Bitmap.fromByteBuffer(blocks.read(descr.getBlockBitmapPointer()),
-                descr.getBlockBitmapPointer());
+    private static long newBlockInGroup(int start, BlockGroupDescriptor descr) throws JExt2Exception {
+    	Bitmap bitmap = bitmaps.openDataBitmap(descr);
 
         if (descr.getFreeBlocksCount() > 0) {
 
@@ -499,6 +502,7 @@ public class DataBlockAccess {
                 
                 /* Check to see if we are trying to allocate a system block */
                 if (!(descr.isValidDataBlockNr(blockNr))) {
+                	bitmaps.closeBitmap(bitmap);
                     throw new RuntimeException("Trying to allocate in system zone" 
                                             + " blockNr=" + blockNr 
                                             + " group=" + descr.getBlockGroup()
@@ -507,14 +511,17 @@ public class DataBlockAccess {
                 
                 bitmap.setBit(freeIndex, true);
                 bitmap.write();
+            	bitmaps.closeBitmap(bitmap);
 
                 descr.setFreeBlocksCount(descr.getFreeBlocksCount() - 1);
 
                 return Calculations.blockNrOfLocal(freeIndex, descr.getBlockGroup());
             } else {
-                start = 0;
+                start = 0; // XXX this does not make sense :-/
             }
-        }        
+        }
+        
+    	bitmaps.closeBitmap(bitmap);
         return -1;
     }
     
@@ -534,7 +541,7 @@ public class DataBlockAccess {
 	 * Free single data block. Update inode.blocks.
 	 * @param  blockNr physical block to free
 	 */
-	public void freeDataBlock(long blockNr) throws IoError {
+	public void freeDataBlock(long blockNr) throws JExt2Exception {
 	    freeDataBlocksContiguous(blockNr, 1);
 	    
 	}
@@ -543,9 +550,9 @@ public class DataBlockAccess {
 	 * Free count blocks. Update inode.blocks.
 	 * @param  blockNr   start physical block to free
 	 * @param  count   number of blocks to free
-	 * @throws IOException 
+	 * @throws JExt2Exception 
 	 */
-	public void freeDataBlocksContiguous(long blockNr, long count) throws IoError {
+	public void freeDataBlocksContiguous(long blockNr, long count) throws JExt2Exception {
 	    /* counter to set {superblock|blockgroup}.freeBlocksCount */
 	    int groupFreed = 0; 
 	    int freed = 0;
@@ -570,10 +577,8 @@ public class DataBlockAccess {
 	            overflow = groupIndex + count - superblock.getBlocksPerGroup();
 	            count -= overflow;
 	        }
-	   
-	        Bitmap bitmap = Bitmap.fromByteBuffer(
-	                blocks.read(groupDescr.getBlockBitmapPointer()),
-	                groupDescr.getBlockBitmapPointer());
+	        
+	        Bitmap bitmap = bitmaps.openDataBitmap(groupDescr);
 	   
 	        /* Check to see if we are trying to free a system block */
 	        if (!(groupDescr.isValidDataBlockNr(blockNr) &&
@@ -597,6 +602,7 @@ public class DataBlockAccess {
 	            }
 	        }
 	        bitmap.write();
+	        bitmaps.closeBitmap(bitmap);
 	    
 	        groupDescr.setFreeBlocksCount(groupDescr.getFreeBlocksCount() + groupFreed);
 	        freed += groupFreed;
@@ -615,7 +621,7 @@ public class DataBlockAccess {
 	 * Free array of data blocks and update inode.blocks appropriately. 
 	 * @param  blockNrs       array of block numbers
 	 */
-	public void freeBlocks(long[] blockNrs) throws IoError {
+	public void freeBlocks(long[] blockNrs) throws JExt2Exception {
 	    long blockToFree = 0;
 	    long count = 0;
 	    
@@ -647,7 +653,7 @@ public class DataBlockAccess {
 	 * @param  blockNrs    blockNrs to start
 	 * 
 	 */
-	private void freeBranches(int depth, long[] blockNrs) throws IoError {	    
+	private void freeBranches(int depth, long[] blockNrs) throws JExt2Exception {	    
 	    if (depth > 0) { /* indirection exists -> go down */
 	        depth -= 1;
 	        for (long nr : blockNrs) {
@@ -686,13 +692,13 @@ public class DataBlockAccess {
 	            sb.append((i+1) + "IND " + blockNr + "\n");
 	            dumpBranches(i, blockNrs, sb);
 	        }
-	    } catch (IoError e) {
+	    } catch (JExt2Exception e) {
 	    }
 	    return sb.toString();
 	}
 	
 	private void dumpBranches(int depth, LinkedList<Long> blockNrs, StringBuilder sb) 
-	        throws IoError {
+	        throws JExt2Exception {
 	    if (blockNrs.size() == 0) return;
 	    
 	    if (depth > 0) { /* indirection exists -> go down */
@@ -719,7 +725,7 @@ public class DataBlockAccess {
 	 * @throws FileTooLarge When you try to truncate to a size 
 	 *     beyond the max. blocks count
 	 */
-	void truncate(long toSize) throws IoError, FileTooLarge {
+	void truncate(long toSize) throws JExt2Exception, FileTooLarge {
 	    if (inode instanceof SymlinkInode && 
 	            ((SymlinkInode)inode).isFastSymlink())
 	        return;

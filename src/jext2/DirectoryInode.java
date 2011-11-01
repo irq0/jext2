@@ -10,6 +10,7 @@ import jext2.exceptions.FileExists;
 import jext2.exceptions.FileNameTooLong;
 import jext2.exceptions.FileTooLarge;
 import jext2.exceptions.IoError;
+import jext2.exceptions.JExt2Exception;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 import jext2.exceptions.NoSuchFileOrDirectory;
 import jext2.exceptions.TooManyLinks;
@@ -334,7 +335,7 @@ public class DirectoryInode extends DataInode {
 	 * @param  inode   inode to unlink
 	 * @param  name    name of the directory entry
 	 */ 
-	public void unLinkOther(Inode inode, String name) throws IoError {
+	public void unLinkOther(Inode inode, String name) throws JExt2Exception {
         if (inode instanceof DirectoryInode)
             throw new IllegalArgumentException("Use unLinkDir for directories");
         unlink(inode, name);
@@ -349,7 +350,7 @@ public class DirectoryInode extends DataInode {
 	 * @throws DirectoryNotEmpty Well, you can't unlink non-empty directories. 
 	 *  "." and ".." entries don't count.
 	 */
-	public void unLinkDir(DirectoryInode inode, String name) throws IoError, DirectoryNotEmpty {
+	public void unLinkDir(DirectoryInode inode, String name) throws JExt2Exception, DirectoryNotEmpty {
 	    if (!inode.isEmptyDirectory())
 	        throw new DirectoryNotEmpty();
 	    unlink(inode, name);
@@ -358,8 +359,9 @@ public class DirectoryInode extends DataInode {
 	/**
 	 * Unlink Inode from this directory. May cause freeInode() if link count
 	 * reaches zero. 
+	 * @throws JExt2Exception 
 	 */
-	private void unlink(Inode inode, String name) throws IoError {
+	private void unlink(Inode inode, String name) throws JExt2Exception {
 	    removeDirectoryEntry(name);
 	    inode.setLinksCount(inode.getLinksCount() - 1);
 	    setStatusChangeTime(new Date());

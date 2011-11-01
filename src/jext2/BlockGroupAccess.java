@@ -13,11 +13,7 @@ public class BlockGroupAccess {
 	private BlockGroupDescriptor[] descriptors;
 	private static BlockGroupAccess instance = null;
 	
-	public BlockGroupAccess() {
-		if (instance != null) {
-			throw new RuntimeException("singleton!");
-		} 
-		instance = this;	
+	private BlockGroupAccess() {
 	}
 		
 	/* 
@@ -93,16 +89,5 @@ public class BlockGroupAccess {
     public BlockGroupDescriptorIterator iterateBlockGroups(int start) {
         return new BlockGroupDescriptorIterator(start);
     }
-	
-	
-	
-	private Bitmap readBitmapAtBlock(long nr) throws IoError {
-		ByteBuffer buf = blocks.read(nr);
-		return Bitmap.fromByteBuffer(buf, nr);
-	}
-	
-	public Bitmap readInodeBitmapOf(BlockGroupDescriptor group) throws IoError {
-		return readBitmapAtBlock(group.getInodeBitmapPointer());
-	}
 	
 }

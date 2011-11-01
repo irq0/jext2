@@ -21,8 +21,8 @@ public class Rename extends jlowfuse.async.tasks.Rename<Jext2Context> {
 		if (newparent == 1) newparent = Constants.EXT2_ROOT_INO;
 
 		try {
-			DirectoryInode parentInode = (DirectoryInode)context.inodes.get(parent);
-			DirectoryInode newparentInode = (DirectoryInode)context.inodes.get(newparent);
+			DirectoryInode parentInode = (DirectoryInode)context.inodes.openInode(parent);
+			DirectoryInode newparentInode = (DirectoryInode)context.inodes.openInode(newparent);
 
 			/* create entries */
 			DirectoryEntry entry = parentInode.lookup(name);
@@ -39,11 +39,11 @@ public class Rename extends jlowfuse.async.tasks.Rename<Jext2Context> {
 				DirectoryEntry existingEntry = newparentInode.lookup(newname);
 				if (existingEntry.getFileType() == DirectoryEntry.FILETYPE_DIR) {
 					DirectoryInode existingDir = 
-							(DirectoryInode)(context.inodes.get(existingEntry.getIno()));
+							(DirectoryInode)(context.inodes.openInode(existingEntry.getIno()));
 
 					newparentInode.unLinkDir(existingDir, newname);
 				} else {
-					Inode existing = context.inodes.get(existingEntry.getIno());
+					Inode existing = context.inodes.openInode(existingEntry.getIno());
 					newparentInode.unLinkOther(existing, newname);
 				}
 			} catch (NoSuchFileOrDirectory ignored) {
@@ -55,7 +55,7 @@ public class Rename extends jlowfuse.async.tasks.Rename<Jext2Context> {
 			 */
 			if (newEntry.getFileType() == DirectoryEntry.FILETYPE_DIR) {
 				DirectoryInode newDir = 
-						(DirectoryInode)(context.inodes.get(newEntry.getIno()));
+						(DirectoryInode)(context.inodes.openInode(newEntry.getIno()));
 
 				DirectoryEntry dotdot = newDir.lookup("..");
 				dotdot.setIno(newparentInode.getIno());
