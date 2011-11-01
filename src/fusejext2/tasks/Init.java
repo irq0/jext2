@@ -67,7 +67,6 @@ public class Init extends jlowfuse.async.tasks.Init<Jext2Context> {
     public void run() {
 	    super.run();
 	    
-	    context.inodes = new InodeAccessProvider();
 		
 	    try {
 	    	context.blocks = new BlockAccess(context.blockDev);
@@ -80,6 +79,8 @@ public class Init extends jlowfuse.async.tasks.Init<Jext2Context> {
 	        
 	        context.blockGroups = new BlockGroupAccess();
 	        context.blockGroups.readDescriptors();
+		    context.inodes = new InodeAccess();
+
 		} catch (IoError e) {
 			System.out.println("init() failed :(");
 			System.out.println(23);
