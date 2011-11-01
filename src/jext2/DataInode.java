@@ -80,7 +80,7 @@ public class DataInode extends Inode {
             } else { /* blocks */
                 count = b.size();
                 result.limit(result.position() + count * blocksize);
-                blockAccess.readToBuffer(b.getFirst() * blocksize + offset, result);
+                blockAccess.readToBufferUnsynchronized(b.getFirst() * blocksize + offset, result);
             }
 
             start += count;          
@@ -130,7 +130,7 @@ public class DataInode extends Inode {
                 blockAccess.write(blockNrs.getFirst(), disk);
             } else { /* write whole block */
                 buf.limit(buf.position() + blocksize);
-                blockAccess.writeFromBuffer(
+                blockAccess.writeFromBufferUnsynchronized(
                         (blockNrs.getFirst()) * blocksize, buf);
             }
             

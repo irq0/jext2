@@ -14,6 +14,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
 public abstract class Block {
+	
     int cleanHashCode = 0;
     
     /** block location on filesystem */
@@ -34,7 +35,7 @@ public abstract class Block {
 	protected void write(ByteBuffer buf) throws IoError {
 		if (getBlockNr() == -1) 
 			throw new IllegalArgumentException("data structure is unregistered");
-
+		
 		BlockAccess.getInstance().writePartial(getBlockNr(), 0, buf);
 	}
 	
