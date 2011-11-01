@@ -8,8 +8,6 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.Arrays;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import jext2.Filesystem;
 import jlowfuse.JLowFuse;
@@ -42,6 +40,9 @@ public class FuseJExt2 {
 	private static boolean daemon = false;
 	private static String fuseCommandline = "-o foo,subtype=jext2";
 		
+	
+	private static JextThreadPoolExecutor service;
+	
 	static class FuseShutdownHook extends Thread {
 		public void run() {
 		    System.out.println("Shutdown ");
@@ -49,7 +50,8 @@ public class FuseJExt2 {
 		    /* this should not be nesseccrry but fuse/jlowfuse does not call 
 		     * DESTROY
 		     */
-		    //ops.destroy();
+		    
+		    service.shutdown();
 		    
 			Session.removeChan(chan);
 			Session.exit(sess);
@@ -203,7 +205,7 @@ public class FuseJExt2 {
 		impls.unlinkImpl = TaskImplementations.getImpl("fusejext2.tasks.Unlink");
 		impls.writeImpl = TaskImplementations.getImpl("fusejext2.tasks.Write");
 		
-		ExecutorService service = Executors.newFixedThreadPool(10);
+		service = new JextThreadPoolExecutor(10); 
 		
 		SWIGTYPE_p_fuse_session sess = JLowFuse.asyncTasksNew(fuseArgs, impls,
 				service, context);
