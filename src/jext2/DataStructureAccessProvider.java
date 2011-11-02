@@ -43,8 +43,27 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 		return ds.value;
 	}
 	
+	
 	/**
-	 * Retrieve entry allready in table. Does not create a new one or change 
+	 * Retrieve entry already in table. Increase usage counter
+	 */
+	protected VAL retain(KEY key) {
+		lock.lock();
+		ValueAndUsage ds = table.get(key);
+
+		if (ds == null || ds.usage <= 0) {
+			lock.unlock();	
+			return null;
+		} else {
+			lock.unlock();
+			assert ds.value != null;
+			ds.usage += 1;
+			return ds.value;
+		}
+	}
+
+	/**
+	 * Retrieve entry already in table. Does not create a new one or change 
 	 * the usage counter 
 	 */
 	protected VAL get(KEY key) {
