@@ -87,7 +87,7 @@ public class InodeAccess extends DataStructureAccessProvider<Long, Inode>{
 	}
 
 	public void closeInode(long ino) {
-		close(ino);
+		release(ino);
 	}
 
 	@Override

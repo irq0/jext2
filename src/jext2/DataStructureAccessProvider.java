@@ -81,9 +81,9 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 	}
 	
 	/**
-	 * Close an entry. Decreases usage counter and might remove entry from table
+	 * Release entry. Decreases usage counter and might remove entry from table
 	 */
-	protected void close(KEY key) {
+	protected void release(KEY key) {
 		lock.lock();
 
 		ValueAndUsage ds = table.get(key);

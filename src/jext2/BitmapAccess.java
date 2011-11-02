@@ -27,7 +27,7 @@ public class BitmapAccess extends DataStructureAccessProvider<Long, Bitmap>{
 	}
 	
 	public void closeBitmap(Bitmap bmap) {
-		close(bmap.nr);
+		release(bmap.nr);
 	}
 
 	@Override
