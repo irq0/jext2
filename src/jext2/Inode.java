@@ -115,12 +115,12 @@ public class Inode extends PartialBlock {
 		this.ino = ino;
 	}
 	
-	public void setUid(long uid) {
+	public synchronized void setUid(long uid) {
 	    this.uidLow = (int)(uid & 0xFFFFFFFFL);
 	    this.uidHigh = (int)((uid >> Ext2fsDataTypes.LE32_SIZE) & 0xFFFFFFFF);
 	}
 	
-	public void setGid(long gid) {
+	public synchronized void setGid(long gid) {
 	    this.gidLow = (int)(gid & 0xFFFFFFFFL);
 	    this.gidHigh = (int)((gid >> Ext2fsDataTypes.LE32_SIZE) & 0xFFFFFFFF);
 	}
