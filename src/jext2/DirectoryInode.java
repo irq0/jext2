@@ -113,7 +113,7 @@ public class DirectoryInode extends DataInode {
         public Iterator<DirectoryEntry> iterator() {
             return this;
         }
-		
+
 	}
 
 	/**
@@ -133,9 +133,8 @@ public class DirectoryInode extends DataInode {
         newDir.setIno(inode.getIno());
         newDir.setFileType(inode.getFileType());
 
-        
         addDirectoryEntry(newDir);
-        
+
         inode.setLinksCount(inode.getLinksCount() + 1);
 	}
 	
@@ -151,6 +150,11 @@ public class DirectoryInode extends DataInode {
 	public void addDirectoryEntry(DirectoryEntry newEntry) throws JExt2Exception, FileExists, NoSpaceLeftOnDevice, FileTooLarge {
        ByteBuffer block;
        int offset = 0;
+       
+       directoryEntries.retain(newEntry);
+       
+       // Using a write lock for the whole process is a bit much but easy..
+       directoryLock.writeLock().lock();
        
        for (long blockNr : accessData().iterateBlocks()) {
            block = blocks.read(blockNr);
@@ -171,8 +175,8 @@ public class DirectoryInode extends DataInode {
                }
                
                /* 
-                * See if current directory entry is unused; if so, 
-                * absorb it into this one.
+                * See if current directory entry is unused; if so:
+                * assimilate!
                 */ 
                if (currentEntry.isUnused() && 
                    currentEntry.getRecLen() >= newEntry.getRecLen()) {
@@ -184,6 +188,8 @@ public class DirectoryInode extends DataInode {
                    setStatusChangeTime(new Date());
                    
                    directoryEntries.release(currentEntry);
+                   directoryEntries.release(newEntry);
+                   directoryLock.writeLock().unlock();
                    return;
                }
                
@@ -210,6 +216,8 @@ public class DirectoryInode extends DataInode {
                    setModificationTime(new Date());
                    setStatusChangeTime(new Date());
                    directoryEntries.release(currentEntry);
+                   directoryEntries.release(newEntry);
+                   directoryLock.writeLock().unlock();
                    return;
                }
                directoryEntries.release(currentEntry);
@@ -238,7 +246,9 @@ public class DirectoryInode extends DataInode {
        
        setSize(getSize() + superblock.getBlocksize());
        setStatusChangeTime(new Date());
-
+       
+       directoryEntries.release(newEntry);
+       directoryLock.writeLock().unlock();
 	}
 
 	
