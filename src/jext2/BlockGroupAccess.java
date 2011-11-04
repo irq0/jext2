@@ -79,6 +79,7 @@ public class BlockGroupAccess {
 
 		@Override
 		public void remove() {
+			throw new UnsupportedOperationException();
 		}
 
 		@Override

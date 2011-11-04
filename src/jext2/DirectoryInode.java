@@ -128,7 +128,7 @@ public class DirectoryInode extends DataInode {
 
 		@Override
 		public void remove() {
-			throw new RuntimeException("remove is unsupported!");
+			throw new UnsupportedOperationException();
 		}
 
         @Override

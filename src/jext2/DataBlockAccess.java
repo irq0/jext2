@@ -89,7 +89,7 @@ public class DataBlockAccess {
 
 		@Override
 		public void remove() {
-			throw new RuntimeException("Remove is unsupported");
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
