@@ -10,7 +10,7 @@ class JExt2 {
 	private String  blockDevFilename;
 	private Superblock superblock;
 	private BlockGroupAccess blockGroups;
-	
+
 	private void initializeFilesystem(String filename) {
 		try {
 			blockDevFilename = filename;
@@ -22,13 +22,13 @@ class JExt2 {
 
 			blockGroups = BlockGroupAccess.getInstance();
 			blockGroups.readDescriptors();
-			
+
 		} catch (java.io.FileNotFoundException e) {
 			System.out.println("Cannot open block device.. exiting");
 			System.exit(23);
 		} catch (IoError e) {
 		    System.out.println("Unrecoverable IO error occurred.. dying");
-			e.printStackTrace();			
+			e.printStackTrace();
 		}
 	}
 
@@ -36,14 +36,14 @@ class JExt2 {
 		System.out.println("JExt2 - Java EXT2 Filesystem Implementation");
 		System.out.println(" blockdev=" + blockDevFilename);
 		System.out.println(superblock);
-		
+
 		System.out.println(superblock.getGroupsCount() + " Block groups on filesystem:");
 		for (BlockGroupDescriptor d : blockGroups.iterateBlockGroups()) {
 			System.out.println(d);
 		}
-		
+
 		System.out.println(Feature.supportedFeatures());
-		
+
 		System.out.println("Root Inode: ");
 		try {
 			System.out.println(InodeAccess.readByIno(Constants.EXT2_ROOT_INO));
@@ -53,22 +53,22 @@ class JExt2 {
 		} catch (Exception ignored) {
 		}
 	}
-	
+
 	private void checkFeatures() {
 		if (Feature.incompatUnsupported() || Feature.roCompatUnsupported()) {
 			System.out.println("Feature set incompatible with JExt2 :(");
 			System.exit(23);
-		}		
+		}
 	}
-	
+
 	public static void main(String[] args) {
-		try { 
-			
-			JExt2 fs = new JExt2();		
+		try {
+
+			JExt2 fs = new JExt2();
 			fs.initializeFilesystem(args[0]);
 			fs.checkFeatures();
-			fs.printMeta();		
-			
+			fs.printMeta();
+
 		} catch (Exception e) {
 			System.err.println("Some error occurred :(");
 			System.err.println("MESSAGE: " + e.getMessage());
@@ -84,12 +84,12 @@ class JExt2 {
 			for (int k=i; k<i+4; k++) {
 				System.out.print("| " + (buf.get(k+offset) & 0xff) + " |") ;
 			}
-	
+
 			System.out.println();
 		}
 		buf.position(offset);
 
 	}
 
-	
+
 }

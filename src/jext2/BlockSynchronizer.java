@@ -11,45 +11,45 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class BlockSynchronizer {
 	private static BlockSynchronizer instance;
-	
+
 	private Map<Long, ReentrantReadWriteLock> locks;
 	private ReentrantLock locksLock;
-	
-	
+
+
 	public BlockSynchronizer() {
 		locks = new HashMap<Long, ReentrantReadWriteLock>();
 		locksLock = new ReentrantLock();
 	}
-	
+
 	private ReentrantReadWriteLock getLock(long nr) {
 		locksLock.lock();
-		
+
 		ReentrantReadWriteLock lock = locks.get(nr);
-		
+
 		if (lock == null) {
 			lock = new ReentrantReadWriteLock();
 			locks.put(nr, lock);
 		}
-		
+
 		locksLock.unlock();
 		return lock;
 	}
-	
+
 	private void removeLock(ReentrantReadWriteLock removeMe, long nr) {
 		locksLock.lock();
-		
-		if (removeMe.hasQueuedThreads()) 
+
+		if (removeMe.hasQueuedThreads())
 			return;
-		
+
 		ReentrantReadWriteLock inMap = locks.get(nr);
 		if (removeMe.equals(inMap)) {
 			locks.remove(removeMe);
 		}
-		
+
 		locksLock.unlock();
 	}
-		
-	
+
+
 	public ReentrantReadWriteLock.ReadLock getReadLock(long nr) {
 		ReentrantReadWriteLock lock = getLock(nr);
 		return lock.readLock();
@@ -59,27 +59,27 @@ public class BlockSynchronizer {
 		ReentrantReadWriteLock lock = getLock(nr);
 		return lock.writeLock();
 	}
-	
+
 	public void readLock(long nr) {
 		getReadLock(nr).lock();
 	}
-	
+
 	public void writeLock(long nr) {
 		getWriteLock(nr).lock();
 	}
-	
+
 	public void readUnlock(long nr) {
 		ReentrantReadWriteLock lock = getLock(nr);
 		lock.readLock().unlock();
 		removeLock(lock, nr);
 	}
-	
+
 	public void writeUnlock(long nr) {
 		ReentrantReadWriteLock lock = getLock(nr);
 		lock.writeLock().unlock();
 		removeLock(lock, nr);
 	}
-	
+
     public static BlockSynchronizer getInstance() {
 		return BlockSynchronizer.instance;
 	}

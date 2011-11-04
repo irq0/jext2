@@ -1,15 +1,15 @@
 package jext2;
 
 public class Constants {
-	// Special inode numbers   
+	// Special inode numbers
 	public static final int	EXT2_BAD_INO         = 1; /* Bad blocks inode */
 	public static final int EXT2_ROOT_INO        = 2; /* Root inode */
 	public static final int EXT2_BOOT_LOADER_INO = 5; /* Boot loader inode */
 	public static final int EXT2_UNDEL_DIR_INO   = 6; /* Undelete directory inode */
-		
-	// First non-reserved inode for old ext2 filesystems 
+
+	// First non-reserved inode for old ext2 filesystems
 	public static final int EXT2_GOOD_OLD_FIRST_INO	=11;
-	
+
 	// Maximal count of links to a file
 	public static final int EXT2_LINK_MAX = 32000;
 
@@ -22,7 +22,7 @@ public class Constants {
  	public static final int	EXT2_DIND_BLOCK  = (EXT2_IND_BLOCK + 1);
  	public static final int	EXT2_TIND_BLOCK  = (EXT2_DIND_BLOCK + 1);
  	public static final int	EXT2_N_BLOCKS    = (EXT2_TIND_BLOCK + 1);
- 
+
 	// Mount flags
  	public static final int EXT2_MOUNT_CHECK        = 0x000001;	/* Do mount-time checks */
 	public static final int EXT2_MOUNT_OLDALLOC		= 0x000002;	/* Don't use the new Orlov allocator */
@@ -44,7 +44,7 @@ public class Constants {
 	// File system states
 	public static final int	EXT2_VALID_FS =	0x0001;	/* Unmounted cleanly */
 	public static final int	EXT2_ERROR_FS =	0x0002;	/* Errors detected */
-	
+
 	// Maximal mount counts between two filesystem checks
 	public static final int EXT2_DFL_MAX_MNT_COUNT = 20; /* Allow 20 mounts */
 	public static final int EXT2_DFL_CHECKINTERVAL = 0;	 /* Don't use interval check */
@@ -54,7 +54,7 @@ public class Constants {
 	public static final int EXT2_ERRORS_RO		= 2;	/* Remount fs read-only */
 	public static final int EXT2_ERRORS_PANIC	= 3;	/* Panic */
 	public static final int EXT2_ERRORS_DEFAULT	= EXT2_ERRORS_CONTINUE;
-	
+
 	// Codes for operating systems
 	public static final int EXT2_OS_LINUX   = 0;
 	public static final int EXT2_OS_HURD    = 1;
@@ -70,7 +70,7 @@ public class Constants {
 	public static final int EXT2_MAX_SUPP_REV=	EXT2_DYNAMIC_REV;
 
 	public static final int JEXT2_MAX_SUPP_REV= EXT2_DYNAMIC_REV;
-	
+
 	public static final int EXT2_GOOD_OLD_INODE_SIZE= 128;
 
 	// Default values for user and/or group using reserved blocks
@@ -84,7 +84,7 @@ public class Constants {
 	public static final int EXT2_DEFM_ACL           = 0x0008;
 	public static final int EXT2_DEFM_UID16         = 0x0010;
 	/* Not used by ext2, but reserved for use by ext3 */
-	public static final int EXT3_DEFM_JMODE         = 0x0060; 
+	public static final int EXT3_DEFM_JMODE         = 0x0060;
 	public static final int EXT3_DEFM_JMODE_DATA    = 0x0020;
 	public static final int EXT3_DEFM_JMODE_ORDERED = 0x0040;
 	public static final int EXT3_DEFM_JMODE_WBACK   = 0x0060;
@@ -99,18 +99,18 @@ public class Constants {
 	public static final int EXT2_SECRM_FL           = 0x00000001; /* Secure deletion */
 	public static final int EXT2_UNRM_FL			= 0x00000002; /* Undelete */
 	public static final int EXT2_COMPR_FL			= 0x00000004; /* Compress file */
-													
+
 	public static final int EXT2_SYNC_FL			= 0x00000008; /* Synchronous updates */
 	public static final int EXT2_IMMUTABLE_FL		= 0x00000010; /* Immutable file */
 	public static final int EXT2_APPEND_FL			= 0x00000020; /* writes to file may only append */
 	public static final int EXT2_NODUMP_FL			= 0x00000040; /* do not dump file */
 	public static final int EXT2_NOATIME_FL			= 0x00000080; /* do not update atime */
-	/* Reserved for compression usage... */			
-	public static final int EXT2_DIRTY_FL			= 0x00000100;		
+	/* Reserved for compression usage... */
+	public static final int EXT2_DIRTY_FL			= 0x00000100;
 	public static final int EXT2_COMPRBLK_FL		= 0x00000200; /* One or more compressed clusters */
 	public static final int EXT2_NOCOMP_FL			= 0x00000400; /* Don't compress */
 	public static final int EXT2_ECOMPR_FL			= 0x00000800; /* Compression error */
-	/* End compression flags --- maybe not all used */	
+	/* End compression flags --- maybe not all used */
 	public static final int EXT2_BTREE_FL			= 0x00001000; /* btree format dir */
 	public static final int EXT2_INDEX_FL			= 0x00001000; /* hash-indexed directory */
 	public static final int EXT2_IMAGIC_FL			= 0x00002000; /* AFS directory */

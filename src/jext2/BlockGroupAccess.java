@@ -9,20 +9,20 @@ import jext2.exceptions.IoError;
 public class BlockGroupAccess {
 	private static BlockAccess blocks = BlockAccess.getInstance();
 	private static Superblock superblock = Superblock.getInstance();
-	
+
 	private BlockGroupDescriptor[] descriptors;
 	private static BlockGroupAccess instance = new BlockGroupAccess();
-	
+
 	private BlockGroupAccess() {
 	}
-		
-	/* 
+
+	/*
 	 * Read descriptors from first block group. Initialize the write-back parameters
-	 * to the first descriptor table. The backup tables will therefore no be updated. 
+	 * to the first descriptor table. The backup tables will therefore no be updated.
 	 */
 	// TODO reimplement with block iterator
 	public void readDescriptors() throws IoError {
-		int blockCount = (superblock.getGroupsCount() + 
+		int blockCount = (superblock.getGroupsCount() +
 						  superblock.getGroupDescrPerBlock() - 1) /
 						  superblock.getGroupDescrPerBlock();
 		int groupCount = superblock.getGroupsCount();
@@ -30,64 +30,68 @@ public class BlockGroupAccess {
 		int groupsPerBlock = superblock.getGroupDescrPerBlock();
 		int group = 0;
 		descriptors = new BlockGroupDescriptor[groupCount+1];
-		
-		for (long nr=start; nr<blockCount+start; nr++) {			
+
+		for (long nr=start; nr<blockCount+start; nr++) {
 			ByteBuffer buf = blocks.read(nr);
-			
-			for (int i=0; i<Math.min(groupCount, groupsPerBlock); i++) {				
+
+			for (int i=0; i<Math.min(groupCount, groupsPerBlock); i++) {
 				descriptors[group] = BlockGroupDescriptor.fromByteBuffer(buf, nr, i*32);
 				descriptors[group].setBlockGroup(group);
 				group++;
 			}
-			
+
 			groupCount -= groupsPerBlock;
 		}
 	}
-	
-	public void syncDescriptors() throws IoError { 
+
+	public void syncDescriptors() throws IoError {
 	    for (BlockGroupDescriptor descr : iterateBlockGroups()) {
 	        descr.sync();
 	    }
 	}
-	
+
 	public BlockGroupDescriptor getGroupDescriptor(int group) {
 		return descriptors[group];
 	}
-	
+
 	public static BlockGroupAccess getInstance() {
 		return instance;
 	}
+
 	
-	
-	private class BlockGroupDescriptorIterator 
+	private class BlockGroupDescriptorIterator
 	implements Iterator<BlockGroupDescriptor>, Iterable<BlockGroupDescriptor> {
 		private int current = 0;
-		
+
 		public BlockGroupDescriptorIterator(int start) {
 		    current = start;
 		}
-		
+
+		@Override
 		public boolean hasNext() {
 			return (current < superblock.getGroupsCount());
 		}
 
+		@Override
 		public BlockGroupDescriptor next() {
-			return descriptors[current++];			
+			return descriptors[current++];
 		}
 
+		@Override
 		public void remove() {
 		}
-		
-		public BlockGroupDescriptorIterator iterator() {
+
+		@Override
+		public Iterator<BlockGroupDescriptor> iterator() {
 			return this;
-		}				
+		}
 	}
-			
+
 	public BlockGroupDescriptorIterator iterateBlockGroups() {
 		return new BlockGroupDescriptorIterator(0);
 	}
     public BlockGroupDescriptorIterator iterateBlockGroups(int start) {
         return new BlockGroupDescriptorIterator(start);
     }
-	
+
 }

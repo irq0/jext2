@@ -7,7 +7,7 @@ import java.lang.reflect.Modifier;
 /** Methods to test for compatibility of filesystem features */
 public class Feature {
 	private static Superblock superblock = Superblock.getInstance();
-	
+
     // Features
     public static final int EXT2_COMPAT_DIR_PREALLOC    = 0x0001;
     public static final int EXT2_COMPAT_IMAGIC_INODES   = 0x0002;
@@ -44,38 +44,38 @@ public class Feature {
     public static final int JEXT2_RO_COMPAT_SUPP        = (EXT2_RO_COMPAT_SPARSE_SUPER|EXT2_RO_COMPAT_LARGE_FILE);
     public static final int JEXT2_RO_COMPAT_UNSUPPORTED = ~JEXT2_RO_COMPAT_SUPP;
     public static final int JEXT2_INCOMPAT_UNSUPPORTED  = ~JEXT2_INCOMPAT_SUPP;
-	
-	/** Check if file system has compatible feature. The implementation is 
+
+	/** Check if file system has compatible feature. The implementation is
 	 * free to support them without risk of damaging meta-data.
 	 */
 	public static boolean hasCompatFeature(int feature) {
 		return (superblock.getFeaturesCompat() & feature) > 0;
 	}
-	
-	/** Check if file system has incompatible feature. The implementation should 
+
+	/** Check if file system has incompatible feature. The implementation should
 	 * refuse to mount the file system if any indicated feature is unsupported
-	 */  
+	 */
 	public static boolean hasIncompatFeature(int feature) {
 		return (superblock.getFeaturesIncompat() & feature) > 0;
 	}
-	
-	/** Check if file system has r/o compatible feature. The implementation should 
-	 * only permit read-only mounting if any of the indicated features is 
+
+	/** Check if file system has r/o compatible feature. The implementation should
+	 * only permit read-only mounting if any of the indicated features is
 	 * unsupported */
 	public static boolean hasRoCompatFeature(int feature) {
 		return (superblock.getFeaturesRoCompat() & feature) > 0;
 	}
-	
-	/** Return a String with supported features. For simplicity this is 
+
+	/** Return a String with supported features. For simplicity this is
 	 * a list of all methods returning true of this class */
 	public static String supportedFeatures() {
 		StringBuilder buf = new StringBuilder("Filesystem features: ");
-				
+
 		Class<Feature> c = Feature.class;
 		for (Method m : c.getDeclaredMethods()) {
 			int mod = m.getModifiers();
 			String name = m.getName();
-			
+
 			if (!name.equals("supportedFeatures") && Modifier.isStatic(mod) && Modifier.isPublic(mod)) {
 					try {
 						boolean ret = (Boolean)m.invoke(null);
@@ -90,11 +90,11 @@ public class Feature {
 
 			}
 		}
-		
+
 		buf.append("\n");
 		return buf.toString();
 	}
-	
+
 	public static boolean compatSupported() {
 		return hasCompatFeature(JEXT2_COMPAT_SUPP);
 	}
@@ -114,31 +114,31 @@ public class Feature {
 	public static boolean roCompatUnsupported() {
 		return hasRoCompatFeature(JEXT2_RO_COMPAT_UNSUPPORTED);
 	}
-	
+
 	public static boolean dirPrealloc() {
-		return hasCompatFeature(EXT2_COMPAT_DIR_PREALLOC); 			    
+		return hasCompatFeature(EXT2_COMPAT_DIR_PREALLOC);
 	}
-	
-	public static boolean imagicInodes() {		
+
+	public static boolean imagicInodes() {
 		return hasCompatFeature(EXT2_COMPAT_IMAGIC_INODES);
 	}
-	
+
 	public static boolean hasJournal() {
 		return hasCompatFeature(EXT3_COMPAT_HAS_JOURNAL);
 	}
-	
+
 	public static boolean extAttr() {
 		return hasCompatFeature(EXT2_COMPAT_EXT_ATTR);
 	}
-	
+
 	public static boolean resizeIno() {
 		return hasCompatFeature(EXT2_COMPAT_RESIZE_INO);
 	}
-	
+
 	public static boolean dirIndex() {
 		return hasCompatFeature(EXT2_COMPAT_DIR_INDEX);
 	}
-	
+
 	public static boolean compression() {
 		return hasIncompatFeature(EXT2_INCOMPAT_COMPRESSION);
 	}
@@ -146,15 +146,15 @@ public class Feature {
 	public static boolean filetype() {
 		return hasIncompatFeature(EXT2_INCOMPAT_FILETYPE);
 	}
-	
+
 	public static boolean recover() {
 		return hasIncompatFeature(EXT3_INCOMPAT_RECOVER);
 	}
-	
+
 	public static boolean journalDev() {
 		return hasIncompatFeature(EXT3_INCOMPAT_JOURNAL_DEV);
 	}
-	
+
 	public static boolean metaBg() {
 		return hasIncompatFeature(EXT2_INCOMPAT_META_BG);
 	}

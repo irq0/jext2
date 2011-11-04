@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 // TODO make this a non static class which contains all pointers to runtime:
-//      filesystem data like superblock, blockaccess, etc. 
+//      filesystem data like superblock, blockaccess, etc.
 //      This then should replace the direct superblock, etc. references in each class
 public class Filesystem {
     private static Charset charset = Charset.defaultCharset();
@@ -27,14 +27,14 @@ public class Filesystem {
      */
     public static long getPID() {
         String appName = ManagementFactory.getRuntimeMXBean().getName();
-        String strPid = appName.substring(0, appName.indexOf('@')-1); 
+        String strPid = appName.substring(0, appName.indexOf('@')-1);
         return Long.parseLong(strPid);
     }
-    
-    public static void initializeLoggingToFile(String logfile) throws IOException { 
+
+    public static void initializeLoggingToFile(String logfile) throws IOException {
 	    FileHandler handler = new FileHandler(logfile);
         handler.setFormatter(new SimpleFormatter());
-        
+
         logger.addHandler(handler);
         logger.setLevel(Level.ALL);
         logger.info("jext2 start");
@@ -43,5 +43,5 @@ public class Filesystem {
     public static Logger getLogger() {
         return logger;
     }
-    
+
 }

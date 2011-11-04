@@ -10,7 +10,7 @@ import org.apache.commons.lang.builder.ToStringStyle;
 
 public class BlockGroupDescriptor extends PartialBlock {
 	private static Superblock superblock = Superblock.getInstance();
-	
+
 	private long blockBitmap;
 	private long inodeBitmap;
 	private long inodeTable;
@@ -21,7 +21,7 @@ public class BlockGroupDescriptor extends PartialBlock {
 	private int usedDirsCount;
 
 	private int blockGroup = -1;
-	
+
 	public final long getBlockBitmapPointer() {
 		return this.blockBitmap;
 	}
@@ -54,7 +54,7 @@ public class BlockGroupDescriptor extends PartialBlock {
 	}
 	public void setUsedDirsCount(int usedDirsCount) {
 		this.usedDirsCount = usedDirsCount;
-	}	
+	}
 	public final void setBlockBitmap(long blockBitmap) {
 		this.blockBitmap = blockBitmap;
 	}
@@ -64,7 +64,8 @@ public class BlockGroupDescriptor extends PartialBlock {
 	public final void setInodeTable(long inodeTable) {
 		this.inodeTable = inodeTable;
 	}
-	
+
+	@Override
 	protected void read(ByteBuffer buf) throws IoError {
 		this.blockBitmap = Ext2fsDataTypes.getLE32U(buf, 0 + offset);
 		this.inodeBitmap = Ext2fsDataTypes.getLE32U(buf, 4 + offset);
@@ -74,6 +75,7 @@ public class BlockGroupDescriptor extends PartialBlock {
 		this.usedDirsCount = Ext2fsDataTypes.getLE16U(buf, 16 + offset);
 	}
 
+	@Override
 	protected void write(ByteBuffer buf) throws IoError {
 		Ext2fsDataTypes.putLE32U(buf, this.blockBitmap, 0);
 		Ext2fsDataTypes.putLE32U(buf, this.inodeBitmap, 4);
@@ -83,22 +85,23 @@ public class BlockGroupDescriptor extends PartialBlock {
 		Ext2fsDataTypes.putLE16U(buf, this.usedDirsCount, 16);
 		super.write(buf);
 	}
-	
+
+	@Override
 	public void write() throws IoError {
 		ByteBuffer buf = allocateByteBuffer();
-		write(buf);		
+		write(buf);
 	}
-	
-	protected ByteBuffer allocateByteBuffer() {		
+
+	protected ByteBuffer allocateByteBuffer() {
 		ByteBuffer buf = ByteBuffer.allocate(32);
 		buf.rewind();
 		return buf;
 	}
-	
+
 	protected BlockGroupDescriptor(long blockNr, int offset) {
 		super(blockNr, offset);
 	}
-	
+
 	public static BlockGroupDescriptor fromByteBuffer(ByteBuffer buf, long blockNr, int offset) {
 		BlockGroupDescriptor b = new BlockGroupDescriptor(blockNr, offset);
 		try {
@@ -109,14 +112,15 @@ public class BlockGroupDescriptor extends PartialBlock {
 		}
 	}
 
+	@Override
 	public String toString() {
 		return ToStringBuilder.reflectionToString(this,
 		                                          ToStringStyle.MULTI_LINE_STYLE);
 	}
-	
-	
+
+
 	/**
-	 * Check if block number is a valid data block in this block group 
+	 * Check if block number is a valid data block in this block group
 	 */
 	public boolean isValidDataBlockNr(long nr) {
 	    return ( nr > 0 &&
@@ -131,22 +135,22 @@ public class BlockGroupDescriptor extends PartialBlock {
 	 * Return the number of blocks used for file system structures
 	 */
 	public int getOverhead() {
-	    return (((hasSuperblock())?1:0) + 
+	    return (((hasSuperblock())?1:0) +
 	            getDescriptorTableBlocks() +
 	            superblock.getInodeTableBlocksPerGroup() +
-	            2 /* inode, block bitmap */ );	            
+	            2 /* inode, block bitmap */ );
 	}
-	
+
 	/**
 	 * do not use this method. it is just for later improvement here. It does
 	 * not take into account that sparse block groups have not descriptor table
-	 */ 
+	 */
 	public static long descriptorLocation(int group) {
 		 int hasSuper = hasSuperblock(group) ? 1 : 0;
-		 
-		 return firstBlock(group) + hasSuper;	 
+
+		 return firstBlock(group) + hasSuper;
 	}
-		 
+
 	/**
 	 * Return first block number in group
 	 */
@@ -154,28 +158,28 @@ public class BlockGroupDescriptor extends PartialBlock {
 		return superblock.getFirstDataBlock() +
 			(group * superblock.getBlocksPerGroup());
 	}
-	
+
 	/**
 	 * Return first block number in this group
 	 */
 	public long firstBlock() {
 	    return firstBlock(this.blockGroup);
 	}
-	
+
 	/**
 	 * Return true if group contains a descriptor table (eg. is not sparse)
 	 */
 	public static boolean hasDescriptorTable(int group) {
 	    return hasSuperblock(group);
 	}
-	
+
 	public boolean hasDescrptiorTable() {
 	    return hasDescriptorTable(this.blockGroup);
 	}
-	
-	
+
+
 	/**
-	 * Return the number of blocks used for the descriptor table. 
+	 * Return the number of blocks used for the descriptor table.
 	 * Depends on the sparse_super feature
 	 */
 	public int getDescriptorTableBlocks() {
@@ -185,9 +189,9 @@ public class BlockGroupDescriptor extends PartialBlock {
 	        return 0;
 	    }
 	}
-	
+
 	/**
-	 * Check if group contains a superblock. Depends on the sparse super 
+	 * Check if group contains a superblock. Depends on the sparse super
 	 * feature.
 	 */
 	public static boolean hasSuperblock(int group) {
@@ -197,26 +201,27 @@ public class BlockGroupDescriptor extends PartialBlock {
 			return true;
 		}
 	}
-	    
+
 	public boolean hasSuperblock() {
 	    return hasSuperblock(this.blockGroup);
 	}
-	
+
 	private static boolean isSparse(int group) {
 		return ((group <= 1) ||
-				test_root(group, 3) || 
+				test_root(group, 3) ||
 				test_root(group, 5) ||
 				test_root(group, 7));
 	}
-	
+
 	private static boolean test_root(int a, int b) {
 		long num = b;
-		
+
 		while (a > num)
 			num *= b;
 		return num == a;
 	}
-	
+
+	@Override
 	public int hashCode() {
 	    return new HashCodeBuilder()
 	        .appendSuper(super.hashCode())
@@ -229,4 +234,4 @@ public class BlockGroupDescriptor extends PartialBlock {
 	        .append(blockGroup)
 	        .toHashCode();
 	}
-}		
+}

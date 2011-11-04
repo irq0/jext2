@@ -8,10 +8,11 @@ import jext2.exceptions.IoError;
 
 public class Bitmap extends Block {
     private boolean dirty = false;
-    
+
 	private ByteBuffer bmap = ByteBuffer.allocate(Superblock.getInstance().getBlocksize());
 	private ReentrantLock bmapLock = new ReentrantLock();
-	
+
+	@Override
 	protected void read(ByteBuffer buf) throws IoError {
 		bmapLock.lock();
 	    this.bmap = buf;
@@ -20,8 +21,8 @@ public class Bitmap extends Block {
 	}
 
 	/**
-	 * Return bit position of next zero in bitmap. Search up to numBytes bytes including the 
-	 * byte in wich start is located. This means that a search starting at the last bit in one 
+	 * Return bit position of next zero in bitmap. Search up to numBytes bytes including the
+	 * byte in wich start is located. This means that a search starting at the last bit in one
 	 * byte will just check a single bit.
 	 */
 	public int getNextZeroBitPos(int start, int numBytes) {
@@ -30,19 +31,19 @@ public class Bitmap extends Block {
 			bmapLock.unlock();
 	        return -1;
 	    }
-	    
+
 		int pos = -1;
 		int byteNum = start / 8;
 		byte offset = (byte) (start % 8);
 		byte chunk;
-		
+
 		bmap.position(byteNum);
 
 		/* start may not be byte aligned - mask first XX bits */
 		chunk = bmap.get();
 
 		chunk = (byte)((0xFF >> offset) ^ 0xFF | chunk);
-		
+
 		while(bmap.hasRemaining() && numBytes > 0) {
 			if (chunk == 0) { /* is zero */
 
@@ -51,16 +52,16 @@ public class Bitmap extends Block {
 			} else if (chunk != (byte)0xFF) { /* has at least one zero bit */
 				pos = (bmap.position()-1)*8 + findRightModeZeroBitInByte(chunk);
 				break;
-			} 
-						
+			}
+
 			chunk = bmap.get();
 			numBytes--;
 		}
-		
+
 		assert !isSet(pos);
 		bmapLock.unlock();
 		return pos;
-	}		
+	}
 
 	public int getNextZeroBitPos(int start) {
 	    return getNextZeroBitPos(start, bmap.limit());
@@ -70,7 +71,7 @@ public class Bitmap extends Block {
 	 * format a byte as bitstring as it appears on disk
 	 */
 	public static String formatByte(byte b) {
-	    return (new StringBuffer(String.format("%1$#32s", 
+	    return (new StringBuffer(String.format("%1$#32s",
 	            Integer.toBinaryString(b).replace(' ','0')).substring(24))).reverse().toString();
 	}
 
@@ -81,24 +82,24 @@ public class Bitmap extends Block {
 
 	    return Bitmap.formatByte(b);
 	}
-	
-	
+
+
 	/**
-	 * test if bit at position pos is 1 
+	 * test if bit at position pos is 1
 	 */
 	public boolean isSet(int pos) {
         int byteNum = pos / 8;
         byte offset = (byte) (pos % 8);
-        
+
 		bmapLock.lock();
 	    byte chunk = bmap.get(byteNum);
 		bmapLock.unlock();
 
 	    byte mask = (byte)(1 << offset);
-	    
+
 	    return ((mask & chunk) != 0);
 	}
-	
+
 	/**
 	 * set bit to value
 	 */
@@ -107,11 +108,11 @@ public class Bitmap extends Block {
 		byte offset = (byte) (pos % 8);
 		bmapLock.lock();
 		byte chunk = bmap.get(byteNum);
-		
+
 		if (value) // set to 1
 			chunk = (byte) (chunk | (1 << offset));
 		else  // set to 0
-			chunk = (byte) (chunk & (0xFF ^ (1 << offset))); 
+			chunk = (byte) (chunk & (0xFF ^ (1 << offset)));
 
 		bmap.put(byteNum, chunk);
 		bmapLock.unlock();
@@ -120,7 +121,7 @@ public class Bitmap extends Block {
 		    assert isSet(pos);
 		else
 		    assert !isSet(pos);
-		
+
 		this.dirty = true;
 	}
 
@@ -138,7 +139,7 @@ public class Bitmap extends Block {
 		}
 		return -1;
 	}
-	
+
 	/**
      * Find position of first zero bit from the right
      * "00111111" -> 6
@@ -154,23 +155,25 @@ public class Bitmap extends Block {
         return -1;
     }
 
-	
+
 	protected Bitmap(long blockNr) {
 		super(blockNr);
 	}
-	
+
 	public static Bitmap fromByteBuffer(ByteBuffer buf, long blockNr) throws IoError {
 		Bitmap bmap = new Bitmap(blockNr);
 		bmap.read(buf);
 		return bmap;
 	}
-	
+
+	@Override
 	public void write() throws IoError {
 		bmapLock.lock();
 		write(bmap);
 		bmapLock.unlock();
-	}	    
-	
+	}
+
+	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 	    sb.append(this.getClass());
@@ -179,7 +182,7 @@ public class Bitmap extends Block {
 		sb.append(getBlockNr());
 		sb.append("\n");
 	    sb.append("  bitmap=\n");
-	    
+
 		bmapLock.lock();
 	    bmap.rewind();
 	    for (int i=0; i<bmap.limit()/(Integer.SIZE/8); i++) {
@@ -189,15 +192,17 @@ public class Bitmap extends Block {
 	        sb.append("\n");
 	    }
 		bmapLock.unlock();
-	    
+
 	    sb.append("]");
 	    return sb.toString();
 	}
-	
+
+	@Override
 	public boolean isDirty() {
 	    return dirty;
 	}
-	
+
+	@Override
 	public void cleanDirty() {
 	    this.dirty = false;
 	}

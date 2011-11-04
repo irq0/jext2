@@ -3,17 +3,17 @@ package jext2;
 import jext2.exceptions.JExt2Exception;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 
-/** 
+/**
  * Inode allocation and deallocation routines
- * Adapted from the linux kernel implementation. The long comments on 
+ * Adapted from the linux kernel implementation. The long comments on
  * functionality are mostly copied from linux or e2fsprogs
  */
 public class InodeAlloc {
 	private static Superblock superblock = Superblock.getInstance();
 	private static BlockGroupAccess blockGroups = BlockGroupAccess.getInstance();
 	private static BitmapAccess bitmaps = BitmapAccess.getInstance();
-	
-	
+
+
 	public static long countFreeInodes() {
 		long count = 0;
 		for (BlockGroupDescriptor group : blockGroups.iterateBlockGroups()) {
@@ -66,7 +66,7 @@ public class InodeAlloc {
 		    desc.getFreeBlocksCount() > 0) {
 			return group;
 		}
-			
+
 		/*
 		 * We're going to place this inode in a different block group from its
 		 * parent.	We want to cause files in a common directory to all land in
@@ -77,7 +77,7 @@ public class InodeAlloc {
 		 * So add our directory's i_ino into the starting point for the hash.
 		 */
 		group = (int)((group + parent.getIno()) % groupsCount);
-		
+
 		/*
 		 * Use a quadratic hash to find a group with a free inode and some
 		 * free blocks.
@@ -91,7 +91,7 @@ public class InodeAlloc {
 			    desc.getFreeBlocksCount() > 0)
 				return group;
 		}
-		
+
 		/*
 		 * That failed: try linear search for a free inode, even if that group
 		 * has no free blocks.
@@ -109,30 +109,30 @@ public class InodeAlloc {
 		}
 
 		throw new NoSpaceLeftOnDevice();
-	}	
+	}
 
-	/* Orlov's allocator for directories. 
-	 * 
+	/* Orlov's allocator for directories.
+	 *
 	 * We always try to spread first-level directories.
 	 *
 	 * If there are block groups with both free inodes and free blocks counts
-	 * not worse than average we return one with smallest directory count. 
-	 * Otherwise we simply return a random group. 
-	 * 
-	 * For the rest rules look so: 
-	 * 
-	 * It's OK to put directory into a group unless 
-	 * it has too many directories already (max_dirs) or 
-	 * it has too few free inodes left (min_inodes) or 
-	 * it has too few free blocks left (min_blocks) or 
-	 * it's already running too large debt (max_debt). 
-	 * Parent's group is preferred, if it doesn't satisfy these 
-	 * conditions we search cyclically through the rest. If none 
-	 * of the groups look good we just look for a group with more 
-	 * free inodes than average (starting at parent's group). 
-	 * 
-	 * Debt is incremented each time we allocate a directory and decremented 
-	 * when we allocate an inode, within 0--255. 
+	 * not worse than average we return one with smallest directory count.
+	 * Otherwise we simply return a random group.
+	 *
+	 * For the rest rules look so:
+	 *
+	 * It's OK to put directory into a group unless
+	 * it has too many directories already (max_dirs) or
+	 * it has too few free inodes left (min_inodes) or
+	 * it has too few free blocks left (min_blocks) or
+	 * it's already running too large debt (max_debt).
+	 * Parent's group is preferred, if it doesn't satisfy these
+	 * conditions we search cyclically through the rest. If none
+	 * of the groups look good we just look for a group with more
+	 * free inodes than average (starting at parent's group).
+	 *
+	 * Debt is incremented each time we allocate a directory and decremented
+	 * when we allocate an inode, within 0--255.
 	 */
 
 	public static int findGroupOrlov(Inode parent) {
@@ -142,106 +142,106 @@ public class InodeAlloc {
 
 	/**
 	 * Free Inode: Remove data blocks and set bit to 0
-	 * @throws JExt2Exception 
+	 * @throws JExt2Exception
 	 */
 	static void freeInode(Inode inode) throws JExt2Exception {
         long ino = inode.getIno();
-        
+
         if (ino < superblock.getFirstIno() ||
                 ino > superblock.getInodesCount()) {
             throw new RuntimeException("reserved or nonexistent inode " + ino);
         }
-        
-        BlockGroupDescriptor groupDescr = 
+
+        BlockGroupDescriptor groupDescr =
             blockGroups.getGroupDescriptor(Calculations.groupOfIno(ino));
         Bitmap bitmap = bitmaps.openInodeBitmap(groupDescr);
         int bit = Calculations.localInodeIndex(ino);
-        
+
         if (!bitmap.isSet(bit)) {
             throw new RuntimeException("Bit allready cleared for inode " + ino);
         } else {
             bitmap.setBit(bit, false);
             bitmap.write();
         }
-        
+
         bitmaps.closeBitmap(bitmap);
-        
+
         groupDescr.setFreeBlocksCount(groupDescr.getFreeInodesCount() + 1);
-        
+
         if (inode.isDirectory()) {
             groupDescr.setUsedDirsCount(groupDescr.getUsedDirsCount() - 1);
             superblock.setDirsCount(superblock.getDirsCount() - 1);
         }
 	}
-	
+
 	/** Register Inode on disk. Find suitable position an reserve this position
 	 * for the Inode. Finally set location data in Inode
-	 * @throws JExt2Exception 
+	 * @throws JExt2Exception
 	 */
 	public static synchronized void registerInode(Inode dir, Inode inode) throws JExt2Exception {
 		/* find best suitable block group */
 		int group;
-		
+
 		if (inode.getMode().isDirectory()) {
 			group = InodeAlloc.findGroupDir(dir);
 		} else {
 			group = InodeAlloc.findGroupOther(dir);
 		}
 
-		if (group == -1) 
-			throw new RuntimeException("No group found");			
+		if (group == -1)
+			throw new RuntimeException("No group found");
 
 		BlockGroupDescriptor descr = blockGroups.getGroupDescriptor(group);
-		
+
 		/* find free inode slot in block groups starting at $group */
 		int ino;
 		long globalIno;
-		if (group == 0) 
+		if (group == 0)
 			ino = (int)(superblock.getFirstIno());
-		else 
+		else
 			ino = 0;
-		
+
 		while (true) {
 			BlockGroupDescriptor bgroup = blockGroups.getGroupDescriptor(group);
 			Bitmap bmap = bitmaps.openInodeBitmap(bgroup);
-			
-			ino = bmap.getNextZeroBitPos(ino);			
+
+			ino = bmap.getNextZeroBitPos(ino);
 			if (ino > superblock.getInodesPerGroup()) {
 				group++;
 				continue;
-			}			
-			
-			globalIno = ino + (group * superblock.getInodesPerGroup() + 1);					
+			}
+
+			globalIno = ino + (group * superblock.getInodesPerGroup() + 1);
 			if (globalIno < superblock.getFirstIno() ||
-				globalIno > superblock.getInodesCount()) {				
+				globalIno > superblock.getInodesCount()) {
 				continue;
 			}
-			
+
 			bmap.setBit(ino, true);
 			bmap.write();
 			bitmaps.closeBitmap(bmap);
-			break;			
-		} 
-				
+			break;
+		}
+
 		/* apply changes to meta data */
 		superblock.setFreeInodesCount(superblock.getFreeInodesCount() - 1);
 		descr.setFreeInodesCount(descr.getFreeInodesCount() - 1);
 
-		if (inode.getMode().isDirectory()) { 
+		if (inode.getMode().isDirectory()) {
 			superblock.setDirsCount(superblock.getDirsCount() + 1);
 			descr.setUsedDirsCount(descr.getUsedDirsCount() + 1);
 		}
-		
+
 		/* set location metadata of inode */
 		int offset = (ino * superblock.getInodeSize()) % superblock.getBlocksize();
-		long block = descr.getInodeTablePointer() + 
+		long block = descr.getInodeTablePointer() +
 		    (ino * superblock.getInodeSize()) / superblock.getBlocksize();
-		
+
 		inode.setBlockGroup(group);
-		inode.setBlockNr(block);		
+		inode.setBlockNr(block);
 		inode.setOffset(offset);
 		inode.setIno(globalIno);
 	}
-	
+
 }
 

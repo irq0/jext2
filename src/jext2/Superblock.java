@@ -20,7 +20,7 @@ import org.apache.commons.lang.builder.ToStringStyle;
 
 public class Superblock extends Block {
 	private static Superblock instance;
-	
+
 	private long inodesCount;
 	private long blocksCount;
 	private long reservedBlocksCount;
@@ -55,7 +55,7 @@ public class Superblock extends Block {
 	private UUID uuid;
 	private String volumeName;
 	private String lastMounted;
-	
+
 	private int blocksize;
 	private int groupDescrPerBlock;
 	private int groupsCount;
@@ -65,7 +65,7 @@ public class Superblock extends Block {
     private int inodesPerBlock;
 
     private int overhead = 0;
-    
+
 	public final long getInodesCount() {
         return inodesCount;
     }
@@ -190,12 +190,12 @@ public class Superblock extends Block {
         return inodesPerBlock;
     }
     /**
-     * Return number of blocks used by fs structures 
+     * Return number of blocks used by fs structures
      */
     public int getOverhead() {
-        if (this.overhead == 0) 
+        if (this.overhead == 0)
             this.overhead = calculateOverhead();
-        return this.overhead;       
+        return this.overhead;
     }
     public void setFreeBlocksCount(long freeBlocksCount) {
 		this.freeBlocksCount = freeBlocksCount;
@@ -206,15 +206,15 @@ public class Superblock extends Block {
 	public void setDirsCount(long dirsCount) {
 		this.dirsCount = dirsCount;
 	}
-	
+
 	public int getAddressesPerBlock() {
 		return this.blocksize / 4;
 	}
-	
+
 	public int getAddressesPerBlockBits() {
 		return 31 - Integer.numberOfLeadingZeros(getAddressesPerBlock());
 	}
-	
+
 	public final void setMountCount(int mountCount) {
         this.mountCount = mountCount;
     }
@@ -238,11 +238,12 @@ public class Superblock extends Block {
 	        // TODO support reserve blocks
 	        return false;
 	    }
-	            
+
 	    return true;
 	}
-	
-	protected void read(ByteBuffer buf) throws IoError {		
+
+	@Override
+	protected void read(ByteBuffer buf) throws IoError {
 		this.inodesCount = Ext2fsDataTypes.getLE32U(buf, 0);
 		this.blocksCount = Ext2fsDataTypes.getLE32U(buf, 4);
 		this.reservedBlocksCount = Ext2fsDataTypes.getLE32U(buf, 8);
@@ -277,19 +278,20 @@ public class Superblock extends Block {
 		this.featuresRoCompat = Ext2fsDataTypes.getLE32U(buf, 100);
 		this.uuid = Ext2fsDataTypes.getUUID(buf, 104);
 		this.volumeName = Ext2fsDataTypes.getString(buf, 120, 16);
-		this.lastMounted = Ext2fsDataTypes.getString(buf, 136, 64);	   	
-		
+		this.lastMounted = Ext2fsDataTypes.getString(buf, 136, 64);
+
 		this.blocksize = (1024 << this.logBlockSize);
 		this.groupDescrPerBlock = this.blocksize / 32;
 		this.groupsCount = (int)( ((this.blocksCount - this.firstDataBlock) - 1) /
 						   this.blocksPerGroup + 1);
-		this.groupDescrBlocks = (this.groupsCount + this.groupDescrPerBlock -1) / 
+		this.groupDescrBlocks = (this.groupsCount + this.groupDescrPerBlock -1) /
 		                         this.groupDescrPerBlock;
 		this.inodesPerBlock = this.blocksize / this.inodeSize;
 		this.inodeTableBlocksPerGroup = (int)(this.inodesPerGroup) / this.inodesPerBlock;
 	}
 
-	
+
+	@Override
 	protected void write(ByteBuffer buf) throws IoError {
 		Ext2fsDataTypes.putLE32U(buf, this.inodesCount, 0);
 		Ext2fsDataTypes.putLE32U(buf, this.blocksCount, 4);
@@ -326,7 +328,7 @@ public class Superblock extends Block {
 		Ext2fsDataTypes.putUUID(buf, this.uuid, 104);
 		Ext2fsDataTypes.putString(buf, this.volumeName, 16, 120);
 		Ext2fsDataTypes.putString(buf, this.lastMounted, 64, 136);
-		
+
 		super.write(buf);
 	}
 
@@ -350,38 +352,39 @@ public class Superblock extends Block {
 	    return blocks;
 	}
 
-	
+
 	/**
 	 * Calculate the overhead (eg. blocks that are in use by fs structures
 	 */
 	private int calculateOverhead() {
 	    int overhead = (int)getFirstDataBlock();
 
-	    for (BlockGroupDescriptor descr : 
+	    for (BlockGroupDescriptor descr :
 	         BlockGroupAccess.getInstance().iterateBlockGroups()) {
 	        overhead += descr.getOverhead();
 	    }
-	    
+
 	    return overhead;
 	}
-	
-	
+
+
+	@Override
 	public void write() throws IoError {
 		ByteBuffer buf = allocateByteBuffer();
 		write(buf);
-	}	
-	
+	}
+
 	private ByteBuffer allocateByteBuffer() {
 		ByteBuffer buf = ByteBuffer.allocate(this.blocksize);
 		buf.rewind();
 		return buf;
-	}	
-		
+	}
+
 	public static Superblock getInstance() {
 		return Superblock.instance;
 
 	}
-	
+
 	protected Superblock(long blockNr) {
 		super(blockNr);
 	}
@@ -395,16 +398,16 @@ public class Superblock extends Block {
 		ByteBuffer buf = blocks.read(1);
 		sb.read(buf);
 
-		Superblock.instance = sb;		
+		Superblock.instance = sb;
 		return sb;
-	}		
-	
+	}
+
 	/**
 	 * Read superblock using a FileChannel. This is intended for testing and code
-	 * that just needs the superblock not any file system access.  
+	 * that just needs the superblock not any file system access.
 	 */
 	public static Superblock fromFileChannel(FileChannel chan) throws IoError {
-		
+
 		Superblock sb = new Superblock(-1);
 		ByteBuffer buf = ByteBuffer.allocate(Constants.EXT2_MIN_BLOCK_SIZE);
 		try {
@@ -414,16 +417,18 @@ public class Superblock extends Block {
 		    throw new IoError();
 		}
 		sb.read(buf);
-		
-	    Superblock.instance = sb;		
+
+	    Superblock.instance = sb;
 		return sb;
 	}
 
+	@Override
 	public String toString() {
 		return ToStringBuilder.reflectionToString(this,
 		                                          ToStringStyle.MULTI_LINE_STYLE);
 	}
-	
+
+	@Override
 	public int hashCode() {
 	    return new HashCodeBuilder()
 	        .appendSuper(super.hashCode())

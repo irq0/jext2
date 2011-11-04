@@ -7,14 +7,14 @@ import jext2.exceptions.JExt2Exception;
 
 public class InodeAccess extends DataStructureAccessProvider<Long, Inode>{
 	private static InodeAccess _instance = new InodeAccess();
-	
+
 	private static Superblock superblock = Superblock.getInstance();
 	private static BlockAccess blocks = BlockAccess.getInstance();
 	private static BlockGroupAccess blockGroups = BlockGroupAccess.getInstance();
-	
+
 	private InodeAccess() {
 	}
-	
+
 	public static Inode readFromByteBuffer(ByteBuffer buf, int offset) throws IoError {
 		Mode mode = Mode.createWithNumericValue(Ext2fsDataTypes.getLE16(buf, offset));
 
@@ -33,38 +33,38 @@ public class InodeAccess extends DataStructureAccessProvider<Long, Inode>{
 		if (ino == 0 || ino > superblock.getInodesCount()) {
 			throw new InvalidArgument();
 		}
-		
+
 		int group = Calculations.groupOfIno(ino);
 		int offset = Calculations.localInodeOffset(ino);
 		int tblBlock = offset / superblock.getBlocksize();
-	
+
 		BlockGroupDescriptor descr = blockGroups.getGroupDescriptor(group);
-	
+
 		long absBlock = descr.getInodeTablePointer() + tblBlock;
 		int relOffset = offset - (tblBlock * superblock.getBlocksize());
-		
-		if (absBlock < 0 || relOffset < 0) 
-		    throw new IoError(); 
-		
+
+		if (absBlock < 0 || relOffset < 0)
+		    throw new IoError();
+
 		ByteBuffer table = blocks.read(absBlock);
 		Inode inode = InodeAccess.readFromByteBuffer(table, relOffset);
 
 		// TODO check for NOENT exception
 		// TODO add blockNr and offset to readFrom call
-		
+
 		inode.setBlockGroup(group);
 		inode.setIno(ino);
 		inode.setBlockNr(absBlock);
 		inode.setOffset(relOffset);
-		
+
 		return inode;
-		
+
 	}
-	
+
 	public static InodeAccess getInstance() {
 		return _instance;
 	}
-	
+
 	public static Inode readRootInode() throws IoError {
 	    try {
 	        return readByIno(Constants.EXT2_ROOT_INO);
@@ -78,7 +78,7 @@ public class InodeAccess extends DataStructureAccessProvider<Long, Inode>{
 		return get(ino);
 	}
 
-	public Inode openInode(long ino) throws JExt2Exception { 
+	public Inode openInode(long ino) throws JExt2Exception {
 		Inode inode = open(ino);
 
 		assert !inode.isDeleted();

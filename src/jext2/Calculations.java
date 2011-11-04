@@ -2,7 +2,7 @@ package jext2;
 
 public class Calculations {
 	private static Superblock superblock = Superblock.getInstance();
-	
+
 	public static int groupOfBlk(long blk) {
 		return (int)((blk - superblock.getFirstDataBlock()) /
 			superblock.getBlocksPerGroup());
@@ -28,7 +28,7 @@ public class Calculations {
 	}
 
 	public static long blockNrOfLocal(int index, long groupNr) {
-	    return index + groupNr * superblock.getBlocksPerGroup() + 
+	    return index + groupNr * superblock.getBlocksPerGroup() +
 	        superblock.getFirstDataBlock();
 	}
 

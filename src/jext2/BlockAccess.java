@@ -10,21 +10,21 @@ import jext2.annotations.NotThreadSafe;
 import jext2.exceptions.IoError;
 
 /**
- * Access to the filesystem blocks  
+ * Access to the filesystem blocks
  */
 public class BlockAccess {
 	BlockSynchronizer synchronizer = BlockSynchronizer.getInstance();
 	private int blocksize = Constants.EXT2_MIN_BLOCK_SIZE;
 	private FileChannel blockdev;
 	private static BlockAccess instance;
-	
+
 	/** number of pointers in indirection block */
     private int ptrs;
-    
+
 	public BlockAccess(FileChannel blockdev) {
 		if (BlockAccess.instance != null) {
 			throw new RuntimeException("BlockAccess is singleton!");
-		} 
+		}
 		this.blockdev = blockdev;
 		BlockAccess.instance = this;
 	}
@@ -34,7 +34,7 @@ public class BlockAccess {
 		ByteBuffer buf = ByteBuffer.allocate(blocksize);
 		try {
 		    buf.order(ByteOrder.BIG_ENDIAN);
-		    
+
 		    synchronizer.readLock(nr);
 		    blockdev.read(buf,(((long)(nr & 0xffffffff)) * blocksize));
 			synchronizer.readUnlock(nr);
@@ -43,15 +43,15 @@ public class BlockAccess {
 		    throw new IoError();
 		}
 
-		return buf; 
-	}	
-	
+		return buf;
+	}
+
 	/**
 	 * Read data from device to buffer starting at postion. To use this method set the
 	 * limit and position of the buffer to your needs and note that position is
 	 * not the block number. This method is indened for bulk data retrieval such as
-	 * the inode.read()  
-	 * 
+	 * the inode.read()
+	 *
 	 * Big fat waring: Aquire a lock for the corresponding block or hell breaks loose...
 	 */
 	@NotThreadSafe(useLock=true)
@@ -63,7 +63,7 @@ public class BlockAccess {
 	        throw new IoError();
 	    }
 	}
-	
+
 	@NotThreadSafe(useLock=true)
 	public void writeFromBufferUnsynchronized(long position, ByteBuffer buf) throws IoError {
 	    buf.order(ByteOrder.BIG_ENDIAN);
@@ -73,10 +73,10 @@ public class BlockAccess {
             throw new IoError();
         }
 	}
-	
+
 	/**
 	 * Zero out part of a block
-	 * @throws IOException 
+	 * @throws IOException
 	 */
 	public void zeroOut(long nr, int start, int end) throws IoError {
 	    ByteBuffer zeros = ByteBuffer.allocate((end-start)+1);
@@ -88,7 +88,7 @@ public class BlockAccess {
 		buf.rewind();
 		try {
 		    blockdev.position(((long)(nr & 0xffffffff)) * blocksize);
-		    
+
 		    synchronizer.writeLock(nr);
 		    blockdev.write(buf);
 		    synchronizer.writeUnlock(nr);
@@ -96,8 +96,8 @@ public class BlockAccess {
 		    synchronizer.writeUnlock(nr);
 		    throw new IoError();
 		}
-	}	
-	
+	}
+
     public void dumpByteBuffer(ByteBuffer buf) {
 	    try {
 		    while (buf.hasRemaining()) {
@@ -109,8 +109,8 @@ public class BlockAccess {
 		    }
 	    } catch (Exception e) {
 	    }
-	}   
-	
+	}
+
     /**
      * Force changes to disc
      */
@@ -121,17 +121,17 @@ public class BlockAccess {
             throw new IoError();
         }
     }
-    
-	
-	/** 
-	 * Write partial buffer to a disk block. It is not possible to write over 
-	 * the blocksize boundry. 
-	 * @throws IOException 
+
+
+	/**
+	 * Write partial buffer to a disk block. It is not possible to write over
+	 * the blocksize boundry.
+	 * @throws IOException
 	 */
 	public void writePartial(long nr, long offset, ByteBuffer buf) throws IoError {
         if (offset + buf.limit() > blocksize)
             throw new IllegalArgumentException("attempt to write over block boundries" + buf + ", " + offset);
-        
+
         try {
             buf.rewind();
 		    synchronizer.writeLock(nr);
@@ -143,25 +143,25 @@ public class BlockAccess {
             throw new IoError();
         }
 	}
-			
+
 	public void initialize(Superblock superblock) {
 	    blocksize = superblock.getBlocksize();
 		ptrs = superblock.getAddressesPerBlock();
 	}
 
 	/**
-     * Read block pointers from block. 
+     * Read block pointers from block.
      * Note: Zero pointers are not skipped
      * @param   dataBlock   physical block number
      * @param   start       index of first pointer to retrieve
      * @param   end         index of last pointer to retrieve
-     * @return  array containing all block numbers in block 
+     * @return  array containing all block numbers in block
      */
     public long[] readBlockNrsFromBlock(long dataBlock, int start, int end) throws IoError {
         int numEntries = (end-start)+1;
         long[] result = new long[numEntries];
         ByteBuffer buffer = ByteBuffer.allocate(numEntries*4);
-        
+
 	    synchronizer.readLock(dataBlock);
 	    try {
 	    	readToBufferUnsynchronized(dataBlock*blocksize + start*4, buffer);
@@ -174,20 +174,20 @@ public class BlockAccess {
         for (int i=0; i<numEntries; i++) {
             result[i] = Ext2fsDataTypes.getLE32U(buffer, i*4);
         }
-        
+
         return result;
     }
 
     /**
-     * Read block pointers from block. Skip pointers that are zero.  
-     * Note: Since we return a list, you cannot use indices computed 
+     * Read block pointers from block. Skip pointers that are zero.
+     * Note: Since we return a list, you cannot use indices computed
      * for the block with the result.
      * @param   dataBlock   physical block number
      * @param   start       index of first pointer to retrieve
      * @param   end         index of last pointer to retrieve
      * @return  list of non-zero block numbers found in block
      */
-    public LinkedList<Long> 
+    public LinkedList<Long>
     readBlockNrsFromBlockSkipZeros(long dataBlock, int start, int end) throws IoError {
         int numEntries = (end-start)+1;
         LinkedList<Long> result = new LinkedList<Long>();
@@ -201,13 +201,13 @@ public class BlockAccess {
 	    	throw e;
 	    }
     	synchronizer.readUnlock(dataBlock);
-    	
+
         for (int i=0; i<numEntries; i++) {
             long tmp = Ext2fsDataTypes.getLE32U(buffer, i*4);
             if (tmp > 0)
                 result.add(tmp);
         }
-        
+
         return result;
     }
 
@@ -225,7 +225,7 @@ public class BlockAccess {
      * @param   dataBlock   physical block number
      * @return  list with all non-zero pointers in block
      */
-    public LinkedList<Long> 
+    public LinkedList<Long>
     readAllBlockNumbersFromBlockSkipZero(long dataBlock) throws IoError {
         return readBlockNrsFromBlockSkipZeros(dataBlock, 0, ptrs-1);
     }

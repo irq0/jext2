@@ -89,7 +89,7 @@ public class ModeBuilder {
 	public ModeBuilder ownerExecute() {
 		return lucidAddToMode(Mode.IXUSR);
 	}
-	
+
 	public ModeBuilder ownerReadWriteExecute() {
 		return lucidAddToMode(Mode.IRWXU);
 	}
@@ -105,7 +105,7 @@ public class ModeBuilder {
 	public ModeBuilder groupExecute() {
 		return lucidAddToMode(Mode.IXGRP);
 	}
-	
+
 	public ModeBuilder groupReadWriteExecute() {
 		return lucidAddToMode(Mode.IRWXG);
 	}
@@ -121,7 +121,7 @@ public class ModeBuilder {
 	public ModeBuilder othersExecute() {
 		return lucidAddToMode(Mode.IXOTH);
 	}
-	
+
 	public ModeBuilder othersReadWriteExecute() {
 		return lucidAddToMode(Mode.IRWXO);
 	}
@@ -133,7 +133,7 @@ public class ModeBuilder {
 	public ModeBuilder mask(int mask) {
 		return lucidMaskMode(mask);
 	}
-	
+
 	public ModeBuilder allReadWriteExecute() {
 		return ownerReadWriteExecute().groupReadWriteExecute().othersReadWriteExecute();
 	}

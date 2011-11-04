@@ -31,7 +31,7 @@ public class Mode {
     public static final int IFDIR = 0040000;
     public static final int IFCHR = 0020000;
     public static final int IFIFO = 0010000;
-    
+
     /** Set user ID on execution.  */
     public static final int ISUID = 0004000;
     /** Set group ID on execution.  */
@@ -39,7 +39,7 @@ public class Mode {
     /** Sticky bit */
     public static final int ISVTX = 0001000;
     /* Read, write, and execute by owner.  */
-    public static final int IRWXU = 00700;    
+    public static final int IRWXU = 00700;
     /** Read by owner */
     public static final int IRUSR = 00400;
     /** Write by owner */
@@ -47,28 +47,28 @@ public class Mode {
     /** Execute by owner */
     public static final int IXUSR = 00100;
     /** Read, write, and execute by group  */
-    public static final int IRWXG = 00070;    
+    public static final int IRWXG = 00070;
     /** Read by group */
     public static final int IRGRP = 00040;
     /** Write by group */
     public static final int IWGRP = 00020;
     /** Execute by group */
     public static final int IXGRP = 00010;
-    /** Read, write, and execute by others  */    
-    public static final int IRWXO = 00007;    
+    /** Read, write, and execute by others  */
+    public static final int IRWXO = 00007;
     /** Read by others */
     public static final int IROTH = 00004;
     /** Write by others */
     public static final int IWOTH = 00002;
     /** Execute by others */
     public static final int IXOTH = 00001;
-       
+
     public boolean isSocket() {
         return isMaskSet(IFSOC);
-    }    
+    }
     public boolean isSymlink() {
         return isMaskSet(IFLNK);
-    }    
+    }
     public boolean isRegular() {
         return isMaskSet(IFREG);
     }
@@ -165,6 +165,7 @@ public class Mode {
 		return mode;
 	}
 
+	@Override
 	public String toString() {
 		StringBuilder s = new StringBuilder();
 		s.append("Mode: ");
