@@ -272,6 +272,10 @@ public class Inode extends PartialBlock {
 		return false;
 	}
 	
+	public boolean hasDataBlocks() {
+		return false;
+	}
+	
 	/**
 	 * An inode is equal if its ino number is the same
 	 */

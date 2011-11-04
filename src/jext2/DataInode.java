@@ -36,6 +36,10 @@ public class DataInode extends Inode {
         this.block = block;
     }
     
+	public boolean hasDataBlocks() {
+		return getBlocks() > 0;
+	}
+    
     /**
      * Get the data access provider to read and write to the data area of this
      * inode

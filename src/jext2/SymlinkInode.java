@@ -197,4 +197,8 @@ public class SymlinkInode extends DataInode {
 	public boolean isSlowSymlink() {
 		return !isFastSymlink();
 	}
+	
+	public boolean hasDataBlocks() {
+		return isSlowSymlink();
+	}
 }
