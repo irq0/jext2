@@ -40,7 +40,7 @@ public class Mknod extends jlowfuse.async.tasks.Mknod<Jext2Context> {
             
             FuseContext fuseContext = req.getContext();           
             RegularInode inode = RegularInode.createEmpty();            
-            inode.setMode(ModeBuilder.regularFile()
+            inode.setMode(new ModeBuilder().regularFile()
 		            .numeric(createMode.numeric() & ~fuseContext.getUmask())
 		            .create() );
 

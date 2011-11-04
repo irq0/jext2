@@ -7,7 +7,6 @@ public class ModeBuilder {
 
 	int mode = 0;
 	boolean filetypeApplied = false;
-	private static ModeBuilder myInstance = new ModeBuilder();
 
 	private void maskMode(int mask) {
 		this.mode = this.mode & mask;
@@ -24,58 +23,46 @@ public class ModeBuilder {
 		addToMode(mask);
 	}
 
-	private static ModeBuilder lucidAddToMode(int add) {
-		ModeBuilder m = instance();
-		m.addToMode(add);
-		return m;
+	private ModeBuilder lucidAddToMode(int add) {
+		addToMode(add);
+		return this;
 	}
 
-	private static ModeBuilder lucidMaskMode(int mask) {
-		ModeBuilder m = instance();
-		m.maskMode(mask);
-		return m;
+	private ModeBuilder lucidMaskMode(int mask) {
+		maskMode(mask);
+		return this;
 	}
 
-	private static ModeBuilder lucidAddToModeAndCheckFiletype(int mask) {
-		ModeBuilder m = instance();
-		m.addToModeAndCheckFiletype(mask);
-		return m;
+	private ModeBuilder lucidAddToModeAndCheckFiletype(int mask) {
+		addToModeAndCheckFiletype(mask);
+		return this;
 	}
 
-	private static ModeBuilder instance() {
-		return myInstance;
-	}
-
-	public void reset() {
-		mode = 0;
-		filetypeApplied = false;
-	}
-
-	public static ModeBuilder regularFile() {
+	public ModeBuilder regularFile() {
 		return lucidAddToModeAndCheckFiletype(Mode.IFREG);
 	}
 
-	public static ModeBuilder directory() {
+	public ModeBuilder directory() {
 		return lucidAddToModeAndCheckFiletype(Mode.IFDIR);
 	}
 
-	public static ModeBuilder socket() {
+	public ModeBuilder socket() {
 		return lucidAddToModeAndCheckFiletype(Mode.IFSOC);
 	}
 
-	public static ModeBuilder link() {
+	public ModeBuilder link() {
 		return lucidAddToModeAndCheckFiletype(Mode.IFLNK);
 	}
 
-	public static ModeBuilder blockDevice() {
+	public ModeBuilder blockDevice() {
 		return lucidAddToModeAndCheckFiletype(Mode.IFBLK);
 	}
 
-	public static ModeBuilder characterDevice() {
+	public ModeBuilder characterDevice() {
 		return lucidAddToModeAndCheckFiletype(Mode.IFCHR);
 	}
 
-	public static ModeBuilder fifo() {
+	public ModeBuilder fifo() {
 		return lucidAddToModeAndCheckFiletype(Mode.IFIFO);
 	}
 
@@ -153,7 +140,6 @@ public class ModeBuilder {
 
 	public Mode create() {
 		Mode m = Mode.createWithNumericValue(mode);
-		reset();
 		return m;
 	}
 }

@@ -1,8 +1,5 @@
 package jext2;
 
-import java.util.Date;
-
-import jext2.exceptions.FileTooLarge;
 import jext2.exceptions.JExt2Exception;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 

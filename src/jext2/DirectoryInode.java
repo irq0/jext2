@@ -382,7 +382,7 @@ public class DirectoryInode extends DataInode {
 	    inode.setAccessTime(now);
 	    inode.setStatusChangeTime(now);
 	    inode.setDeletionTime(new Date(0));
-        inode.setMode(ModeBuilder.directory().create());
+        inode.setMode(new ModeBuilder().directory().create());
         inode.setBlock(new long[Constants.EXT2_N_BLOCKS]);
 	    
 	    return inode;

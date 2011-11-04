@@ -168,7 +168,7 @@ public class SymlinkInode extends DataInode {
         inode.setAccessTime(now);
         inode.setStatusChangeTime(now);
         inode.setDeletionTime(new Date(0));
-	    inode.setMode(ModeBuilder.link().allReadWriteExecute().create());
+	    inode.setMode(new ModeBuilder().link().allReadWriteExecute().create());
         inode.setBlock(new long[Constants.EXT2_N_BLOCKS]);
         inode.setBlocks(0);
         inode.symlink = "";
