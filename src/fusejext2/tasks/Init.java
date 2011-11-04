@@ -17,32 +17,32 @@ public class Init extends jlowfuse.async.tasks.Init<Jext2Context> {
 
 	private void performBasicFilesystemChecks()
 	{
-    	checkExt2Features();
-        checkExt2Magic();
-        checkExt2Revision();
-        checkExt2MountState();
+		checkExt2Features();
+		checkExt2Magic();
+		checkExt2Revision();
+		checkExt2MountState();
 	}
 
 	private void checkExt2Features() {
-        if (Feature.incompatUnsupported() || Feature.roCompatUnsupported()) {
-            System.out.println("Featureset incompatible with JExt2 :(");
-            System.exit(23);
-        }
+		if (Feature.incompatUnsupported() || Feature.roCompatUnsupported()) {
+			System.out.println("Featureset incompatible with JExt2 :(");
+			System.exit(23);
+		}
 	}
 
 	private void checkExt2Magic() {
-        if (context.superblock.getMagic() != 0xEF53) {
-            System.out.println("Wrong magic -> no ext2");
-            System.exit(23);
-        }
+		if (context.superblock.getMagic() != 0xEF53) {
+			System.out.println("Wrong magic -> no ext2");
+			System.exit(23);
+		}
 	}
 
 	private void checkExt2Revision() {
-        /* ext2_setup_super */
-        if (context.superblock.getRevLevel() > Constants.JEXT2_MAX_SUPP_REV) {
-            System.out.println("Error: Revision level too high, exiting");
-            System.exit(23);
-        }
+		/* ext2_setup_super */
+		if (context.superblock.getRevLevel() > Constants.JEXT2_MAX_SUPP_REV) {
+			System.out.println("Error: Revision level too high, exiting");
+			System.exit(23);
+		}
 	}
 
 	private void checkExt2MountState() {
@@ -59,32 +59,32 @@ public class Init extends jlowfuse.async.tasks.Init<Jext2Context> {
 	}
 
 	private void markExt2AsMounted() {
-        context.superblock.setMountCount(context.superblock.getMountCount() + 1);
-        context.superblock.setLastMount(new Date());
-        context.superblock.setLastMounted("jext2");
+		context.superblock.setMountCount(context.superblock.getMountCount() + 1);
+		context.superblock.setLastMount(new Date());
+		context.superblock.setLastMounted("jext2");
 	}
 
-    @Override
+	@Override
 	public void run() {
-	    super.run();
+		super.run();
 
 
-	    try {
-	    	context.blocks = new BlockAccess(context.blockDev);
-	    	context.superblock = Superblock.fromBlockAccess(context.blocks);
-	    	context.blocks.initialize(context.superblock);
+		try {
+			context.blocks = new BlockAccess(context.blockDev);
+			context.superblock = Superblock.fromBlockAccess(context.blocks);
+			context.blocks.initialize(context.superblock);
 
-	    	performBasicFilesystemChecks();
-	        markExt2AsMounted();
-	        // TODO set times, volume name, etc in  superblock
+			performBasicFilesystemChecks();
+			markExt2AsMounted();
+			// TODO set times, volume name, etc in  superblock
 
-	        context.blockGroups = BlockGroupAccess.getInstance();
-	        context.blockGroups.readDescriptors();
-		    context.inodes = InodeAccess.getInstance();
+			context.blockGroups = BlockGroupAccess.getInstance();
+			context.blockGroups.readDescriptors();
+			context.inodes = InodeAccess.getInstance();
 
 		} catch (IoError e) {
 			System.out.println("init() failed :(");
 			System.out.println(23);
 		}
-    }
+	}
 }

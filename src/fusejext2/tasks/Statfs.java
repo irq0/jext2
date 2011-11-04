@@ -15,29 +15,29 @@ public class Statfs extends jlowfuse.async.tasks.Statfs<Jext2Context> {
 
 	@Override
 	public void run() {
-        StatVFS s = new StatVFS();
+		StatVFS s = new StatVFS();
 
-        Superblock superblock = context.superblock;
+		Superblock superblock = context.superblock;
 
-        s.setBsize(superblock.getBlocksize());
-        s.setFrsize(superblock.getBlocksize());
-        s.setBlocks(superblock.getBlocksCount() - superblock.getOverhead());
-        s.setBfree(superblock.getFreeBlocksCount());
+		s.setBsize(superblock.getBlocksize());
+		s.setFrsize(superblock.getBlocksize());
+		s.setBlocks(superblock.getBlocksCount() - superblock.getOverhead());
+		s.setBfree(superblock.getFreeBlocksCount());
 
-        if (s.getBfree() >= superblock.getReservedBlocksCount())
-            s.setBavail(superblock.getFreeBlocksCount() - superblock.getReservedBlocksCount());
-        else
-        	s.setBavail(0);
+		if (s.getBfree() >= superblock.getReservedBlocksCount())
+			s.setBavail(superblock.getFreeBlocksCount() - superblock.getReservedBlocksCount());
+		else
+			s.setBavail(0);
 
-        s.setFiles(superblock.getInodesCount());
-        s.setFfree(superblock.getFreeInodesCount());
-        s.setFavail(superblock.getFreeInodesCount());
+		s.setFiles(superblock.getInodesCount());
+		s.setFfree(superblock.getFreeInodesCount());
+		s.setFavail(superblock.getFreeInodesCount());
 
-        s.setFsid(0);
-        s.setFlag(0);
-        s.setNamemax(DirectoryEntry.MAX_NAME_LEN);
+		s.setFsid(0);
+		s.setFlag(0);
+		s.setNamemax(DirectoryEntry.MAX_NAME_LEN);
 
-        Reply.statfs(req, s);
+		Reply.statfs(req, s);
 	}
 
 }

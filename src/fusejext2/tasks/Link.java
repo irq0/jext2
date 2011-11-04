@@ -19,22 +19,22 @@ public class Link extends jlowfuse.async.tasks.Link<Jext2Context> {
 
 	@Override
 	public void run() {
-        if (ino == 1) ino = Constants.EXT2_ROOT_INO;
-        try {
-            Inode parent = context.inodes.openInode(newparent);
-            if (!parent.isDirectory())
-                throw new NotADirectory();
+		if (ino == 1) ino = Constants.EXT2_ROOT_INO;
+		try {
+			Inode parent = context.inodes.openInode(newparent);
+			if (!parent.isDirectory())
+				throw new NotADirectory();
 
-            Inode child = context.inodes.openInode(ino);
-            if (child.isDirectory())
-                throw new IsADirectory();
+			Inode child = context.inodes.openInode(ino);
+			if (child.isDirectory())
+				throw new IsADirectory();
 
-            ((DirectoryInode)parent).addLink(child, newname);
-            Reply.entry(req, Util.inodeToEntryParam(context.superblock, child));
+			((DirectoryInode)parent).addLink(child, newname);
+			Reply.entry(req, Util.inodeToEntryParam(context.superblock, child));
 
-        } catch (JExt2Exception e) {
-            Reply.err(req, e.getErrno());
-        }
+		} catch (JExt2Exception e) {
+			Reply.err(req, e.getErrno());
+		}
 	}
 
 }

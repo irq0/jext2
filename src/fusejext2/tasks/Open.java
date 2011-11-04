@@ -24,7 +24,7 @@ public class Open extends jlowfuse.async.tasks.Open<Jext2Context> {
 			Reply.open(req, fi);
 
 		} catch (JExt2Exception e) {
-            Reply.err(req, e.getErrno());
-        }
+			Reply.err(req, e.getErrno());
+		}
 	}
 }

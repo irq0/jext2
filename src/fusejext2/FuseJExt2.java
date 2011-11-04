@@ -46,47 +46,47 @@ public class FuseJExt2 {
 	static class FuseShutdownHook extends Thread {
 		@Override
 		public void run() {
-		    System.out.println("Shutdown ");
+			System.out.println("Shutdown ");
 
-		    /* this should not be nesseccrry but fuse/jlowfuse does not call
-		     * DESTROY
-		     */
+			/* this should not be nesseccrry but fuse/jlowfuse does not call
+			 * DESTROY
+			 */
 
-		    service.shutdown();
+			service.shutdown();
 
 			Session.removeChan(chan);
 			Session.exit(sess);
 			Fuse.unmount(mountpoint, chan);
 
 			try {
-			    blockDev.force(false);
-			    blockDev.close();
+				blockDev.force(false);
+				blockDev.close();
 			} catch (IOException e) {
-			    System.err.println(Arrays.toString(e.getStackTrace()));
-                System.err.println(e.getLocalizedMessage());
+				System.err.println(Arrays.toString(e.getStackTrace()));
+				System.err.println(e.getLocalizedMessage());
 			}
 		}
 	}
 
 	@SuppressWarnings("static-access")
-    public static void parseCommandline(String[] args) {
+	public static void parseCommandline(String[] args) {
 		CommandLineParser parser = new PosixParser();
 
 		Options options = new Options();
 		options.addOption("d", "daemonize", false, "java side of daemonzation - use jext_daemon.sh");
 		options.addOption("h", "help", false, "print this usage text");
 		options.addOption(OptionBuilder.withDescription("options passed directly to FUSE")
-		                  .hasArg()
-		                  .withArgName("FUSE_OPTIONS")
-		                  .create("o"));
+				.hasArg()
+				.withArgName("FUSE_OPTIONS")
+				.create("o"));
 		options.addOption(OptionBuilder.withDescription("charset used for file system string conversion")
-		                  .hasArg()
-		                  .withArgName("CHARSET")
-		                  .create("c"));
+				.hasArg()
+				.withArgName("CHARSET")
+				.create("c"));
 		options.addOption(OptionBuilder.withDescription("log to file")
-		                  .hasArg()
-		                  .withArgName("FILENAME")
-		                  .create("l"));
+				.hasArg()
+				.withArgName("FILENAME")
+				.create("l"));
 		try {
 			CommandLine cmd = parser.parse(options, args);
 
@@ -97,21 +97,21 @@ public class FuseJExt2 {
 				throw new ParseException("");
 			}
 			if (cmd.hasOption("c")) {
-			    String option = cmd.getOptionValue("c");
-			    try {
-			        Filesystem.setCharset(Charset.forName(option));
-			    } catch (UnsupportedCharsetException e) {
-			        throw new ParseException("Unknown charset: " + option +
-			                "\n Supported charsets:\n\n" + Charset.availableCharsets());
-			    }
+				String option = cmd.getOptionValue("c");
+				try {
+					Filesystem.setCharset(Charset.forName(option));
+				} catch (UnsupportedCharsetException e) {
+					throw new ParseException("Unknown charset: " + option +
+							"\n Supported charsets:\n\n" + Charset.availableCharsets());
+				}
 			}
 			if (cmd.hasOption("l")) {
-			    String filename = cmd.getOptionValue("l");
-			    try {
-			        Filesystem.initializeLoggingToFile(filename);
-			    } catch (IOException e) {
-			        throw new ParseException("Can't open file for logging");
-			    }
+				String filename = cmd.getOptionValue("l");
+				try {
+					Filesystem.initializeLoggingToFile(filename);
+				} catch (IOException e) {
+					throw new ParseException("Can't open file for logging");
+				}
 			}
 
 			String[] leftover = cmd.getArgs();
@@ -129,9 +129,9 @@ public class FuseJExt2 {
 		} catch (ParseException e) {
 			HelpFormatter usage = new HelpFormatter();
 			usage.printHelp("<jext2 java commandline> [OPTIONS] <block device> <mountpoint>",
-			                "jext2 - java ext2 file system implementation",
-			                options,
-			                e.getMessage());
+					"jext2 - java ext2 file system implementation",
+					options,
+					e.getMessage());
 			System.exit(1);
 		}
 	}
@@ -157,27 +157,27 @@ public class FuseJExt2 {
 			daemonize();
 
 
-        try {
-	        RandomAccessFile blockDevFile = new RandomAccessFile(filename, "rw");
-    		blockDev = blockDevFile.getChannel();
-        } catch (FileNotFoundException e) {
-        	System.out.println("Can't open block device / file");
-        	System.exit(1);
-        }
+		try {
+			RandomAccessFile blockDevFile = new RandomAccessFile(filename, "rw");
+			blockDev = blockDevFile.getChannel();
+		} catch (FileNotFoundException e) {
+			System.out.println("Can't open block device / file");
+			System.exit(1);
+		}
 
 
-        chan = Fuse.mount(mountpoint, fuseArgs);
-        if (chan == null) {
-	        System.out.println("Can't mount on " + mountpoint);
-	        System.exit(1);
-        }
+		chan = Fuse.mount(mountpoint, fuseArgs);
+		if (chan == null) {
+			System.out.println("Can't mount on " + mountpoint);
+			System.exit(1);
+		}
 
-        FuseShutdownHook hook = new FuseShutdownHook();
-        Runtime.getRuntime().addShutdownHook(hook);
+		FuseShutdownHook hook = new FuseShutdownHook();
+		Runtime.getRuntime().addShutdownHook(hook);
 
 		Jext2Context context = new Jext2Context(blockDev);
 		DefaultTaskImplementations<Jext2Context> impls =
-			new DefaultTaskImplementations<Jext2Context>();
+				new DefaultTaskImplementations<Jext2Context>();
 
 		// for i in *.java; do n=${i%.*}; c=${n,*}; echo impls.${c}Impl = TaskImplementations.getImpl\(\"fusejext2.tasks.$n\"\)\;>
 		impls.accessImpl = TaskImplementations.getImpl("fusejext2.tasks.Access");
@@ -211,7 +211,7 @@ public class FuseJExt2 {
 		SWIGTYPE_p_fuse_session sess = JLowFuse.asyncTasksNew(fuseArgs, impls,
 				service, context);
 
-        Session.addChan(sess, chan);
-        Session.loopSingle(sess);
-    }
+		Session.addChan(sess, chan);
+		Session.loopSingle(sess);
+	}
 }

@@ -17,17 +17,17 @@ public class Readlink extends jlowfuse.async.tasks.Readlink<Jext2Context> {
 
 	@Override
 	public void run() {
-	    if (ino == 1) ino = Constants.EXT2_ROOT_INO;
+		if (ino == 1) ino = Constants.EXT2_ROOT_INO;
 		try {
-		    Inode inode = context.inodes.openInode(ino);
+			Inode inode = context.inodes.openInode(ino);
 			if (!inode.isSymlink())
 				throw new OperationNotPermitted();
 
 			Reply.readlink(req, ((SymlinkInode)inode).getSymlink());
 
 		} catch (JExt2Exception e) {
-            Reply.err(req, e.getErrno());
-        }
+			Reply.err(req, e.getErrno());
+		}
 
 	}
 }

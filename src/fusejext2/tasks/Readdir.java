@@ -19,14 +19,14 @@ public class Readdir extends jlowfuse.async.tasks.Readdir<Jext2Context> {
 
 	@Override
 	public void run() {
-	    if (ino == 1) ino = Constants.EXT2_ROOT_INO;
+		if (ino == 1) ino = Constants.EXT2_ROOT_INO;
 
-        DirectoryInode inode = (DirectoryInode)(context.inodes.getOpened(ino));
+		DirectoryInode inode = (DirectoryInode)(context.inodes.getOpened(ino));
 
 		Dirbuf buf = new Dirbuf();
 
 		for (DirectoryEntry d : inode.iterateDirectory()) {
-		    if (d.isUnused()) continue;
+			if (d.isUnused()) continue;
 			FuseExtra.dirbufAdd(req,
 					buf,
 					d.getName(),

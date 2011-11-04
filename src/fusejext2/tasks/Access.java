@@ -12,7 +12,7 @@ public class Access extends jlowfuse.async.tasks.Access<Jext2Context> {
 
 	@Override
 	public void run() {
-	    /* Allow everything. Want permissions? Use -o default_permissions */
-        Reply.err(req, 0);
+		/* Allow everything. Want permissions? Use -o default_permissions */
+		Reply.err(req, 0);
 	}
 }

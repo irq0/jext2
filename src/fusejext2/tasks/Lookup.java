@@ -21,7 +21,7 @@ public class Lookup extends jlowfuse.async.tasks.Lookup<Jext2Context> {
 	public void run() {
 		if (parent == 1) parent = Constants.EXT2_ROOT_INO;
 		try {
-		    Inode parentInode = context.inodes.openInode(parent);
+			Inode parentInode = context.inodes.openInode(parent);
 			if (!parentInode.isDirectory())
 				throw new NotADirectory();
 
@@ -30,7 +30,7 @@ public class Lookup extends jlowfuse.async.tasks.Lookup<Jext2Context> {
 			Reply.entry(req, Util.inodeToEntryParam(context.superblock, child));
 
 		} catch (JExt2Exception e) {
-            Reply.err(req, e.getErrno());
-        }
+			Reply.err(req, e.getErrno());
+		}
 	}
 }
