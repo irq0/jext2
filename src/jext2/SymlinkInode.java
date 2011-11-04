@@ -153,9 +153,7 @@ public class SymlinkInode extends DataInode {
 		return inode;
 	}	
 	
-	public short getFileType() {
-	    return DirectoryEntry.FILETYPE_SYMLINK;
-	}
+
 	
     /**
      * Create empty Inode. Initialize *Times, block array.
@@ -181,5 +179,21 @@ public class SymlinkInode extends DataInode {
         return new HashCodeBuilder()
             .appendSuper(super.hashCode())
             .append(symlink).toHashCode();
+    }
+    
+	public short getFileType() {
+	    return DirectoryEntry.FILETYPE_SYMLINK;
+	}
+	
+    public boolean isSymlink() {
+    	return true;
+    }
+    
+    public boolean isDirectory() {
+    	return false;
+    }
+    
+    public boolean isRegularFile() {
+    	return false;
     }
 }

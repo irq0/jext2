@@ -392,7 +392,19 @@ public class DirectoryInode extends DataInode {
 	    return DirectoryEntry.FILETYPE_DIR;
 	}
 	
-	/**
+    public boolean isSymlink() {
+    	return false;
+    }
+    
+    public boolean isDirectory() {
+    	return true;
+    }
+    
+    public boolean isRegularFile() {
+    	return false;
+    }
+    
+    /**
 	 * Unlink inode from directory. May cause inode destruction. Inode can 
 	 * be any kind of inode except directories.
 	 * 

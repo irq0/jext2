@@ -25,6 +25,18 @@ public class RegularInode extends DataInode {
 	public short getFileType() {
 	    return DirectoryEntry.FILETYPE_REG_FILE;
 	}
+	
+    public boolean isSymlink() {
+    	return false;
+    }
+    
+    public boolean isDirectory() {
+    	return false;
+    }
+    
+    public boolean isRegularFile() {
+    	return true;
+    }
 
 	/**
 	 * Set size. For regular inodes the size is stored in i_size and i_dir_acl

@@ -252,6 +252,19 @@ public class Inode extends PartialBlock {
 	    return DirectoryEntry.FILETYPE_UNKNOWN;
 	}
 	
+    public boolean isSymlink() {
+    	return false;
+    }
+    
+    public boolean isDirectory() {
+    	return false;
+    }
+    
+    public boolean isRegularFile() {
+    	return false;
+    }
+    
+	
 	/**
 	 * An inode is equal if its ino number is the same
 	 */
