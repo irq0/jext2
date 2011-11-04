@@ -181,7 +181,7 @@ public class InodeAlloc {
 	 * for the Inode. Finally set location data in Inode
 	 * @throws JExt2Exception 
 	 */
-	public static void registerInode(Inode dir, Inode inode) throws JExt2Exception {
+	public static synchronized void registerInode(Inode dir, Inode inode) throws JExt2Exception {
 		/* find best suitable block group */
 		int group;
 		
