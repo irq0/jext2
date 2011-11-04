@@ -16,11 +16,11 @@ public class Util {
 	    tim.setNsec(0);
 	    return tim;
 	}
-	
+
     public static Date timespecToDate(Timespec time) {
 	    return new Date(time.getSec()*1000 + time.getNsec()/1000);
 	}
-	
+
 	public static Stat inodeToStat(Superblock superblock, Inode inode) {
 		Stat s = new Stat();
 		s.setUid(inode.getUidLow());
@@ -30,19 +30,19 @@ public class Util {
 		s.setBlksize(superblock.getBlocksize());
 		s.setNlink(inode.getLinksCount());
 		s.setSize(inode.getSize());
-		
-		if (inode.hasDataBlocks()) 
+
+		if (inode.hasDataBlocks())
 		    s.setBlocks(((DataInode)inode).getBlocks());
-		else 
+		else
 		    s.setBlocks(0);
-		
+
 		s.setAtim(dateToTimespec(inode.getAccessTime()));
 		s.setCtim(dateToTimespec(inode.getStatusChangeTime()));
 		s.setMtim(dateToTimespec(inode.getModificationTime()));
-		
+
 		return s;
-	}	
-	
+	}
+
 	public static EntryParam inodeToEntryParam(Superblock superblock, Inode inode) {
         EntryParam e = new EntryParam();
         e.setAttr(inodeToStat(superblock, inode));
@@ -52,5 +52,5 @@ public class Util {
         e.setIno(inode.getIno());
         return e;
 	}
-	
+
 }

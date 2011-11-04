@@ -39,24 +39,25 @@ public class FuseJExt2 {
 
 	private static boolean daemon = false;
 	private static String fuseCommandline = "-o foo,subtype=jext2";
-		
-	
+
+
 	private static JextThreadPoolExecutor service;
-	
+
 	static class FuseShutdownHook extends Thread {
+		@Override
 		public void run() {
 		    System.out.println("Shutdown ");
-		    
-		    /* this should not be nesseccrry but fuse/jlowfuse does not call 
+
+		    /* this should not be nesseccrry but fuse/jlowfuse does not call
 		     * DESTROY
 		     */
-		    
+
 		    service.shutdown();
-		    
+
 			Session.removeChan(chan);
 			Session.exit(sess);
 			Fuse.unmount(mountpoint, chan);
-			
+
 			try {
 			    blockDev.force(false);
 			    blockDev.close();
@@ -65,12 +66,12 @@ public class FuseJExt2 {
                 System.err.println(e.getLocalizedMessage());
 			}
 		}
-	}	
-	
+	}
+
 	@SuppressWarnings("static-access")
     public static void parseCommandline(String[] args) {
 		CommandLineParser parser = new PosixParser();
-		
+
 		Options options = new Options();
 		options.addOption("d", "daemonize", false, "java side of daemonzation - use jext_daemon.sh");
 		options.addOption("h", "help", false, "print this usage text");
@@ -112,7 +113,7 @@ public class FuseJExt2 {
 			        throw new ParseException("Can't open file for logging");
 			    }
 			}
-			
+
 			String[] leftover = cmd.getArgs();
 			if (leftover.length != 2) {
 				throw new ParseException("No <block device> and/or <mountpoint> given!");
@@ -124,7 +125,7 @@ public class FuseJExt2 {
 			if (cmd.hasOption("o")) {
 				fuseCommandline += "," + cmd.getOptionValue("o");
 			}
-			
+
 		} catch (ParseException e) {
 			HelpFormatter usage = new HelpFormatter();
 			usage.printHelp("<jext2 java commandline> [OPTIONS] <block device> <mountpoint>",
@@ -140,7 +141,7 @@ public class FuseJExt2 {
 		String filename = System.getProperty("daemon.pidfile");
 		return new File(filename);
 	}
-	
+
 	private static void daemonize() {
 		getPidFile().deleteOnExit();
 		System.out.close();
@@ -149,21 +150,21 @@ public class FuseJExt2 {
 
 	public static void main(String[] args) {
 		parseCommandline(args);
-		
+
 		JLowFuseArgs fuseArgs = JLowFuseArgs.parseCommandline(new String[] {fuseCommandline});
-		
+
 		if (daemon)
 			daemonize();
-			
-		
+
+
         try {
 	        RandomAccessFile blockDevFile = new RandomAccessFile(filename, "rw");
-    		blockDev = blockDevFile.getChannel();		
+    		blockDev = blockDevFile.getChannel();
         } catch (FileNotFoundException e) {
         	System.out.println("Can't open block device / file");
         	System.exit(1);
         }
-            
+
 
         chan = Fuse.mount(mountpoint, fuseArgs);
         if (chan == null) {
@@ -173,11 +174,11 @@ public class FuseJExt2 {
 
         FuseShutdownHook hook = new FuseShutdownHook();
         Runtime.getRuntime().addShutdownHook(hook);
-        
+
 		Jext2Context context = new Jext2Context(blockDev);
-		DefaultTaskImplementations<Jext2Context> impls = 
+		DefaultTaskImplementations<Jext2Context> impls =
 			new DefaultTaskImplementations<Jext2Context>();
-		
+
 		// for i in *.java; do n=${i%.*}; c=${n,*}; echo impls.${c}Impl = TaskImplementations.getImpl\(\"fusejext2.tasks.$n\"\)\;>
 		impls.accessImpl = TaskImplementations.getImpl("fusejext2.tasks.Access");
 		impls.destroyImpl = TaskImplementations.getImpl("fusejext2.tasks.Destroy");
@@ -204,13 +205,13 @@ public class FuseJExt2 {
 		impls.symlinkImpl = TaskImplementations.getImpl("fusejext2.tasks.Symlink");
 		impls.unlinkImpl = TaskImplementations.getImpl("fusejext2.tasks.Unlink");
 		impls.writeImpl = TaskImplementations.getImpl("fusejext2.tasks.Write");
-		
-		service = new JextThreadPoolExecutor(10); 
-		
+
+		service = new JextThreadPoolExecutor(10);
+
 		SWIGTYPE_p_fuse_session sess = JLowFuse.asyncTasksNew(fuseArgs, impls,
 				service, context);
-        
-        Session.addChan(sess, chan);     
+
+        Session.addChan(sess, chan);
         Session.loopSingle(sess);
     }
 }

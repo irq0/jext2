@@ -14,9 +14,9 @@ public class Jext2Context extends Context {
 	public BlockGroupAccess blockGroups;
 
 	public FileChannel blockDev;
-	
+
 	public InodeAccess inodes;
-	
+
 	public Jext2Context(FileChannel blockDev) {
 		this.blockDev = blockDev;
 	}
