@@ -86,6 +86,7 @@ public class DataBlockAccess {
 		}
 
 		public void remove() {
+			throw new RuntimeException("Remove is unsupported");
 		}
 		
 		public DataBlockIterator iterator() {
