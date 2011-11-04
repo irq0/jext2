@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import jext2.exceptions.DirectoryNotEmpty;
 import jext2.exceptions.FileExists;
@@ -20,6 +21,11 @@ import jext2.exceptions.TooManyLinks;
 public class DirectoryInode extends DataInode {
 	private static BlockAccess blocks = BlockAccess.getInstance();
 	private static Superblock superblock = Superblock.getInstance();
+	
+	private DirectoryEntryAccess directoryEntries = DirectoryEntryAccess.createForDirectoy(this);
+	
+	private ReentrantReadWriteLock directoryLock = 
+			new ReentrantReadWriteLock(true);
 
 	/**
 	 * Get the directory iterator. Please note: A directory entry 
@@ -60,7 +66,11 @@ public class DirectoryInode extends DataInode {
 			        
 			        blockNr = blockIter.next();
 			        block = blocks.read(blockNr);
-			        return DirectoryEntry.fromByteBuffer(block, blockNr, 0);
+			        
+			        DirectoryEntry entry = DirectoryEntry.fromByteBuffer(block, blockNr, 0);
+			        directoryEntries.add(entry);
+			        
+			        return entry;
 			    }
 
 				assert last != null;
@@ -82,7 +92,9 @@ public class DirectoryInode extends DataInode {
 				}
 				
 				// fetch next entry from block
-				return DirectoryEntry.fromByteBuffer(block, blockNr, offset);
+		        DirectoryEntry entry = DirectoryEntry.fromByteBuffer(block, blockNr, offset);
+		        directoryEntries.add(entry);
+		        return entry;
 			} catch (IoError e) {
 				return null;
 			}
@@ -95,6 +107,7 @@ public class DirectoryInode extends DataInode {
 		}
 
 		public void remove() {
+			throw new RuntimeException("remove is unsupported!");
 		}
 
         public Iterator<DirectoryEntry> iterator() {
@@ -144,6 +157,8 @@ public class DirectoryInode extends DataInode {
 
            while (offset + 8 <= block.limit()) { /* space for minimum of one entry */
                DirectoryEntry currentEntry = DirectoryEntry.fromByteBuffer(block, blockNr, offset);
+               directoryEntries.add(currentEntry);
+               directoryEntries.retain(currentEntry);
                
                if (currentEntry.getName().equals(newEntry.getName())) 
                    throw new FileExists();
@@ -167,6 +182,8 @@ public class DirectoryInode extends DataInode {
                    
                    setModificationTime(new Date()); // should be handeld by block layer 
                    setStatusChangeTime(new Date());
+                   
+                   directoryEntries.release(currentEntry);
                    return;
                }
                
@@ -192,9 +209,11 @@ public class DirectoryInode extends DataInode {
 
                    setModificationTime(new Date());
                    setStatusChangeTime(new Date());
+                   directoryEntries.release(currentEntry);
                    return;
                }
-               
+               directoryEntries.release(currentEntry);
+
                offset += currentEntry.getRecLen();
            }               
            offset = 0;
@@ -247,9 +266,11 @@ public class DirectoryInode extends DataInode {
 	        throw new FileNameTooLong();
 	    
 		for (DirectoryEntry dir : iterateDirectory()) {
+			directoryEntries.retain(dir);
 			if (name.equals(dir.getName())) {
 				return dir;
 			}
+			directoryEntries.release(dir);
 		}
 		throw new NoSuchFileOrDirectory();
 	}
@@ -259,8 +280,11 @@ public class DirectoryInode extends DataInode {
 
 		sb.append(" DIRECTORY=[");		
 		for (DirectoryEntry dir : iterateDirectory()) {
+			directoryEntries.retain(dir);
 			sb.append(dir.toString());
 			sb.append("\n");
+			directoryEntries.release(dir);
+
 		}
 		sb.append("]");
 
@@ -290,9 +314,10 @@ public class DirectoryInode extends DataInode {
 	/**
 	 * Remove "." and ".." entry from the directory. Should be called before
 	 * a unlink on a directory.
+	 * @throws NoSuchFileOrDirectory 
 	 * @praram parent parent inode. Used to resolve the ".." link
 	 */
-	public void removeDotLinks(DirectoryInode parent) throws IoError {
+	public void removeDotLinks(DirectoryInode parent) throws IoError, NoSuchFileOrDirectory {
 	    removeDirectoryEntry(".");
 	    removeDirectoryEntry("..");
 	    
@@ -377,24 +402,40 @@ public class DirectoryInode extends DataInode {
 	 * update the inode.linksCount here.
 	 * @see #unlink(Inode inode, String name)
 	 * @param name Name of the entry
+	 * @throws NoSuchFileOrDirectory 
 	 */
-	public void removeDirectoryEntry(String name) throws IoError {
+	public void removeDirectoryEntry(String name) throws IoError, NoSuchFileOrDirectory {
+		
 	    /* First: Find the entry and its predecessor */
+		directoryLock.readLock().lock();
 	    DirectoryEntry prev = null;
 	    DirectoryEntry toDelete = null;
 	    for (DirectoryEntry current : iterateDirectory()) {
+			directoryEntries.retain(current);
 	        if (name.equals(current.getName())) {
 	            toDelete = current;
 	            break;
 	        }
+			directoryEntries.release(prev);
 	        prev = current;
 	    }
+	    
+	    assert directoryEntries.usageCounter(prev) > 0;
+	    assert directoryEntries.usageCounter(toDelete) > 0;
+	    
+	    directoryLock.readLock().unlock();
 
+	    /* Another thread could have deleted the entry */
+	    if (toDelete.isUnused()) {
+	    	directoryEntries.release(toDelete);
+	    	throw new NoSuchFileOrDirectory();
+	    } 
 	    /* 
 	     * When we are at the beginning of a block there is 
 	     * no prev entry we can use 
 	     */
 		assert toDelete != null;
+		directoryLock.writeLock().lock();
 		if (toDelete.getOffset() == 0) {
 	        toDelete.setIno(0);
 	        toDelete.clearName();
@@ -409,7 +450,12 @@ public class DirectoryInode extends DataInode {
 		    prev.setRecLen(prev.getRecLen() + toDelete.getRecLen());
 	        prev.write(); // ok here: is meta data
 	    }
-	    
+		
+    	directoryEntries.release(toDelete);
+    	directoryEntries.release(prev);
+
+    	directoryLock.writeLock().unlock();
 	    setModificationTime(new Date());
+	    
 	}
 }
