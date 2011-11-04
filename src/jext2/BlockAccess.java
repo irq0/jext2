@@ -91,7 +91,7 @@ public class BlockAccess {
 		    
 		    synchronizer.writeLock(nr);
 		    blockdev.write(buf);
-		    synchronizer.writeLock(nr);
+		    synchronizer.writeUnlock(nr);
 		} catch (IOException e) {
 		    synchronizer.writeUnlock(nr);
 		    throw new IoError();
