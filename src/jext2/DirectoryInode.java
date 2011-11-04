@@ -261,11 +261,15 @@ public class DirectoryInode extends DataInode {
 	
 	public boolean isEmptyDirectory() {
 	    int count = 0;
+	    directoryLock.readLock().lock();
 	    for (@SuppressWarnings("unused") DirectoryEntry dir : iterateDirectory()) {
 	        count += 1;
-	        if (count >= 3) 
+	        if (count >= 3) {
+	    	    directoryLock.readLock().unlock();
 	            return false;
+	        }	            
 	    }
+	    directoryLock.readLock().unlock();
 	    return true;
 	}
 	
@@ -282,27 +286,34 @@ public class DirectoryInode extends DataInode {
 	    if (Ext2fsDataTypes.getStringByteLength(name) > DirectoryEntry.MAX_NAME_LEN)
 	        throw new FileNameTooLong();
 	    
+	    directoryLock.readLock().lock();
 		for (DirectoryEntry dir : iterateDirectory()) {
 			directoryEntries.retain(dir);
 			if (name.equals(dir.getName())) {
+			    directoryLock.readLock().unlock();
 				return dir;
 			}
 			directoryEntries.release(dir);
 		}
+		
+	    directoryLock.readLock().unlock();
 		throw new NoSuchFileOrDirectory();
 	}
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder(super.toString());
 
-		sb.append(" DIRECTORY=[");		
+		sb.append(" DIRECTORY=[");
+		
+	    directoryLock.readLock().lock();
 		for (DirectoryEntry dir : iterateDirectory()) {
 			directoryEntries.retain(dir);
 			sb.append(dir.toString());
 			sb.append("\n");
 			directoryEntries.release(dir);
-
 		}
+	    directoryLock.readLock().unlock();
+
 		sb.append("]");
 
 		return sb.toString();
