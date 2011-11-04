@@ -7,7 +7,9 @@ import org.apache.commons.lang.builder.ToStringStyle;
 import java.util.Date;
 import java.nio.ByteBuffer;
 
+import jext2.exceptions.FileTooLarge;
 import jext2.exceptions.IoError;
+import jext2.exceptions.JExt2Exception;
 
 public class Inode extends PartialBlock {
     private Mode mode;
@@ -284,8 +286,26 @@ public class Inode extends PartialBlock {
 	        .append(blockGroup)
 	        .append(ino).toHashCode();
 	}
+	
+	/**
+	 *  Delete Inode
+	 */
+	public synchronized void delete() throws JExt2Exception {
+	    if (this.isDeleted())
+	        return;
+	    	    
+	    setDeletionTime(new Date());
+	    setSize(0);
+        if (this instanceof DataInode) {
+            try {
+                ((DataInode)this).accessData().truncate(0);
+            } catch (FileTooLarge e) {
+                throw new RuntimeException("should not happen");
+            }
+        }
+	    
+        write(); // ok here: deleted inodes will not get any sync calls i guess
+        
+        InodeAlloc.freeInode(this);
+	}
 }
-
-
-
-

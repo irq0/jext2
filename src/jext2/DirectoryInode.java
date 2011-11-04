@@ -420,7 +420,7 @@ public class DirectoryInode extends DataInode {
 	}
 	
 	/**
-	 * Unlink Inode from this directory. May cause freeInode() if link count
+	 * Unlink Inode from this directory. May delete associated inode if link count
 	 * reaches zero. 
 	 * @throws JExt2Exception 
 	 */
@@ -430,7 +430,7 @@ public class DirectoryInode extends DataInode {
 	    setStatusChangeTime(new Date());
 
 	    if (inode.getLinksCount() <= 0) {
-	        InodeAlloc.freeInode(inode);
+	        inode.delete();
 	    }
 	    
 	}

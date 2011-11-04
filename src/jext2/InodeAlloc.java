@@ -147,22 +147,7 @@ public class InodeAlloc {
 	 * Free Inode: Remove data blocks and set bit to 0
 	 * @throws JExt2Exception 
 	 */
-	public static void freeInode(Inode inode) throws JExt2Exception {
-	    if (inode.getLinksCount() > 0)
-	        return;
-	    	    
-	    inode.setDeletionTime(new Date());
-	    inode.setSize(0);
-        if (inode instanceof DataInode) {
-            try {
-                ((DataInode)inode).accessData().truncate(0);
-            } catch (FileTooLarge e) {
-                throw new RuntimeException("should not happen");
-            }
-        }
-	    
-        inode.write(); // ok here: deleted inodes will not get any sync calls i guess
-
+	static void freeInode(Inode inode) throws JExt2Exception {
         long ino = inode.getIno();
         
         if (ino < superblock.getFirstIno() ||
