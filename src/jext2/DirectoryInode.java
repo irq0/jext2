@@ -28,10 +28,20 @@ public class DirectoryInode extends DataInode {
 			new ReentrantReadWriteLock(true);
 
 	/**
+	 * Lock to use when iterating a directory with {@link #iterateDirectory()}
+	 */
+	public ReentrantReadWriteLock.ReadLock lockForIterateDirectory() {
+		return directoryLock.readLock();
+	}
+	
+	/**
 	 * Get the directory iterator. Please note: A directory entry 
 	 * is everything found that fits the datastructure. Though "fill" entries
 	 * are allways included. You may want do do a #DirectoryEntry.isUnused 
 	 * to check that.
+	 * 
+	 * While using the DirectoryIterator you must hold the lock provided
+	 * by {@link #lockForIterateDirectory()}
 	 * @returns Directory iterator for this inode
 	 */
 	@NotThreadSafe(useLock=true)
