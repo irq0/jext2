@@ -101,6 +101,7 @@ public class DirectoryEntry extends PartialBlock {
 	 * Create a new directory entry. Note that the name is mandatory because
 	 * it dictates the record length on disk
 	 */
+	// TODO make visibility package
 	public static DirectoryEntry create(String name) throws FileNameTooLong {
 	    int nameLen = Ext2fsDataTypes.getStringByteLength(name);
 	    
@@ -132,6 +133,7 @@ public class DirectoryEntry extends PartialBlock {
 	 * Create the dummy directory entry which occupies the unused part of a 
 	 * block.
 	 */
+	// TODO make visibility package
 	public static DirectoryEntry createRestDummy(DirectoryEntry last) {
 	    DirectoryEntry dir = new DirectoryEntry();
 	    dir.fileType = FILETYPE_UNKNOWN;
@@ -153,7 +155,7 @@ public class DirectoryEntry extends PartialBlock {
 	    return 8 + nameLen + numPadBytes(nameLen);
 	}
 
-	public static DirectoryEntry fromByteBuffer(ByteBuffer buf, long blockNr, int offset) throws IoError {				
+	static DirectoryEntry fromByteBuffer(ByteBuffer buf, long blockNr, int offset) throws IoError {				
 		DirectoryEntry dir = new DirectoryEntry(blockNr, offset);
 		dir.read(buf);
 		return dir;
@@ -161,8 +163,8 @@ public class DirectoryEntry extends PartialBlock {
 	
 	public static int readRecLen(ByteBuffer buf, int offset) {
 	    return Ext2fsDataTypes.getLE16(buf, offset + 4);
-	}		
-	
+	}
+
 	/**
 	 * Export data structure to ByteBuffer which in turn can be written
 	 * to disk
