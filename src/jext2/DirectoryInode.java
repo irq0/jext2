@@ -45,12 +45,14 @@ public class DirectoryInode extends DataInode {
 		private ByteBuffer block;
 		private long blockNr;
 		private DirectoryEntry entry;
+		private DirectoryEntry previousEntry;
 		private int offset = 0;
 
 		private Iterator<Long> blockIter;
 		
 		DirectoryIterator() {
 		    blockIter = accessData().iterateBlocks();
+		    this.previousEntry = null;
 			this.entry = fetchNextEntry(null);
 		}
 
@@ -69,7 +71,7 @@ public class DirectoryInode extends DataInode {
 			        
 			        DirectoryEntry entry = DirectoryEntry.fromByteBuffer(block, blockNr, 0);
 			        directoryEntries.add(entry);
-			        
+			        directoryEntries.retain(entry);
 			        return entry;
 			    }
 
@@ -94,6 +96,7 @@ public class DirectoryInode extends DataInode {
 				// fetch next entry from block
 		        DirectoryEntry entry = DirectoryEntry.fromByteBuffer(block, blockNr, offset);
 		        directoryEntries.add(entry);
+		        directoryEntries.retain(entry);
 		        return entry;
 			} catch (IoError e) {
 				return null;
@@ -101,7 +104,10 @@ public class DirectoryInode extends DataInode {
 		}
 		
 		public DirectoryEntry next() {
+			directoryEntries.release(previousEntry);
+
 			DirectoryEntry result = this.entry;
+			this.previousEntry = this.entry;
 			this.entry = fetchNextEntry(entry);
 			return result;
 		}
