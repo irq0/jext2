@@ -6,6 +6,7 @@ import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.util.LinkedList;
 
+import jext2.annotations.NotThreadSafe;
 import jext2.exceptions.IoError;
 
 /**
@@ -53,6 +54,7 @@ public class BlockAccess {
 	 * 
 	 * Big fat waring: Aquire a lock for the corresponding block or hell breaks loose...
 	 */
+	@NotThreadSafe(useLock=true)
 	public void readToBufferUnsynchronized(long position, ByteBuffer buf) throws IoError {
 	    try {
 	        buf.order(ByteOrder.BIG_ENDIAN);
@@ -62,6 +64,7 @@ public class BlockAccess {
 	    }
 	}
 	
+	@NotThreadSafe(useLock=true)
 	public void writeFromBufferUnsynchronized(long position, ByteBuffer buf) throws IoError {
 	    buf.order(ByteOrder.BIG_ENDIAN);
 	    try {
