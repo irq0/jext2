@@ -6,9 +6,9 @@ import jext2.Inode;
 import jext2.InodeAlloc;
 import jext2.ModeBuilder;
 import jext2.exceptions.JExt2Exception;
+import jext2.exceptions.NotADirectory;
 import jlowfuse.FuseReq;
 import jlowfuse.Reply;
-import fuse.Errno;
 import fuse.FuseContext;
 import fusejext2.Jext2Context;
 import fusejext2.Util;
@@ -23,12 +23,10 @@ public class Mkdir extends jlowfuse.async.tasks.Mkdir<Jext2Context> {
         if (parent == 1) parent = Constants.EXT2_ROOT_INO;
         try {
             Inode parentInode = context.inodes.openInode(parent);
-            if (!parentInode.isDirectory()) {
-                Reply.err(req, Errno.ENOTDIR);
-                return;
-            }
-
-            FuseContext fuseContext = req.getContext();            
+            if (!parentInode.isDirectory())
+            	throw new NotADirectory();
+            
+        	FuseContext fuseContext = req.getContext();            
             DirectoryInode inode = 
                 DirectoryInode.createEmpty();            
             inode.setMode(new ModeBuilder().directory()

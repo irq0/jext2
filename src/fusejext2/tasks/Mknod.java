@@ -7,10 +7,11 @@ import jext2.InodeAlloc;
 import jext2.Mode;
 import jext2.ModeBuilder;
 import jext2.RegularInode;
+import jext2.exceptions.FunctionNotImplemented;
 import jext2.exceptions.JExt2Exception;
+import jext2.exceptions.NotADirectory;
 import jlowfuse.FuseReq;
 import jlowfuse.Reply;
-import fuse.Errno;
 import fuse.FuseContext;
 import fusejext2.Jext2Context;
 import fusejext2.Util;
@@ -27,17 +28,13 @@ public class Mknod extends jlowfuse.async.tasks.Mknod<Jext2Context> {
             Mode createMode = Mode.createWithNumericValue(mode & 0xFFFF);
 
             /* Only support regular files */
-            if (! createMode.isRegular()) {
-                Reply.err(req, Errno.ENOSYS);
-                return;
-            }
+            if (!createMode.isRegular())
+            	throw new FunctionNotImplemented();
 
             Inode parentInode = context.inodes.openInode(parent);
-            if (!parentInode.isDirectory()) {
-                Reply.err(req, Errno.ENOTDIR);
-                return;
-            }
-            
+            if (!parentInode.isDirectory())
+            	throw new NotADirectory();
+            	
             FuseContext fuseContext = req.getContext();           
             RegularInode inode = RegularInode.createEmpty();            
             inode.setMode(new ModeBuilder().regularFile()

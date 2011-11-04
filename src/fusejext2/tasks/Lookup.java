@@ -5,7 +5,7 @@ import jext2.DirectoryEntry;
 import jext2.DirectoryInode;
 import jext2.Inode;
 import jext2.exceptions.JExt2Exception;
-import fuse.Errno;
+import jext2.exceptions.NotADirectory;
 import fusejext2.Jext2Context;
 import fusejext2.Util;
 import jlowfuse.FuseReq;
@@ -21,11 +21,9 @@ public class Lookup extends jlowfuse.async.tasks.Lookup<Jext2Context> {
 		if (parent == 1) parent = Constants.EXT2_ROOT_INO;
 		try {		
 		    Inode parentInode = context.inodes.openInode(parent);
-			if (!parentInode.isDirectory()) { 
-				Reply.err(req, Errno.ENOTDIR);
-				return;
-			}
-			
+			if (!parentInode.isDirectory())
+				throw new NotADirectory();
+
 			DirectoryEntry entry = ((DirectoryInode)parentInode).lookup(name);			
 			Inode child = context.inodes.openInode(entry.getIno());			
 			Reply.entry(req, Util.inodeToEntryParam(context.superblock, child));			

@@ -2,7 +2,7 @@ package fusejext2.tasks;
 
 import jext2.Inode;
 import jext2.exceptions.JExt2Exception;
-import jext2.exceptions.PermissionDenied;
+import jext2.exceptions.OperationNotPermitted;
 import jlowfuse.FuseReq;
 import jlowfuse.Reply;
 import fuse.FileInfo;
@@ -17,9 +17,8 @@ public class Open extends jlowfuse.async.tasks.Open<Jext2Context> {
 	public void run() {
 		try {
 			Inode inode = context.inodes.openInode(ino);
-			if (!inode.isRegularFile()) {
-				Reply.err(req, Errno.EPERM);
-			}
+			if (!inode.isRegularFile())
+				throw new OperationNotPermitted();
 			
 			Reply.open(req, fi);
 
