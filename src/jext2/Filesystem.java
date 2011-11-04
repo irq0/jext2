@@ -12,36 +12,36 @@ import java.util.logging.SimpleFormatter;
 //      filesystem data like superblock, blockaccess, etc.
 //      This then should replace the direct superblock, etc. references in each class
 public class Filesystem {
-    private static Charset charset = Charset.defaultCharset();
-    private static Logger logger = Logger.getLogger("jext2");
+	private static Charset charset = Charset.defaultCharset();
+	private static Logger logger = Logger.getLogger("jext2");
 
 	public static Charset getCharset() {
-        return charset;
-    }
-    public static void setCharset(Charset charset) {
-        Filesystem.charset = charset;
-    }
+		return charset;
+	}
+	public static void setCharset(Charset charset) {
+		Filesystem.charset = charset;
+	}
 
-    /**
-     * Get the PID of the running process
-     */
-    public static long getPID() {
-        String appName = ManagementFactory.getRuntimeMXBean().getName();
-        String strPid = appName.substring(0, appName.indexOf('@')-1);
-        return Long.parseLong(strPid);
-    }
+	/**
+	 * Get the PID of the running process
+	 */
+	public static long getPID() {
+		String appName = ManagementFactory.getRuntimeMXBean().getName();
+		String strPid = appName.substring(0, appName.indexOf('@')-1);
+		return Long.parseLong(strPid);
+	}
 
-    public static void initializeLoggingToFile(String logfile) throws IOException {
-	    FileHandler handler = new FileHandler(logfile);
-        handler.setFormatter(new SimpleFormatter());
+	public static void initializeLoggingToFile(String logfile) throws IOException {
+		FileHandler handler = new FileHandler(logfile);
+		handler.setFormatter(new SimpleFormatter());
 
-        logger.addHandler(handler);
-        logger.setLevel(Level.ALL);
-        logger.info("jext2 start");
-    }
+		logger.addHandler(handler);
+		logger.setLevel(Level.ALL);
+		logger.info("jext2 start");
+	}
 
-    public static Logger getLogger() {
-        return logger;
-    }
+	public static Logger getLogger() {
+		return logger;
+	}
 
 }

@@ -17,14 +17,14 @@ public class Constants {
 	public static final int	EXT2_MAX_FRAG_SIZE = 4096;
 	public static final int EXT2_MIN_FRAG_LOG_SIZE = 10;
 
- 	public static final int	EXT2_NDIR_BLOCKS = 12;
- 	public static final int	EXT2_IND_BLOCK   = EXT2_NDIR_BLOCKS;
- 	public static final int	EXT2_DIND_BLOCK  = (EXT2_IND_BLOCK + 1);
- 	public static final int	EXT2_TIND_BLOCK  = (EXT2_DIND_BLOCK + 1);
- 	public static final int	EXT2_N_BLOCKS    = (EXT2_TIND_BLOCK + 1);
+	public static final int	EXT2_NDIR_BLOCKS = 12;
+	public static final int	EXT2_IND_BLOCK   = EXT2_NDIR_BLOCKS;
+	public static final int	EXT2_DIND_BLOCK  = (EXT2_IND_BLOCK + 1);
+	public static final int	EXT2_TIND_BLOCK  = (EXT2_DIND_BLOCK + 1);
+	public static final int	EXT2_N_BLOCKS    = (EXT2_TIND_BLOCK + 1);
 
 	// Mount flags
- 	public static final int EXT2_MOUNT_CHECK        = 0x000001;	/* Do mount-time checks */
+	public static final int EXT2_MOUNT_CHECK        = 0x000001;	/* Do mount-time checks */
 	public static final int EXT2_MOUNT_OLDALLOC		= 0x000002;	/* Don't use the new Orlov allocator */
 	public static final int EXT2_MOUNT_GRPID		= 0x000004;	/* Create files with directory's group */
 	public static final int EXT2_MOUNT_DEBUG		= 0x000008;	/* Some debugging messages */
@@ -125,18 +125,18 @@ public class Constants {
 
 	/* Flags that should be inherited by new inodes from their parent. */
 	public static final int EXT2_FL_INHERITED = (EXT2_SECRM_FL |
-	                                             EXT2_UNRM_FL |
-	                                             EXT2_COMPR_FL |
-	                                             EXT2_SYNC_FL |
-	                                             EXT2_IMMUTABLE_FL |
-	                                             EXT2_APPEND_FL |
-	                                             EXT2_NODUMP_FL |
-	                                             EXT2_NOATIME_FL |
-	                                             EXT2_COMPRBLK_FL|
-	                                             EXT2_NOCOMP_FL |
-	                                             EXT2_JOURNAL_DATA_FL |
-	                                             EXT2_NOTAIL_FL |
-	                                             EXT2_DIRSYNC_FL);
+			EXT2_UNRM_FL |
+			EXT2_COMPR_FL |
+			EXT2_SYNC_FL |
+			EXT2_IMMUTABLE_FL |
+			EXT2_APPEND_FL |
+			EXT2_NODUMP_FL |
+			EXT2_NOATIME_FL |
+			EXT2_COMPRBLK_FL|
+			EXT2_NOCOMP_FL |
+			EXT2_JOURNAL_DATA_FL |
+			EXT2_NOTAIL_FL |
+			EXT2_DIRSYNC_FL);
 
 	/* Flags that are appropriate for regular files (all but dir-specific ones). */
 	public static final int EXT2_REG_FLMASK = (~(EXT2_DIRSYNC_FL | EXT2_TOPDIR_FL));

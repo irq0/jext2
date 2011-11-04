@@ -80,7 +80,7 @@ public class BlockSynchronizer {
 		removeLock(lock, nr);
 	}
 
-    public static BlockSynchronizer getInstance() {
+	public static BlockSynchronizer getInstance() {
 		return BlockSynchronizer.instance;
 	}
 }

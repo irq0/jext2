@@ -23,8 +23,8 @@ public class BlockGroupAccess {
 	// TODO reimplement with block iterator
 	public void readDescriptors() throws IoError {
 		int blockCount = (superblock.getGroupsCount() +
-						  superblock.getGroupDescrPerBlock() - 1) /
-						  superblock.getGroupDescrPerBlock();
+				superblock.getGroupDescrPerBlock() - 1) /
+				superblock.getGroupDescrPerBlock();
 		int groupCount = superblock.getGroupsCount();
 		long start = BlockGroupDescriptor.descriptorLocation(0);
 		int groupsPerBlock = superblock.getGroupDescrPerBlock();
@@ -45,9 +45,9 @@ public class BlockGroupAccess {
 	}
 
 	public void syncDescriptors() throws IoError {
-	    for (BlockGroupDescriptor descr : iterateBlockGroups()) {
-	        descr.sync();
-	    }
+		for (BlockGroupDescriptor descr : iterateBlockGroups()) {
+			descr.sync();
+		}
 	}
 
 	public BlockGroupDescriptor getGroupDescriptor(int group) {
@@ -58,13 +58,13 @@ public class BlockGroupAccess {
 		return instance;
 	}
 
-	
+
 	private class BlockGroupDescriptorIterator
 	implements Iterator<BlockGroupDescriptor>, Iterable<BlockGroupDescriptor> {
 		private int current = 0;
 
 		public BlockGroupDescriptorIterator(int start) {
-		    current = start;
+			current = start;
 		}
 
 		@Override
@@ -91,8 +91,8 @@ public class BlockGroupAccess {
 	public BlockGroupDescriptorIterator iterateBlockGroups() {
 		return new BlockGroupDescriptorIterator(0);
 	}
-    public BlockGroupDescriptorIterator iterateBlockGroups(int start) {
-        return new BlockGroupDescriptorIterator(start);
-    }
+	public BlockGroupDescriptorIterator iterateBlockGroups(int start) {
+		return new BlockGroupDescriptorIterator(start);
+	}
 
 }

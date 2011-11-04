@@ -5,12 +5,12 @@ public class Calculations {
 
 	public static int groupOfBlk(long blk) {
 		return (int)((blk - superblock.getFirstDataBlock()) /
-			superblock.getBlocksPerGroup());
+				superblock.getBlocksPerGroup());
 	}
 
 	public static int groupIndexOfBlk(long blk) {
-	    return (int)((blk - superblock.getFirstDataBlock()) %
-	        superblock.getBlocksPerGroup());
+		return (int)((blk - superblock.getFirstDataBlock()) %
+				superblock.getBlocksPerGroup());
 	}
 
 
@@ -24,12 +24,12 @@ public class Calculations {
 
 	public static int localInodeOffset(long ino) {
 		return (int)(((ino - 1) % superblock.getInodesPerGroup()) *
-			superblock.getInodeSize());
+				superblock.getInodeSize());
 	}
 
 	public static long blockNrOfLocal(int index, long groupNr) {
-	    return index + groupNr * superblock.getBlocksPerGroup() +
-	        superblock.getFirstDataBlock();
+		return index + groupNr * superblock.getBlocksPerGroup() +
+				superblock.getFirstDataBlock();
 	}
 
 }

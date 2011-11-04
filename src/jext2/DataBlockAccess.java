@@ -22,20 +22,20 @@ public class DataBlockAccess {
 	protected DataInode inode = null;
 
 	// used by findGoal
-    private long lastAllocLogicalBlock = 0;
-    private long lastAllocPhysicalBlock = 0;
+	private long lastAllocLogicalBlock = 0;
+	private long lastAllocPhysicalBlock = 0;
 
 	/** number of pointers in indirection block */
-    private static int ptrs = superblock.getAddressesPerBlock();
+	private static int ptrs = superblock.getAddressesPerBlock();
 
-    /** number of direct Blocks */
-    public static final long directBlocks = Constants.EXT2_NDIR_BLOCKS;
-    /** number of indirect Blocks */
-    public static final long indirectBlocks = ptrs;
-    /** number of double indirect blocks */
-    public static final long doubleBlocks = ptrs*ptrs;
-    /** number of triple indirect blocks */
-    public static final long trippleBlocks = ptrs*ptrs*ptrs;
+	/** number of direct Blocks */
+	public static final long directBlocks = Constants.EXT2_NDIR_BLOCKS;
+	/** number of indirect Blocks */
+	public static final long indirectBlocks = ptrs;
+	/** number of double indirect blocks */
+	public static final long doubleBlocks = ptrs*ptrs;
+	/** number of triple indirect blocks */
+	public static final long trippleBlocks = ptrs*ptrs*ptrs;
 
 	class DataBlockIterator implements Iterator<Long>, Iterable<Long>{
 		Inode inode;
@@ -50,32 +50,32 @@ public class DataBlockAccess {
 		}
 
 		DataBlockIterator(DataInode inode) {
-		    this(inode , -1);
+			this(inode , -1);
 		}
 
 		@Override
 		public boolean hasNext() {
-		    fetchNext();
-		    return ((remaining > 0) || ((blocks != null) && (blocks.size() > 0)));
+			fetchNext();
+			return ((remaining > 0) || ((blocks != null) && (blocks.size() > 0)));
 		}
 
 		private void fetchNext() {
 			try {
-			   if (remaining > 0) { /* still blocks to fetch */
-			      if (blocks == null || blocks.size() == 0) { /* blockNr cache empty */
-			           try {
-			               blocks = getBlocks(current + 1, remaining);
-			           } catch (FileTooLarge e) {
-			               blocks = null;
-			           }
-			           if (blocks == null) {
-			               remaining = 0;
-			               return;
-			           }
-			           remaining -= blocks.size();
-			           current += blocks.size();
-			       }
-			   }
+				if (remaining > 0) { /* still blocks to fetch */
+					if (blocks == null || blocks.size() == 0) { /* blockNr cache empty */
+						try {
+							blocks = getBlocks(current + 1, remaining);
+						} catch (FileTooLarge e) {
+							blocks = null;
+						}
+						if (blocks == null) {
+							remaining = 0;
+							return;
+						}
+						remaining -= blocks.size();
+						current += blocks.size();
+					}
+				}
 			} catch (JExt2Exception e) {
 				// XXX this is potentially to broad
 			}
@@ -83,8 +83,8 @@ public class DataBlockAccess {
 
 		@Override
 		public Long next() {
-		    fetchNext();
-		    return (blocks.removeFirst());
+			fetchNext();
+			return (blocks.removeFirst());
 		}
 
 		@Override
@@ -115,25 +115,25 @@ public class DataBlockAccess {
 	 *     than the last possible triple indirection offset for this blocksize
 	 */
 	public static int[] blockToPath(long fileBlockNr) throws FileTooLarge {
-	    // fileBlockNr will allways be less than blockSize -> int is ok
+		// fileBlockNr will allways be less than blockSize -> int is ok
 		if (fileBlockNr < 0) {
 			throw new RuntimeException("blockToPath: file block number < 0");
 		} else if (fileBlockNr < Constants.EXT2_NDIR_BLOCKS) {
 			return new int[] { (int)fileBlockNr };
 		} else if ((fileBlockNr -= directBlocks) < indirectBlocks) {
 			return new int[] { Constants.EXT2_IND_BLOCK,
-							    (int)fileBlockNr };
+					(int)fileBlockNr };
 		} else if ((fileBlockNr -= indirectBlocks) < doubleBlocks) {
 			return new int[] { Constants.EXT2_DIND_BLOCK,
-							    (int)fileBlockNr / ptrs,
-							    (int)fileBlockNr % ptrs };
+					(int)fileBlockNr / ptrs,
+					(int)fileBlockNr % ptrs };
 		} else if ((fileBlockNr -= doubleBlocks)  < trippleBlocks) {
 			return new int[] { Constants.EXT2_TIND_BLOCK,
-							    (int)fileBlockNr / (ptrs*ptrs),
-							    ((int)fileBlockNr / ptrs) % ptrs ,
-							    (int)fileBlockNr % ptrs };
+					(int)fileBlockNr / (ptrs*ptrs),
+					((int)fileBlockNr / ptrs) % ptrs ,
+					(int)fileBlockNr % ptrs };
 		} else {
-		    throw new FileTooLarge();
+			throw new FileTooLarge();
 		}
 	}
 
@@ -157,17 +157,17 @@ public class DataBlockAccess {
 		}
 
 		for (int i=1; i<depth; i++) {
-				long nr = blocks.readBlockNumberFromBlock(blockNrs[i-1],
-					    					              offsets[i]);
+			long nr = blocks.readBlockNumberFromBlock(blockNrs[i-1],
+					offsets[i]);
 
-				blockNrs[i] = nr;
+			blockNrs[i] = nr;
 
-				if (nr == 0) { /* chain is incomplete */
-					long[] result = new long[i];
-					for (int k=0; k<i; k++)
-						result[k] = blockNrs[k];
-					return result;
-				}
+			if (nr == 0) { /* chain is incomplete */
+				long[] result = new long[i];
+				for (int k=0; k<i; k++)
+					result[k] = blockNrs[k];
+				return result;
+			}
 		}
 
 		return blockNrs;
@@ -179,11 +179,11 @@ public class DataBlockAccess {
 	 * @return Preferrred place for a block (the goal)
 	 */
 	public long findGoal(long block, long[] blockNrs, int[] offsets) throws IoError {
-	    if (block == (lastAllocLogicalBlock + 1)
-	        && (lastAllocPhysicalBlock != 0)) {
-	            return (lastAllocPhysicalBlock + 1);
-	        }
-	    return findNear(inode, blockNrs, offsets);
+		if (block == (lastAllocLogicalBlock + 1)
+				&& (lastAllocPhysicalBlock != 0)) {
+			return (lastAllocPhysicalBlock + 1);
+		}
+		return findNear(inode, blockNrs, offsets);
 	}
 
 
@@ -198,37 +198,37 @@ public class DataBlockAccess {
 	 *     - if pointer will live in inode - allocate in the same cylinder group
 	 */
 	public long findNear(DataInode inode, long[] blockNrs, int[] offsets) throws IoError {
-	    int depth = blockNrs.length;
+		int depth = blockNrs.length;
 
-	    /* Try to find previous block */
-	    if (depth == 0)  { /* search direct blocks */
-	        long[] directBlocks = inode.getBlock();
-	        for (int i=directBlocks.length-1; i >= 0; i--) {
-	            if (directBlocks[i] != 0)
-	                return directBlocks[i];
-	        }
-	    } else { /* search last indirect block */
-	        ByteBuffer indirectBlock = blocks.read(blockNrs[depth-1]);
+		/* Try to find previous block */
+		if (depth == 0)  { /* search direct blocks */
+			long[] directBlocks = inode.getBlock();
+			for (int i=directBlocks.length-1; i >= 0; i--) {
+				if (directBlocks[i] != 0)
+					return directBlocks[i];
+			}
+		} else { /* search last indirect block */
+			ByteBuffer indirectBlock = blocks.read(blockNrs[depth-1]);
 
-	        for (int i=offsets[depth-1]-1; i>= 0; i--) {
-	            long pointer = Ext2fsDataTypes.getLE32U(indirectBlock, i*4);
-	            if (pointer != 0)
-	                return pointer;
-	        }
-	    }
+			for (int i=offsets[depth-1]-1; i>= 0; i--) {
+				long pointer = Ext2fsDataTypes.getLE32U(indirectBlock, i*4);
+				if (pointer != 0)
+					return pointer;
+			}
+		}
 
-	    /* No such thing, so let's try location of indirect block */
-	    if (depth > 1)
-	        return blockNrs[depth-1];
+		/* No such thing, so let's try location of indirect block */
+		if (depth > 1)
+			return blockNrs[depth-1];
 
 
-	    /* It is going to be refered from inode itself? OK just put i into
-	     * the same cylinder group then
-	     */
-	    long bgStart = BlockGroupDescriptor.firstBlock(inode.getBlockGroup());
-	    long colour = (Filesystem.getPID() % 16) *
-	                    (superblock.getBlocksPerGroup() / 16);
-	    return bgStart + colour;
+		/* It is going to be refered from inode itself? OK just put i into
+		 * the same cylinder group then
+		 */
+		long bgStart = BlockGroupDescriptor.firstBlock(inode.getBlockGroup());
+		long colour = (Filesystem.getPID() % 16) *
+				(superblock.getBlocksPerGroup() / 16);
+		return bgStart + colour;
 
 	}
 
@@ -244,45 +244,45 @@ public class DataBlockAccess {
 	 * them into a chain and writes them to disk.
 	 */
 	public LinkedList<Long> allocBranch(int num, long goal,
-	                                    int[] offsets, long[] blockNrs)
-	                                           throws JExt2Exception, NoSpaceLeftOnDevice {
+			int[] offsets, long[] blockNrs)
+					throws JExt2Exception, NoSpaceLeftOnDevice {
 
-	    int n = 0;
-	    LinkedList<Long> result = new LinkedList<Long>();
+		int n = 0;
+		LinkedList<Long> result = new LinkedList<Long>();
 
-        try {
-            long parent = allocateBlock(goal);
-            result.addLast(parent);
+		try {
+			long parent = allocateBlock(goal);
+			result.addLast(parent);
 
-            if (parent > 0) {
-                for (n=1; n < num; n++) {
-                    /* allocate the next block */
-                    long nr = allocateBlock(parent);
-                    if (nr > 0) {
-                        result.addLast(nr);
+			if (parent > 0) {
+				for (n=1; n < num; n++) {
+					/* allocate the next block */
+					long nr = allocateBlock(parent);
+					if (nr > 0) {
+						result.addLast(nr);
 
-                        ByteBuffer buf = ByteBuffer.allocate(superblock.getBlocksize());
-                        Ext2fsDataTypes.putLE32U(buf, nr, offsets[n]*4);
-                        buf.rewind();
-                        blocks.write(parent, buf);
-                    } else {
-                        break;
-                    }
+						ByteBuffer buf = ByteBuffer.allocate(superblock.getBlocksize());
+						Ext2fsDataTypes.putLE32U(buf, nr, offsets[n]*4);
+						buf.rewind();
+						blocks.write(parent, buf);
+					} else {
+						break;
+					}
 
-                    parent = nr;
-                }
-            }
-        } catch (NoSpaceLeftOnDevice e) {
-            for (long nr : result) {
-                freeBlocks(new long[] {nr});
-            }
-        }
+					parent = nr;
+				}
+			}
+		} catch (NoSpaceLeftOnDevice e) {
+			for (long nr : result) {
+				freeBlocks(new long[] {nr});
+			}
+		}
 
-	    if (num == n)
-	        return result;
+		if (num == n)
+			return result;
 
-	    /* Allocation failed, free what we already allocated */
-	    throw new NoSpaceLeftOnDevice();
+		/* Allocation failed, free what we already allocated */
+		throw new NoSpaceLeftOnDevice();
 	}
 
 
@@ -291,28 +291,28 @@ public class DataBlockAccess {
 	 * @throws IOException
 	 */
 	public void spliceBranch(long logicalBlock,
-	                         int[] offsets, long[] blockNrs, LinkedList<Long> newBlockNrs)
-	                         throws IoError {
+			int[] offsets, long[] blockNrs, LinkedList<Long> newBlockNrs)
+					throws IoError {
 
-	    int existDepth = blockNrs.length;
+		int existDepth = blockNrs.length;
 
-	    if (existDepth == 0) { /* add direct block */
-	        long[] directBlocks = inode.getBlock();
-	        directBlocks[offsets[0]] = newBlockNrs.getFirst().longValue();
-	    } else {
-	        ByteBuffer buf = blocks.read(blockNrs[existDepth-1]);
-	        Ext2fsDataTypes.putLE32U(buf, newBlockNrs.getFirst().longValue(),
-	                                     offsets[existDepth]*4);
-	        buf.rewind();
-	        blocks.write(blockNrs[existDepth-1], buf);
-	    }
+		if (existDepth == 0) { /* add direct block */
+			long[] directBlocks = inode.getBlock();
+			directBlocks[offsets[0]] = newBlockNrs.getFirst().longValue();
+		} else {
+			ByteBuffer buf = blocks.read(blockNrs[existDepth-1]);
+			Ext2fsDataTypes.putLE32U(buf, newBlockNrs.getFirst().longValue(),
+					offsets[existDepth]*4);
+			buf.rewind();
+			blocks.write(blockNrs[existDepth-1], buf);
+		}
 
-	    lastAllocLogicalBlock = logicalBlock;
-	    lastAllocPhysicalBlock = newBlockNrs.getLast().intValue();
+		lastAllocLogicalBlock = logicalBlock;
+		lastAllocPhysicalBlock = newBlockNrs.getLast().intValue();
 
-	    inode.setBlocks(inode.getBlocks() +
-	            newBlockNrs.size() * (superblock.getBlocksize()/ 512));
-	    inode.setModificationTime(new Date());
+		inode.setBlocks(inode.getBlocks() +
+				newBlockNrs.size() * (superblock.getBlocksize()/ 512));
+		inode.setModificationTime(new Date());
 	}
 
 
@@ -322,35 +322,35 @@ public class DataBlockAccess {
 	 * @param  fileBlockNr  logical block address
 	 * @param  maxBlocks    maximum blocks returned
 	 * @return list of block nrs or null if logical block not found
-     * @throws FileTooLarge fileBlockNr bigger than maximum indirection offset
-     * @throws IOException
+	 * @throws FileTooLarge fileBlockNr bigger than maximum indirection offset
+	 * @throws IOException
 	 */
 	public LinkedList<Long> getBlocks(long fileBlockNr, long maxBlocks)
-	        throws JExt2Exception, FileTooLarge {
-	    try {
-	        return getBlocks(fileBlockNr, maxBlocks, false);
-	    } catch (NoSpaceLeftOnDevice e) {
-	        throw new RuntimeException("should not happen");
-	    }
+			throws JExt2Exception, FileTooLarge {
+		try {
+			return getBlocks(fileBlockNr, maxBlocks, false);
+		} catch (NoSpaceLeftOnDevice e) {
+			throw new RuntimeException("should not happen");
+		}
 	}
 
 	/**
-     * Get up to maxBlocks block numbers for the logical block number. Allocate new blocks if
-     * necessary. In case of block allocation only one is blockNr returned.
-     * @see    getBlocksAllocate
-     * @param  fileBlockNr  logical block address
-     * @param  maxBlocks    maximum blocks returned
-     * @return list of block nrs
-     * @throws NoSpaceLeftOnDevice
-     * @throws FileTooLarge fileBlockNr bigger than maximum indirection offset
-     * @throws IOException
-     * @see #getBlocks(long fileBlockNr, long maxBlocks, boolean create)
-     * @see #getBlocks(long fileBlockNr, long maxBlocks)
-     */
-    public LinkedList<Long> getBlocksAllocate(long fileBlockNr, long maxBlocks)
-            throws JExt2Exception, NoSpaceLeftOnDevice, FileTooLarge {
-        return getBlocks(fileBlockNr, maxBlocks, true);
-    }
+	 * Get up to maxBlocks block numbers for the logical block number. Allocate new blocks if
+	 * necessary. In case of block allocation only one is blockNr returned.
+	 * @see    getBlocksAllocate
+	 * @param  fileBlockNr  logical block address
+	 * @param  maxBlocks    maximum blocks returned
+	 * @return list of block nrs
+	 * @throws NoSpaceLeftOnDevice
+	 * @throws FileTooLarge fileBlockNr bigger than maximum indirection offset
+	 * @throws IOException
+	 * @see #getBlocks(long fileBlockNr, long maxBlocks, boolean create)
+	 * @see #getBlocks(long fileBlockNr, long maxBlocks)
+	 */
+	public LinkedList<Long> getBlocksAllocate(long fileBlockNr, long maxBlocks)
+			throws JExt2Exception, NoSpaceLeftOnDevice, FileTooLarge {
+		return getBlocks(fileBlockNr, maxBlocks, true);
+	}
 
 
 	/** Get up to maxBlocks BlockNrs for the logical fileBlockNr. I dont really like to change behavior
@@ -366,7 +366,7 @@ public class DataBlockAccess {
 	 * @throws IOException
 	 */
 	private LinkedList<Long> getBlocks(long fileBlockNr, long maxBlocks, boolean create)
-	    throws JExt2Exception, NoSpaceLeftOnDevice, FileTooLarge {
+			throws JExt2Exception, NoSpaceLeftOnDevice, FileTooLarge {
 
 		if (fileBlockNr < 0 || maxBlocks < 1)
 			throw new IllegalArgumentException();
@@ -392,10 +392,10 @@ public class DataBlockAccess {
 			long blocksToBoundary = 0;
 			if (depth >= 2) /* indirect blocks */
 				blocksToBoundary =
-					superblock.getAddressesPerBlock() - offsets[depth-1] - 1;
+				superblock.getAddressesPerBlock() - offsets[depth-1] - 1;
 			else /* direct blocks */
 				blocksToBoundary =
-					Constants.EXT2_NDIR_BLOCKS - offsets[0] - 1;
+				Constants.EXT2_NDIR_BLOCKS - offsets[0] - 1;
 
 			int count = 1;
 			while(count < maxBlocks && count <= blocksToBoundary) {
@@ -404,7 +404,7 @@ public class DataBlockAccess {
 				long nextOnDisk = -1;
 				if (depth >= 2) /* indirect blocks */
 					nextOnDisk = blocks.readBlockNumberFromBlock(
-						blockNrs[depth-2], offsets[depth-1] + count);
+							blockNrs[depth-2], offsets[depth-1] + count);
 				else /* direct blocks */
 					nextOnDisk = inode.getBlock()[offsets[0] + count];
 
@@ -439,107 +439,107 @@ public class DataBlockAccess {
 	 * Try to allocate a block by looping over block groups and calling
 	 * newBlockInGroup
 	 */
-    private static long newBlock(long goal) throws JExt2Exception, NoSpaceLeftOnDevice {
-        if (! superblock.hasFreeBlocks()) {
-            throw new NoSpaceLeftOnDevice();
-        }
+	private static long newBlock(long goal) throws JExt2Exception, NoSpaceLeftOnDevice {
+		if (! superblock.hasFreeBlocks()) {
+			throw new NoSpaceLeftOnDevice();
+		}
 
-        if (goal < superblock.getFirstDataBlock() ||
-                goal >= superblock.getBlocksCount())
-            goal = superblock.getFirstDataBlock();
+		if (goal < superblock.getFirstDataBlock() ||
+				goal >= superblock.getBlocksCount())
+			goal = superblock.getFirstDataBlock();
 
-        int goalGroup = Calculations.groupOfBlk(goal);
-        int start = (int) ((goal - superblock.getFirstDataBlock()) %
-                superblock.getBlocksPerGroup());
+		int goalGroup = Calculations.groupOfBlk(goal);
+		int start = (int) ((goal - superblock.getFirstDataBlock()) %
+				superblock.getBlocksPerGroup());
 
-        /* start at the goalGroup and search forward for first free block */
-        for (BlockGroupDescriptor descr : blockGroups.iterateBlockGroups(goalGroup)) {
-            long blockNr =  newBlockInGroup(start, descr);
-            if (blockNr > 0) {
-                return blockNr;
-            }
-            start = 0;
-        }
+		/* start at the goalGroup and search forward for first free block */
+		for (BlockGroupDescriptor descr : blockGroups.iterateBlockGroups(goalGroup)) {
+			long blockNr =  newBlockInGroup(start, descr);
+			if (blockNr > 0) {
+				return blockNr;
+			}
+			start = 0;
+		}
 
-        /* start at first group and search the rest */
-        for (BlockGroupDescriptor descr : blockGroups.iterateBlockGroups()) {
-            long blockNr =  newBlockInGroup(0, descr);
-            if (blockNr > 0) {
-                return blockNr;
-            }
-        }
+		/* start at first group and search the rest */
+		for (BlockGroupDescriptor descr : blockGroups.iterateBlockGroups()) {
+			long blockNr =  newBlockInGroup(0, descr);
+			if (blockNr > 0) {
+				return blockNr;
+			}
+		}
 
-        throw new NoSpaceLeftOnDevice();
-    }
+		throw new NoSpaceLeftOnDevice();
+	}
 
-    /**
-     * Allocate a new block. Uses a goal block to assist allocation. If
-     * the goal is free, or there is a free block within 32 blocks of the gloal, that block is
-     * allocated. Otherwise a forward search is made for a free block.
-     * @param  goal    the goal block
-     * @return     pointer to allocated block
-     * @throws IOException
-     * @throws NoSpaceLeftOnDevice
-     */
-    public static long allocateBlock(long goal) throws NoSpaceLeftOnDevice, JExt2Exception {
-        long blockNr = newBlock(goal);
+	/**
+	 * Allocate a new block. Uses a goal block to assist allocation. If
+	 * the goal is free, or there is a free block within 32 blocks of the gloal, that block is
+	 * allocated. Otherwise a forward search is made for a free block.
+	 * @param  goal    the goal block
+	 * @return     pointer to allocated block
+	 * @throws IOException
+	 * @throws NoSpaceLeftOnDevice
+	 */
+	public static long allocateBlock(long goal) throws NoSpaceLeftOnDevice, JExt2Exception {
+		long blockNr = newBlock(goal);
 
-        /* Finally return pointer to allocated block or an error */
-        superblock.setFreeBlocksCount(superblock.getFreeBlocksCount() - 1);
-        return blockNr;
-    }
+		/* Finally return pointer to allocated block or an error */
+		superblock.setFreeBlocksCount(superblock.getFreeBlocksCount() - 1);
+		return blockNr;
+	}
 
-    /**
-     * Find free block in single block group
-     * @param       start       bitmap index to begin (think of goal)
-     * @param       descr       group descriptor to search
-     * @return      block number or -1
-     * @throws JExt2Exception
-     */
-    private static long newBlockInGroup(int start, BlockGroupDescriptor descr) throws JExt2Exception {
-    	Bitmap bitmap = bitmaps.openDataBitmap(descr);
+	/**
+	 * Find free block in single block group
+	 * @param       start       bitmap index to begin (think of goal)
+	 * @param       descr       group descriptor to search
+	 * @return      block number or -1
+	 * @throws JExt2Exception
+	 */
+	private static long newBlockInGroup(int start, BlockGroupDescriptor descr) throws JExt2Exception {
+		Bitmap bitmap = bitmaps.openDataBitmap(descr);
 
-        if (descr.getFreeBlocksCount() > 0) {
+		if (descr.getFreeBlocksCount() > 0) {
 
-            int freeIndex = bitmap.getNextZeroBitPos(start);
-            if (freeIndex > 0) {
-                long blockNr = descr.firstBlock() + freeIndex;
+			int freeIndex = bitmap.getNextZeroBitPos(start);
+			if (freeIndex > 0) {
+				long blockNr = descr.firstBlock() + freeIndex;
 
-                /* Check to see if we are trying to allocate a system block */
-                if (!(descr.isValidDataBlockNr(blockNr))) {
-                	bitmaps.closeBitmap(bitmap);
-                    throw new RuntimeException("Trying to allocate in system zone"
-                                            + " blockNr=" + blockNr
-                                            + " group=" + descr.getBlockGroup()
-                                            + " index=" + freeIndex);
-                }
+				/* Check to see if we are trying to allocate a system block */
+				if (!(descr.isValidDataBlockNr(blockNr))) {
+					bitmaps.closeBitmap(bitmap);
+					throw new RuntimeException("Trying to allocate in system zone"
+							+ " blockNr=" + blockNr
+							+ " group=" + descr.getBlockGroup()
+							+ " index=" + freeIndex);
+				}
 
-                bitmap.setBit(freeIndex, true);
-                bitmap.write();
-            	bitmaps.closeBitmap(bitmap);
+				bitmap.setBit(freeIndex, true);
+				bitmap.write();
+				bitmaps.closeBitmap(bitmap);
 
-                descr.setFreeBlocksCount(descr.getFreeBlocksCount() - 1);
+				descr.setFreeBlocksCount(descr.getFreeBlocksCount() - 1);
 
-                return Calculations.blockNrOfLocal(freeIndex, descr.getBlockGroup());
-            } else {
-                start = 0; // XXX this does not make sense :-/
-            }
-        }
+				return Calculations.blockNrOfLocal(freeIndex, descr.getBlockGroup());
+			} else {
+				start = 0; // XXX this does not make sense :-/
+			}
+		}
 
-    	bitmaps.closeBitmap(bitmap);
-        return -1;
-    }
+		bitmaps.closeBitmap(bitmap);
+		return -1;
+	}
 
 
-    private DataBlockAccess(DataInode inode) {
-        this.inode = inode;
-    }
+	private DataBlockAccess(DataInode inode) {
+		this.inode = inode;
+	}
 
 	/**
 	 * Create access provider to inode data
 	 */
 	public static DataBlockAccess fromInode(DataInode inode) {
-	    return new DataBlockAccess(inode);
+		return new DataBlockAccess(inode);
 	}
 
 	/**
@@ -547,7 +547,7 @@ public class DataBlockAccess {
 	 * @param  blockNr physical block to free
 	 */
 	public void freeDataBlock(long blockNr) throws JExt2Exception {
-	    freeDataBlocksContiguous(blockNr, 1);
+		freeDataBlocksContiguous(blockNr, 1);
 
 	}
 
@@ -558,68 +558,68 @@ public class DataBlockAccess {
 	 * @throws JExt2Exception
 	 */
 	public void freeDataBlocksContiguous(long blockNr, long count) throws JExt2Exception {
-	    /* counter to set {superblock|blockgroup}.freeBlocksCount */
-	    int groupFreed = 0;
-	    int freed = 0;
+		/* counter to set {superblock|blockgroup}.freeBlocksCount */
+		int groupFreed = 0;
+		int freed = 0;
 
-	    if (blockNr < superblock.getFirstDataBlock() ||
-	        blockNr + count < blockNr ||
-	        blockNr + count > superblock.getBlocksCount()) {
-	        throw new RuntimeException("Free blocks not in datazone" +
-	        		" blockNr=" + blockNr +
-	        		" count=" + count);
-	    }
+		if (blockNr < superblock.getFirstDataBlock() ||
+				blockNr + count < blockNr ||
+				blockNr + count > superblock.getBlocksCount()) {
+			throw new RuntimeException("Free blocks not in datazone" +
+					" blockNr=" + blockNr +
+					" count=" + count);
+		}
 
-	    long overflow;
-	    do {
-	        overflow = 0;
-	        int groupNr = Calculations.groupOfBlk(blockNr);
-	        int groupIndex = Calculations.groupIndexOfBlk(blockNr);
-	        BlockGroupDescriptor groupDescr = blockGroups.getGroupDescriptor(groupNr);
+		long overflow;
+		do {
+			overflow = 0;
+			int groupNr = Calculations.groupOfBlk(blockNr);
+			int groupIndex = Calculations.groupIndexOfBlk(blockNr);
+			BlockGroupDescriptor groupDescr = blockGroups.getGroupDescriptor(groupNr);
 
-	        /* Check to see if we are freeing blocks across a group boundary. */
-	        if (groupIndex + count > superblock.getBlocksPerGroup()) {
-	            overflow = groupIndex + count - superblock.getBlocksPerGroup();
-	            count -= overflow;
-	        }
+			/* Check to see if we are freeing blocks across a group boundary. */
+			if (groupIndex + count > superblock.getBlocksPerGroup()) {
+				overflow = groupIndex + count - superblock.getBlocksPerGroup();
+				count -= overflow;
+			}
 
-	        Bitmap bitmap = bitmaps.openDataBitmap(groupDescr);
+			Bitmap bitmap = bitmaps.openDataBitmap(groupDescr);
 
-	        /* Check to see if we are trying to free a system block */
-	        if (!(groupDescr.isValidDataBlockNr(blockNr) &&
-	              groupDescr.isValidDataBlockNr(blockNr + count-1))) {
-	            throw new RuntimeException("Freeing blocks in system zones");
-	        }
+			/* Check to see if we are trying to free a system block */
+			if (!(groupDescr.isValidDataBlockNr(blockNr) &&
+					groupDescr.isValidDataBlockNr(blockNr + count-1))) {
+				throw new RuntimeException("Freeing blocks in system zones");
+			}
 
-	        /* Set block bits to "free" */
-	        groupFreed = 0;
-	        for (int i=0; i<count; i++) {
-	            if (!(bitmap.isSet(groupIndex + i))) {
-	                throw new RuntimeException("Bit allready cleared for block" +
-	                        " nr=" + (blockNr+i) +
-	                        " groupIndex=" + (groupIndex+i) +
-	                        " bitmap=" + bitmap.getBitStringContaining(groupIndex + i));
-	            } else if (groupIndex + i > superblock.getBlocksPerGroup()) {
-	                groupFreed++;
-	            } else {
-	                groupFreed++;
-	                bitmap.setBit(groupIndex + i, false);
-	            }
-	        }
-	        bitmap.write();
-	        bitmaps.closeBitmap(bitmap);
+			/* Set block bits to "free" */
+			groupFreed = 0;
+			for (int i=0; i<count; i++) {
+				if (!(bitmap.isSet(groupIndex + i))) {
+					throw new RuntimeException("Bit allready cleared for block" +
+							" nr=" + (blockNr+i) +
+							" groupIndex=" + (groupIndex+i) +
+							" bitmap=" + bitmap.getBitStringContaining(groupIndex + i));
+				} else if (groupIndex + i > superblock.getBlocksPerGroup()) {
+					groupFreed++;
+				} else {
+					groupFreed++;
+					bitmap.setBit(groupIndex + i, false);
+				}
+			}
+			bitmap.write();
+			bitmaps.closeBitmap(bitmap);
 
-	        groupDescr.setFreeBlocksCount(groupDescr.getFreeBlocksCount() + groupFreed);
-	        freed += groupFreed;
+			groupDescr.setFreeBlocksCount(groupDescr.getFreeBlocksCount() + groupFreed);
+			freed += groupFreed;
 
-	        blockNr += count;
-	        count = overflow;
-	    } while (overflow > 0);
+			blockNr += count;
+			count = overflow;
+		} while (overflow > 0);
 
 
-	    inode.setBlocks(inode.getBlocks() - freed * (superblock.getBlocksize()/ 512));
-	    inode.setModificationTime(new Date());
-	    superblock.setFreeBlocksCount(superblock.getFreeBlocksCount() + freed);
+		inode.setBlocks(inode.getBlocks() - freed * (superblock.getBlocksize()/ 512));
+		inode.setModificationTime(new Date());
+		superblock.setFreeBlocksCount(superblock.getFreeBlocksCount() + freed);
 	}
 
 	/**
@@ -627,27 +627,27 @@ public class DataBlockAccess {
 	 * @param  blockNrs       array of block numbers
 	 */
 	public void freeBlocks(long[] blockNrs) throws JExt2Exception {
-	    long blockToFree = 0;
-	    long count = 0;
+		long blockToFree = 0;
+		long count = 0;
 
-	    for (long nr : blockNrs) {
-	        if (nr > 0) {
-	            if (count == 0) {
-	                blockToFree = nr;
-	                count = 1;
-	            } else if (blockToFree == nr - count) {
-	                count++;
-	            } else {
-	                freeDataBlocksContiguous(blockToFree, count);
-	                blockToFree = nr;
-	                count = 1;
-	            }
-	        }
-	    }
+		for (long nr : blockNrs) {
+			if (nr > 0) {
+				if (count == 0) {
+					blockToFree = nr;
+					count = 1;
+				} else if (blockToFree == nr - count) {
+					count++;
+				} else {
+					freeDataBlocksContiguous(blockToFree, count);
+					blockToFree = nr;
+					count = 1;
+				}
+			}
+		}
 
-	    if (count > 0) {
-	        freeDataBlocksContiguous(blockToFree, count);
-	    }
+		if (count > 0) {
+			freeDataBlocksContiguous(blockToFree, count);
+		}
 	}
 
 
@@ -659,19 +659,19 @@ public class DataBlockAccess {
 	 *
 	 */
 	private void freeBranches(int depth, long[] blockNrs) throws JExt2Exception {
-	    if (depth > 0) { /* indirection exists -> go down */
-	        depth -= 1;
-	        for (long nr : blockNrs) {
-	            if (nr == 0) continue;
+		if (depth > 0) { /* indirection exists -> go down */
+			depth -= 1;
+			for (long nr : blockNrs) {
+				if (nr == 0) continue;
 
-	            long[] nextBlockNrs = blocks.readAllBlockNumbersFromBlock(nr);
+				long[] nextBlockNrs = blocks.readAllBlockNumbersFromBlock(nr);
 
-	            freeBranches(depth, nextBlockNrs);
-	            freeDataBlock(nr);
-	        }
-	    } else { /* just data pointers left */
-	        freeBlocks(blockNrs);
-	    }
+				freeBranches(depth, nextBlockNrs);
+				freeDataBlock(nr);
+			}
+		} else { /* just data pointers left */
+			freeBlocks(blockNrs);
+		}
 	}
 
 	/**
@@ -679,49 +679,49 @@ public class DataBlockAccess {
 	 * debuggung of the block allocation. toString uses this as well
 	 */
 	public String dumpHierachy() {
-	    StringBuilder sb =
-	        new StringBuilder("Inode has " + inode.getBlocks() + " blocks");
+		StringBuilder sb =
+				new StringBuilder("Inode has " + inode.getBlocks() + " blocks");
 
-	    /* direct blocks */
-	    long[] direct = inode.getBlock();
-	    for (int i=0; i<Constants.EXT2_NDIR_BLOCKS; i++) {
-	        sb.append("[" + i + "] " + direct[i] + "\n");
-	    }
+		/* direct blocks */
+		long[] direct = inode.getBlock();
+		for (int i=0; i<Constants.EXT2_NDIR_BLOCKS; i++) {
+			sb.append("[" + i + "] " + direct[i] + "\n");
+		}
 
-	    /* indirection */
-	    try {
-	        for (int i=0; i<3; i++) {
-	            long blockNr = direct[Constants.EXT2_IND_BLOCK+i];
-	            LinkedList<Long> blockNrs =
-	                blocks.readAllBlockNumbersFromBlockSkipZero(blockNr);
-	            sb.append((i+1) + "IND " + blockNr + "\n");
-	            dumpBranches(i, blockNrs, sb);
-	        }
-	    } catch (JExt2Exception e) {
-	    }
-	    return sb.toString();
+		/* indirection */
+		try {
+			for (int i=0; i<3; i++) {
+				long blockNr = direct[Constants.EXT2_IND_BLOCK+i];
+				LinkedList<Long> blockNrs =
+						blocks.readAllBlockNumbersFromBlockSkipZero(blockNr);
+				sb.append((i+1) + "IND " + blockNr + "\n");
+				dumpBranches(i, blockNrs, sb);
+			}
+		} catch (JExt2Exception e) {
+		}
+		return sb.toString();
 	}
 
 	private void dumpBranches(int depth, LinkedList<Long> blockNrs, StringBuilder sb)
-	        throws JExt2Exception {
-	    if (blockNrs.size() == 0) return;
+			throws JExt2Exception {
+		if (blockNrs.size() == 0) return;
 
-	    if (depth > 0) { /* indirection exists -> go down */
-	        depth -= 1;
-	        for (long nr : blockNrs) {
-	            if (nr == 0) continue;
+		if (depth > 0) { /* indirection exists -> go down */
+			depth -= 1;
+			for (long nr : blockNrs) {
+				if (nr == 0) continue;
 
-	            LinkedList<Long> nextBlockNrs =
-	                blocks.readAllBlockNumbersFromBlockSkipZero(nr);
+				LinkedList<Long> nextBlockNrs =
+						blocks.readAllBlockNumbersFromBlockSkipZero(nr);
 
-	            sb.append(
-	                String.format("%" + ((depth+1)*10) + "s \\_ %10s \n", " ", nr));
-	            dumpBranches(depth, nextBlockNrs, sb);
-	        }
-	    } else { /* just data pointers left */
-	        sb.append(
-	          String.format("%" + ((depth+2)*10) + "s -> %10s \n", " ", blockNrs));
-	    }
+				sb.append(
+						String.format("%" + ((depth+1)*10) + "s \\_ %10s \n", " ", nr));
+				dumpBranches(depth, nextBlockNrs, sb);
+			}
+		} else { /* just data pointers left */
+			sb.append(
+					String.format("%" + ((depth+2)*10) + "s -> %10s \n", " ", blockNrs));
+		}
 	}
 
 	/**
@@ -731,76 +731,76 @@ public class DataBlockAccess {
 	 *     beyond the max. blocks count
 	 */
 	void truncate(long toSize) throws JExt2Exception, FileTooLarge {
-	    if (inode.isFastSymlink())
-	        return;
+		if (inode.isFastSymlink())
+			return;
 
-	    // TODO check inode flags for append or immutable
+		// TODO check inode flags for append or immutable
 
-        long[] directBlocks = inode.getBlock();
+		long[] directBlocks = inode.getBlock();
 
-	    int blocksize = superblock.getBlocksize();
-	    long blockToKill = (toSize + blocksize-1) / blocksize;
+		int blocksize = superblock.getBlocksize();
+		long blockToKill = (toSize + blocksize-1) / blocksize;
 
-	    int[] offsets = blockToPath(blockToKill);
-	    int depth = offsets.length;
+		int[] offsets = blockToPath(blockToKill);
+		int depth = offsets.length;
 
-        /* kill direct blocks */
-	    if (depth == 1) {
-	        long[] blocksToFree = Arrays.copyOfRange(directBlocks,
-	                offsets[0], Constants.EXT2_NDIR_BLOCKS);
+		/* kill direct blocks */
+		if (depth == 1) {
+			long[] blocksToFree = Arrays.copyOfRange(directBlocks,
+					offsets[0], Constants.EXT2_NDIR_BLOCKS);
 
-	        for (int i=offsets[0]; i<Constants.EXT2_NDIR_BLOCKS; i++) {
-	            directBlocks[i] = 0;
-	        }
-	        freeBlocks(blocksToFree);
-	    }
+			for (int i=offsets[0]; i<Constants.EXT2_NDIR_BLOCKS; i++) {
+				directBlocks[i] = 0;
+			}
+			freeBlocks(blocksToFree);
+		}
 
-	    /* kill partial branches */
-	    long[] branchNrs = getBranch(offsets);
-	    int existDepth = branchNrs.length;
+		/* kill partial branches */
+		long[] branchNrs = getBranch(offsets);
+		int existDepth = branchNrs.length;
 
-	    for (int i=existDepth-1; i>0; i--) {
-	        long nr = branchNrs[i-1];
-	        int start = offsets[i];
+		for (int i=existDepth-1; i>0; i--) {
+			long nr = branchNrs[i-1];
+			int start = offsets[i];
 
-	        long[] blockNrs = blocks.readBlockNrsFromBlock(nr, start, ptrs-1);
-	        blocks.zeroOut(nr, start*4, (ptrs-1)*4);
-	        freeBranches((existDepth-2)-i, blockNrs);
-	    }
-	    directBlocks[offsets[0]] = 0;
+			long[] blockNrs = blocks.readBlockNrsFromBlock(nr, start, ptrs-1);
+			blocks.zeroOut(nr, start*4, (ptrs-1)*4);
+			freeBranches((existDepth-2)-i, blockNrs);
+		}
+		directBlocks[offsets[0]] = 0;
 
-	    /* kill the remaining (whole) subtrees */
-	    long nr = -1;
+		/* kill the remaining (whole) subtrees */
+		long nr = -1;
 
-	    switch(offsets[0]) {
-	    default:
-	        nr = directBlocks[Constants.EXT2_IND_BLOCK];
-	        if (nr > 0) {
-	            directBlocks[Constants.EXT2_IND_BLOCK] = 0;
-	            freeBranches(1, new long[] {nr});
-	        }
-	    case Constants.EXT2_IND_BLOCK:
-            nr = directBlocks[Constants.EXT2_DIND_BLOCK];
-            if (nr > 0) {
-                directBlocks[Constants.EXT2_DIND_BLOCK] = 0;
-                freeBranches(2, new long[] {nr});
-            }
-	    case Constants.EXT2_DIND_BLOCK:
-            nr = directBlocks[Constants.EXT2_TIND_BLOCK];
-            if (nr > 0) {
-                directBlocks[Constants.EXT2_TIND_BLOCK] = 0;
-                freeBranches(3, new long[] {nr});
-            }
-	    case Constants.EXT2_TIND_BLOCK:
-	    }
+		switch(offsets[0]) {
+		default:
+			nr = directBlocks[Constants.EXT2_IND_BLOCK];
+			if (nr > 0) {
+				directBlocks[Constants.EXT2_IND_BLOCK] = 0;
+				freeBranches(1, new long[] {nr});
+			}
+		case Constants.EXT2_IND_BLOCK:
+			nr = directBlocks[Constants.EXT2_DIND_BLOCK];
+			if (nr > 0) {
+				directBlocks[Constants.EXT2_DIND_BLOCK] = 0;
+				freeBranches(2, new long[] {nr});
+			}
+		case Constants.EXT2_DIND_BLOCK:
+			nr = directBlocks[Constants.EXT2_TIND_BLOCK];
+			if (nr > 0) {
+				directBlocks[Constants.EXT2_TIND_BLOCK] = 0;
+				freeBranches(3, new long[] {nr});
+			}
+		case Constants.EXT2_TIND_BLOCK:
+		}
 	}
 
 	@Override
 	public String toString() {
-	    return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)
-	        .append("lastAllocLogicalBlock", lastAllocLogicalBlock)
-	        .append("lastAllocPhysicalBlock", lastAllocPhysicalBlock)
-	        .appendToString(dumpHierachy()).toString();
+		return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)
+		.append("lastAllocLogicalBlock", lastAllocLogicalBlock)
+		.append("lastAllocPhysicalBlock", lastAllocPhysicalBlock)
+		.appendToString(dumpHierachy()).toString();
 	}
 
 }

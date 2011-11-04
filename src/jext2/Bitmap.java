@@ -7,7 +7,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import jext2.exceptions.IoError;
 
 public class Bitmap extends Block {
-    private boolean dirty = false;
+	private boolean dirty = false;
 
 	private ByteBuffer bmap = ByteBuffer.allocate(Superblock.getInstance().getBlocksize());
 	private ReentrantLock bmapLock = new ReentrantLock();
@@ -15,8 +15,8 @@ public class Bitmap extends Block {
 	@Override
 	protected void read(ByteBuffer buf) throws IoError {
 		bmapLock.lock();
-	    this.bmap = buf;
-	    this.bmap.order(ByteOrder.LITTLE_ENDIAN);
+		this.bmap = buf;
+		this.bmap.order(ByteOrder.LITTLE_ENDIAN);
 		bmapLock.unlock();
 	}
 
@@ -27,10 +27,10 @@ public class Bitmap extends Block {
 	 */
 	public int getNextZeroBitPos(int start, int numBytes) {
 		bmapLock.lock();
-	    if ((bmap.limit() - start) == 0) {
+		if ((bmap.limit() - start) == 0) {
 			bmapLock.unlock();
-	        return -1;
-	    }
+			return -1;
+		}
 
 		int pos = -1;
 		int byteNum = start / 8;
@@ -47,8 +47,8 @@ public class Bitmap extends Block {
 		while(bmap.hasRemaining() && numBytes > 0) {
 			if (chunk == 0) { /* is zero */
 
-			    pos = (bmap.position()-1) * 8;
-			    break;
+				pos = (bmap.position()-1) * 8;
+				break;
 			} else if (chunk != (byte)0xFF) { /* has at least one zero bit */
 				pos = (bmap.position()-1)*8 + findRightModeZeroBitInByte(chunk);
 				break;
@@ -64,15 +64,15 @@ public class Bitmap extends Block {
 	}
 
 	public int getNextZeroBitPos(int start) {
-	    return getNextZeroBitPos(start, bmap.limit());
+		return getNextZeroBitPos(start, bmap.limit());
 	}
 
 	/**
 	 * format a byte as bitstring as it appears on disk
 	 */
 	public static String formatByte(byte b) {
-	    return (new StringBuffer(String.format("%1$#32s",
-	            Integer.toBinaryString(b).replace(' ','0')).substring(24))).reverse().toString();
+		return (new StringBuffer(String.format("%1$#32s",
+				Integer.toBinaryString(b).replace(' ','0')).substring(24))).reverse().toString();
 	}
 
 	public String getBitStringContaining(int pos) {
@@ -80,7 +80,7 @@ public class Bitmap extends Block {
 		byte b = bmap.get(pos/8);
 		bmapLock.unlock();
 
-	    return Bitmap.formatByte(b);
+		return Bitmap.formatByte(b);
 	}
 
 
@@ -88,16 +88,16 @@ public class Bitmap extends Block {
 	 * test if bit at position pos is 1
 	 */
 	public boolean isSet(int pos) {
-        int byteNum = pos / 8;
-        byte offset = (byte) (pos % 8);
+		int byteNum = pos / 8;
+		byte offset = (byte) (pos % 8);
 
 		bmapLock.lock();
-	    byte chunk = bmap.get(byteNum);
+		byte chunk = bmap.get(byteNum);
 		bmapLock.unlock();
 
-	    byte mask = (byte)(1 << offset);
+		byte mask = (byte)(1 << offset);
 
-	    return ((mask & chunk) != 0);
+		return ((mask & chunk) != 0);
 	}
 
 	/**
@@ -118,9 +118,9 @@ public class Bitmap extends Block {
 		bmapLock.unlock();
 
 		if (value)
-		    assert isSet(pos);
+			assert isSet(pos);
 		else
-		    assert !isSet(pos);
+			assert !isSet(pos);
 
 		this.dirty = true;
 	}
@@ -130,10 +130,10 @@ public class Bitmap extends Block {
 	 * "00111111" -> 0
 	 */
 	public static int findLeftMostZeroBitInByte(byte b) {
-	    byte mask = -0x80; /* sign bit is 128 */
+		byte mask = -0x80; /* sign bit is 128 */
 		for (int i=0; i<8; i++) {
-		    if ((mask & b) == 0) {
-	            return i;
+			if ((mask & b) == 0) {
+				return i;
 			}
 			mask = (byte) ((mask >>> 1) & ~mask);
 		}
@@ -141,19 +141,19 @@ public class Bitmap extends Block {
 	}
 
 	/**
-     * Find position of first zero bit from the right
-     * "00111111" -> 6
-     */
-    public static int findRightModeZeroBitInByte(byte b) {
-        byte mask = 0x01;
-        for (int i=0; i<8; i++) {
-            if ((mask & b) == 0) {
-                return i;
-            }
-            mask = (byte) (mask << 1);
-        }
-        return -1;
-    }
+	 * Find position of first zero bit from the right
+	 * "00111111" -> 6
+	 */
+	public static int findRightModeZeroBitInByte(byte b) {
+		byte mask = 0x01;
+		for (int i=0; i<8; i++) {
+			if ((mask & b) == 0) {
+				return i;
+			}
+			mask = (byte) (mask << 1);
+		}
+		return -1;
+	}
 
 
 	protected Bitmap(long blockNr) {
@@ -176,34 +176,34 @@ public class Bitmap extends Block {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-	    sb.append(this.getClass());
-	    sb.append("[\n");
-	    sb.append("  blockNr=");
+		sb.append(this.getClass());
+		sb.append("[\n");
+		sb.append("  blockNr=");
 		sb.append(getBlockNr());
 		sb.append("\n");
-	    sb.append("  bitmap=\n");
+		sb.append("  bitmap=\n");
 
 		bmapLock.lock();
-	    bmap.rewind();
-	    for (int i=0; i<bmap.limit()/(Integer.SIZE/8); i++) {
-		    StringBuilder binstr = new StringBuilder();
-	        binstr.append(String.format("%1$#23s", (Integer.toBinaryString(bmap.getInt())).replace(' ','0')));
-	        sb.append(binstr.reverse());
-	        sb.append("\n");
-	    }
+		bmap.rewind();
+		for (int i=0; i<bmap.limit()/(Integer.SIZE/8); i++) {
+			StringBuilder binstr = new StringBuilder();
+			binstr.append(String.format("%1$#23s", (Integer.toBinaryString(bmap.getInt())).replace(' ','0')));
+			sb.append(binstr.reverse());
+			sb.append("\n");
+		}
 		bmapLock.unlock();
 
-	    sb.append("]");
-	    return sb.toString();
+		sb.append("]");
+		return sb.toString();
 	}
 
 	@Override
 	public boolean isDirty() {
-	    return dirty;
+		return dirty;
 	}
 
 	@Override
 	public void cleanDirty() {
-	    this.dirty = false;
+		this.dirty = false;
 	}
 }

@@ -11,40 +11,40 @@ import jext2.exceptions.IoError;
  */
 public abstract class PartialBlock extends Block {
 
-    /** in block offset */
-    protected int offset;
+	/** in block offset */
+	protected int offset;
 
-    @Override
+	@Override
 	public abstract void write() throws IoError;
 
-    @Override
+	@Override
 	protected abstract void read(ByteBuffer buf) throws IoError;
 
-    @Override
+	@Override
 	protected void write(ByteBuffer buf) throws IoError {
-        if (getOffset() == -1 || getBlockNr() == -1)
-            throw new IllegalArgumentException("data structure is unregistered");
+		if (getOffset() == -1 || getBlockNr() == -1)
+			throw new IllegalArgumentException("data structure is unregistered");
 
-        BlockAccess.getInstance().writePartial(getBlockNr(), getOffset(), buf);
-    }
-    public int getOffset() {
-    	return offset;
-    }
+		BlockAccess.getInstance().writePartial(getBlockNr(), getOffset(), buf);
+	}
+	public int getOffset() {
+		return offset;
+	}
 
-    public final void setOffset(int offset) {
-    	this.offset = offset;
-    }
+	public final void setOffset(int offset) {
+		this.offset = offset;
+	}
 
-    protected PartialBlock(long blockNr, int offset) {
-        super(blockNr);
-        this.offset = offset;
-    }
+	protected PartialBlock(long blockNr, int offset) {
+		super(blockNr);
+		this.offset = offset;
+	}
 
 
-    @Override
+	@Override
 	public int hashCode() {
-        return new HashCodeBuilder()
-            .appendSuper(super.hashCode())
-            .append(offset).toHashCode();
-    }
+		return new HashCodeBuilder()
+		.appendSuper(super.hashCode())
+		.append(offset).toHashCode();
+	}
 }

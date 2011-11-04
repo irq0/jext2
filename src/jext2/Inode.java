@@ -12,7 +12,7 @@ import jext2.exceptions.IoError;
 import jext2.exceptions.JExt2Exception;
 
 public class Inode extends PartialBlock {
-    private Mode mode;
+	private Mode mode;
 	private int gidLow = 0;
 	private int uidLow = 0;
 	private long size = 0;
@@ -51,14 +51,14 @@ public class Inode extends PartialBlock {
 		return this.size;
 	}
 	/**
-     * Time of last access - atime
-     */
+	 * Time of last access - atime
+	 */
 	public final Date getAccessTime() {
 		return this.accessTime;
 	}
 	/**
 	 * Time of last status change - ctime
-     */
+	 */
 	public final Date getStatusChangeTime() {
 		return this.changeTime;
 	}
@@ -118,13 +118,13 @@ public class Inode extends PartialBlock {
 	}
 
 	public synchronized void setUid(long uid) {
-	    this.uidLow = (int)(uid & 0xFFFFFFFFL);
-	    this.uidHigh = (int)((uid >> Ext2fsDataTypes.LE32_SIZE) & 0xFFFFFFFF);
+		this.uidLow = (int)(uid & 0xFFFFFFFFL);
+		this.uidHigh = (int)((uid >> Ext2fsDataTypes.LE32_SIZE) & 0xFFFFFFFF);
 	}
 
 	public synchronized void setGid(long gid) {
-	    this.gidLow = (int)(gid & 0xFFFFFFFFL);
-	    this.gidHigh = (int)((gid >> Ext2fsDataTypes.LE32_SIZE) & 0xFFFFFFFF);
+		this.gidLow = (int)(gid & 0xFFFFFFFFL);
+		this.gidHigh = (int)((gid >> Ext2fsDataTypes.LE32_SIZE) & 0xFFFFFFFF);
 	}
 
 	public final void setMode(Mode mode) {
@@ -142,9 +142,9 @@ public class Inode extends PartialBlock {
 	public final void setAccessTime(Date accessTime) {
 		this.accessTime = accessTime;
 	}
-    public final void setStatusChangeTime(Date changeTime) {
-        this.changeTime = changeTime;
-    }
+	public final void setStatusChangeTime(Date changeTime) {
+		this.changeTime = changeTime;
+	}
 	public final void setModificationTime(Date modificationTime) {
 		this.modificationTime = modificationTime;
 	}
@@ -167,13 +167,13 @@ public class Inode extends PartialBlock {
 		this.gidHigh = gidHigh;
 	}
 	protected final void setDirAcl(long dirAcl) {
-	    this.dirAcl = dirAcl;
+		this.dirAcl = dirAcl;
 	}
 	public final boolean isDeleted() {
-	    return (this.deletionTime.after(new Date(0)));
+		return (this.deletionTime.after(new Date(0)));
 	}
 
-    @Override
+	@Override
 	protected void write(ByteBuffer buf) throws IoError {
 		Ext2fsDataTypes.putLE16U(buf, this.mode.numeric(), 0);
 		Ext2fsDataTypes.putLE16U(buf, this.uidLow, 2);
@@ -219,9 +219,9 @@ public class Inode extends PartialBlock {
 	@Override
 	public String toString() {
 		return ToStringBuilder.reflectionToString(this,
-		            ToStringStyle.MULTI_LINE_STYLE,
-		            false,
-		            Inode.class);
+				ToStringStyle.MULTI_LINE_STYLE,
+				false,
+				Inode.class);
 	}
 
 	protected Inode(long blockNr, int offset) {
@@ -236,7 +236,7 @@ public class Inode extends PartialBlock {
 
 	public boolean equals(Inode other) {
 		return (this.nr == other.nr) &&
-			(this.offset == other.offset);
+				(this.offset == other.offset);
 	}
 
 	/** allocate a ByteBuffer big enough for a Inode */
@@ -253,20 +253,20 @@ public class Inode extends PartialBlock {
 	}
 
 	public short getFileType() {
-	    return DirectoryEntry.FILETYPE_UNKNOWN;
+		return DirectoryEntry.FILETYPE_UNKNOWN;
 	}
 
-    public boolean isSymlink() {
-    	return false;
-    }
+	public boolean isSymlink() {
+		return false;
+	}
 
-    public boolean isDirectory() {
-    	return false;
-    }
+	public boolean isDirectory() {
+		return false;
+	}
 
-    public boolean isRegularFile() {
-    	return false;
-    }
+	public boolean isRegularFile() {
+		return false;
+	}
 
 	public boolean isFastSymlink() {
 		return false;
@@ -285,57 +285,57 @@ public class Inode extends PartialBlock {
 	 */
 	@Override
 	public boolean equals(Object otherObj) {
-	    if (!(otherObj instanceof Inode))
-	        return false;
+		if (!(otherObj instanceof Inode))
+			return false;
 
-	    Inode other = (Inode)otherObj;
+		Inode other = (Inode)otherObj;
 
-	    return new EqualsBuilder()
-	        .append(ino, other.ino)
-	        .isEquals();
+		return new EqualsBuilder()
+		.append(ino, other.ino)
+		.isEquals();
 	}
 
 	@Override
 	public int hashCode() {
-	    return new HashCodeBuilder()
-	        .appendSuper(super.hashCode())
-	        .append(mode.numeric())
-	        .append(getGid())
-	        .append(getUid())
-	        .append(size)
-	        .append(accessTime)
-	        .append(changeTime)
-	        .append(modificationTime)
-	        .append(deletionTime)
-	        .append(linksCount)
-	        .append(flags)
-	        .append(generation)
-	        .append(fileAcl)
-	        .append(dirAcl)
-	        .append(fragmentAddress)
-	        .append(blockGroup)
-	        .append(ino).toHashCode();
+		return new HashCodeBuilder()
+		.appendSuper(super.hashCode())
+		.append(mode.numeric())
+		.append(getGid())
+		.append(getUid())
+		.append(size)
+		.append(accessTime)
+		.append(changeTime)
+		.append(modificationTime)
+		.append(deletionTime)
+		.append(linksCount)
+		.append(flags)
+		.append(generation)
+		.append(fileAcl)
+		.append(dirAcl)
+		.append(fragmentAddress)
+		.append(blockGroup)
+		.append(ino).toHashCode();
 	}
 
 	/**
 	 *  Delete Inode
 	 */
-	public synchronized void delete() throws JExt2Exception {
-	    if (this.isDeleted())
-	        return;
+	 public synchronized void delete() throws JExt2Exception {
+		if (this.isDeleted())
+			return;
 
-	    setDeletionTime(new Date());
-	    setSize(0);
-        if (hasDataBlocks()) {
-            try {
-                ((DataInode)this).accessData().truncate(0);
-            } catch (FileTooLarge e) {
-                throw new RuntimeException("should not happen");
-            }
-        }
+		setDeletionTime(new Date());
+		setSize(0);
+		if (hasDataBlocks()) {
+			try {
+				((DataInode)this).accessData().truncate(0);
+			} catch (FileTooLarge e) {
+				throw new RuntimeException("should not happen");
+			}
+		}
 
-        write(); // ok here: deleted inodes will not get any sync calls i guess
+		write(); // ok here: deleted inodes will not get any sync calls i guess
 
-        InodeAlloc.freeInode(this);
-	}
+		InodeAlloc.freeInode(this);
+	 }
 }

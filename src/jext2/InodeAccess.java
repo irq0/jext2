@@ -44,7 +44,7 @@ public class InodeAccess extends DataStructureAccessProvider<Long, Inode>{
 		int relOffset = offset - (tblBlock * superblock.getBlocksize());
 
 		if (absBlock < 0 || relOffset < 0)
-		    throw new IoError();
+			throw new IoError();
 
 		ByteBuffer table = blocks.read(absBlock);
 		Inode inode = InodeAccess.readFromByteBuffer(table, relOffset);
@@ -66,11 +66,11 @@ public class InodeAccess extends DataStructureAccessProvider<Long, Inode>{
 	}
 
 	public static Inode readRootInode() throws IoError {
-	    try {
-	        return readByIno(Constants.EXT2_ROOT_INO);
-	    } catch (InvalidArgument e) {
-	        throw new RuntimeException("should not happen");
-	    }
+		try {
+			return readByIno(Constants.EXT2_ROOT_INO);
+		} catch (InvalidArgument e) {
+			throw new RuntimeException("should not happen");
+		}
 	}
 
 

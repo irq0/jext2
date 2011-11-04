@@ -18,15 +18,15 @@ import java.util.UUID;
  */
 
 public class Ext2fsDataTypes {
-    public static final int LE8_MAX = 255;
-    public static final int LE8_MIN = 0;
-    public static final int LE8_SIZE = 8;
-    public static final int LE16_MAX = 65535; /* 2^16 - 1 */
-    public static final int LE16_MIN = 0;
-    public static final int LE16_SIZE = 16;
-    public static final long LE32_MAX = 4294967295L; /* 2^32 - 1 */
-    public static final int LE32_MIN = 0;
-    public static final int LE32_SIZE = 32;
+	public static final int LE8_MAX = 255;
+	public static final int LE8_MIN = 0;
+	public static final int LE8_SIZE = 8;
+	public static final int LE16_MAX = 65535; /* 2^16 - 1 */
+	public static final int LE16_MIN = 0;
+	public static final int LE16_SIZE = 16;
+	public static final long LE32_MAX = 4294967295L; /* 2^32 - 1 */
+	public static final int LE32_MIN = 0;
+	public static final int LE32_SIZE = 32;
 
 
 	public static Date getDate(ByteBuffer buffer, int offset) {
@@ -54,7 +54,7 @@ public class Ext2fsDataTypes {
 
 	public static long getLE32U(ByteBuffer buffer, int offset) {
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
-		long result = (long)buffer.getInt(offset) & 0xffffffffL;
+		long result = buffer.getInt(offset) & 0xffffffffL;
 		assert result >= LE32_MIN && result <= LE32_MAX;
 		return result;
 	}
@@ -67,28 +67,28 @@ public class Ext2fsDataTypes {
 	public static short getLE8U(ByteBuffer buffer, int offset) {
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
 		short result = (short)(buffer.get(offset) & (short)0xff);
-        assert result >= LE8_MIN && result <= LE8_MAX;
+		assert result >= LE8_MIN && result <= LE8_MAX;
 		return result;
 	}
 
 	public static String getString(ByteBuffer buffer, int offset, int len)  {
-	    buffer.order(ByteOrder.LITTLE_ENDIAN);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
 
-	    CharsetDecoder decoder = Filesystem.getCharset().newDecoder();
-	    decoder.onUnmappableCharacter(CodingErrorAction.REPLACE);
-	    decoder.onMalformedInput(CodingErrorAction.REPLACE);
+		CharsetDecoder decoder = Filesystem.getCharset().newDecoder();
+		decoder.onUnmappableCharacter(CodingErrorAction.REPLACE);
+		decoder.onMalformedInput(CodingErrorAction.REPLACE);
 
-	    buffer.limit(offset+len);
-	    buffer.position(offset);
+		buffer.limit(offset+len);
+		buffer.position(offset);
 
-	    CharBuffer cbuf;
-        try {
-            cbuf = decoder.decode(buffer);
-        } catch (CharacterCodingException e) {
-            return "";
-        }
+		CharBuffer cbuf;
+		try {
+			cbuf = decoder.decode(buffer);
+		} catch (CharacterCodingException e) {
+			return "";
+		}
 
-	    buffer.limit(buffer.capacity());
+		buffer.limit(buffer.capacity());
 
 		return cbuf.toString();
 
@@ -122,12 +122,12 @@ public class Ext2fsDataTypes {
 	 * happen to be 16Bit unsigned.
 	 */
 	public static int getStringByteLength(String string) {
-	    CharsetEncoder encoder = Filesystem.getCharset().newEncoder();
-	    try {
-	        return encoder.encode(CharBuffer.wrap(string.toCharArray())).limit();
-	    } catch (CharacterCodingException e) {
-	        throw new RuntimeException(e);
-	    }
+		CharsetEncoder encoder = Filesystem.getCharset().newEncoder();
+		try {
+			return encoder.encode(CharBuffer.wrap(string.toCharArray())).limit();
+		} catch (CharacterCodingException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	public static void putString(ByteBuffer buffer, String value, int len, int offset) {
@@ -149,31 +149,31 @@ public class Ext2fsDataTypes {
 	public static void putLE32(ByteBuffer buffer, int value, int offset) {
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
 		buffer.putInt(offset, value);
-        assert (value == getLE32(buffer, offset));
+		assert (value == getLE32(buffer, offset));
 	}
 
 	public static void putLE32U(ByteBuffer buffer, long value, int offset) {
-        if (!(value >= LE32_MIN  && value <= LE32_MAX))
-            throw new IllegalArgumentException("Value " + value + " out of Range: " +
-                    "for x: " + LE32_MIN + " <= x <= " + LE32_MAX);
-	    buffer.order(ByteOrder.LITTLE_ENDIAN);
-	    buffer.putInt(offset, (int)(value & 0xffffffffL));
-        assert (value == getLE32U(buffer, offset));
+		if (!(value >= LE32_MIN  && value <= LE32_MAX))
+			throw new IllegalArgumentException("Value " + value + " out of Range: " +
+					"for x: " + LE32_MIN + " <= x <= " + LE32_MAX);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		buffer.putInt(offset, (int)(value & 0xffffffffL));
+		assert (value == getLE32U(buffer, offset));
 	}
 
 	public static void putLE16(ByteBuffer buffer, short value, int offset) {
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
 		buffer.putShort(offset, value);
-        assert (value == getLE16U(buffer, offset));
+		assert (value == getLE16U(buffer, offset));
 	}
 
 	public static void putLE16U(ByteBuffer buffer, int value, int offset) {
-        if (!(value >= LE16_MIN  && value <= LE16_MAX))
-            throw new IllegalArgumentException("Value " + value + " out of Range: " +
-                    "for x: " + LE16_MIN + " <= x <= " + LE16_MAX);
-	    buffer.order(ByteOrder.LITTLE_ENDIAN);
-	    buffer.putShort(offset, (short)(value & 0xffff));
-        assert (value == getLE16U(buffer, offset));
+		if (!(value >= LE16_MIN  && value <= LE16_MAX))
+			throw new IllegalArgumentException("Value " + value + " out of Range: " +
+					"for x: " + LE16_MIN + " <= x <= " + LE16_MAX);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		buffer.putShort(offset, (short)(value & 0xffff));
+		assert (value == getLE16U(buffer, offset));
 	}
 
 	public static void putLE8(ByteBuffer buffer, byte value, int offset) {
@@ -184,12 +184,12 @@ public class Ext2fsDataTypes {
 	}
 
 	public static void putLE8U(ByteBuffer buffer, short value, int offset) {
-        if (!(value >= LE8_MIN  && value <= LE8_MAX))
-            throw new IllegalArgumentException("Value " + value + " out of Range: " +
-                    "for x: " + LE8_MIN + " <= x <= " + LE8_MAX);
-        buffer.order(ByteOrder.LITTLE_ENDIAN);
-        buffer.put(offset, (byte)(value & 0xff));
+		if (!(value >= LE8_MIN  && value <= LE8_MAX))
+			throw new IllegalArgumentException("Value " + value + " out of Range: " +
+					"for x: " + LE8_MIN + " <= x <= " + LE8_MAX);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		buffer.put(offset, (byte)(value & 0xff));
 
-        assert (value == getLE8U(buffer, offset));
-    }
+		assert (value == getLE8U(buffer, offset));
+	}
 }

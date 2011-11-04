@@ -24,29 +24,29 @@ public class DirectoryEntry extends PartialBlock {
 
 	public static final int MAX_NAME_LEN = 255;
 	public static final short FILETYPE_UNKNOWN  = 0;
-    public static final short FILETYPE_REG_FILE = 1;
-    public static final short FILETYPE_DIR      = 2;
-    public static final short FILETYPE_CHRDEV   = 3;
-    public static final short FILETYPE_BLKDEV   = 4;
-    public static final short FILETYPE_FIFO     = 5;
-    public static final short FILETYPE_SOCK     = 6;
-    public static final short FILETYPE_SYMLINK  = 7;
-    public static final short FILETYPE_MAX      = 8;
+	public static final short FILETYPE_REG_FILE = 1;
+	public static final short FILETYPE_DIR      = 2;
+	public static final short FILETYPE_CHRDEV   = 3;
+	public static final short FILETYPE_BLKDEV   = 4;
+	public static final short FILETYPE_FIFO     = 5;
+	public static final short FILETYPE_SOCK     = 6;
+	public static final short FILETYPE_SYMLINK  = 7;
+	public static final short FILETYPE_MAX      = 8;
 
-    // EXT2_DIR_PAD defines the directory entries boundaries
-    // NOTE: It must be a multiple of 4
-    public static final int DIR_PAD     = 4;
-    public static final int DIR_ROUND   = (DIR_PAD - 1);
-    public static final int MAX_REC_LEN = ((1<<16)-1);
+	// EXT2_DIR_PAD defines the directory entries boundaries
+	// NOTE: It must be a multiple of 4
+	public static final int DIR_PAD     = 4;
+	public static final int DIR_ROUND   = (DIR_PAD - 1);
+	public static final int MAX_REC_LEN = ((1<<16)-1);
 
 	public DirectoryEntry(long blockNr, int offset) {
-	    super(blockNr, offset);
-    }
+		super(blockNr, offset);
+	}
 	public DirectoryEntry() {
-	    this(-1,-1);
+		this(-1,-1);
 	}
 
-    public final long getIno() {
+	public final long getIno() {
 		return this.ino;
 	}
 	public final int getRecLen() {
@@ -62,27 +62,27 @@ public class DirectoryEntry extends PartialBlock {
 		return this.name;
 	}
 	public final void setIno(long ino) {
-        this.ino = ino;
-    }
-    public final void setFileType(short fileType) {
-        this.fileType = fileType;
-    }
-    public final void setRecLen(int recLen) {
-        this.recLen = recLen;
-    }
-    /** set entry length to minimum required */
-    public final void truncateRecord() {
-        this.recLen = minSizeNeeded(this.nameLen);
-    }
+		this.ino = ino;
+	}
+	public final void setFileType(short fileType) {
+		this.fileType = fileType;
+	}
+	public final void setRecLen(int recLen) {
+		this.recLen = recLen;
+	}
+	/** set entry length to minimum required */
+	public final void truncateRecord() {
+		this.recLen = minSizeNeeded(this.nameLen);
+	}
 
-    public final void clearName() {
-        this.name = "";
-        this.nameLen = 0;
-    }
+	public final void clearName() {
+		this.name = "";
+		this.nameLen = 0;
+	}
 
-    public final boolean isUnused() {
-        return (this.ino == 0);
-    }
+	public final boolean isUnused() {
+		return (this.ino == 0);
+	}
 
 	@Override
 	protected void read(ByteBuffer buf) throws IoError {
@@ -96,7 +96,7 @@ public class DirectoryEntry extends PartialBlock {
 	@Override
 	public String toString() {
 		return ToStringBuilder.reflectionToString(this,
-		                                          ToStringStyle.MULTI_LINE_STYLE);
+				ToStringStyle.MULTI_LINE_STYLE);
 	}
 
 	/**
@@ -105,30 +105,30 @@ public class DirectoryEntry extends PartialBlock {
 	 */
 	// TODO make visibility package
 	public static DirectoryEntry create(String name) throws FileNameTooLong {
-	    int nameLen = Ext2fsDataTypes.getStringByteLength(name);
+		int nameLen = Ext2fsDataTypes.getStringByteLength(name);
 
-	    if (nameLen > MAX_NAME_LEN) {
-	        throw new FileNameTooLong();
-	    }
+		if (nameLen > MAX_NAME_LEN) {
+			throw new FileNameTooLong();
+		}
 
-	    DirectoryEntry dir = new DirectoryEntry();
+		DirectoryEntry dir = new DirectoryEntry();
 
-	    /*
-	     * The directory entry must be divisible by 4, so the name
-	     * gets zero padded
-	     */
-	    short padNameLen = (short)(nameLen + (DIR_PAD - (nameLen % DIR_PAD)));
+		/*
+		 * The directory entry must be divisible by 4, so the name
+		 * gets zero padded
+		 */
+		short padNameLen = (short)(nameLen + (DIR_PAD - (nameLen % DIR_PAD)));
 
-	    String namePadded = StringUtils.rightPad(name, padNameLen, (char)(0x00));
+		String namePadded = StringUtils.rightPad(name, padNameLen, (char)(0x00));
 
-	    dir.recLen = (short)(8 + padNameLen);
-	    dir.nameLen = (short)nameLen;
-	    dir.name = namePadded;
+		dir.recLen = (short)(8 + padNameLen);
+		dir.nameLen = (short)nameLen;
+		dir.name = namePadded;
 
-	    if (dir.recLen > MAX_REC_LEN)
-	        throw new RuntimeException("MAX_REC_LEN");
+		if (dir.recLen > MAX_REC_LEN)
+			throw new RuntimeException("MAX_REC_LEN");
 
-	    return dir;
+		return dir;
 	}
 
 	/**
@@ -137,24 +137,24 @@ public class DirectoryEntry extends PartialBlock {
 	 */
 	// TODO make visibility package
 	public static DirectoryEntry createRestDummy(DirectoryEntry last) {
-	    DirectoryEntry dir = new DirectoryEntry();
-	    dir.fileType = FILETYPE_UNKNOWN;
-	    dir.ino = 0;
-	    dir.nameLen = 0;
-	    dir.recLen = Superblock.getInstance().getBlocksize() - last.getRecLen();
+		DirectoryEntry dir = new DirectoryEntry();
+		dir.fileType = FILETYPE_UNKNOWN;
+		dir.ino = 0;
+		dir.nameLen = 0;
+		dir.recLen = Superblock.getInstance().getBlocksize() - last.getRecLen();
 
-	    return dir;
+		return dir;
 	}
 
 	public static int numPadBytes(int nameLen) {
-	    return 4 - (nameLen % 4);
+		return 4 - (nameLen % 4);
 	}
 
 	/**
 	 * Return entry size based on name length
 	 */
 	public static int minSizeNeeded(int nameLen) {
-	    return 8 + nameLen + numPadBytes(nameLen);
+		return 8 + nameLen + numPadBytes(nameLen);
 	}
 
 	static DirectoryEntry fromByteBuffer(ByteBuffer buf, long blockNr, int offset) throws IoError {
@@ -164,42 +164,42 @@ public class DirectoryEntry extends PartialBlock {
 	}
 
 	public static int readRecLen(ByteBuffer buf, int offset) {
-	    return Ext2fsDataTypes.getLE16(buf, offset + 4);
+		return Ext2fsDataTypes.getLE16(buf, offset + 4);
 	}
 
 	/**
 	 * Export data structure to ByteBuffer which in turn can be written
 	 * to disk
 	 */
-    public ByteBuffer toByteBuffer() throws IoError {
-        ByteBuffer buf = ByteBuffer.allocate(4 + 2 + 1 + 1 + this.nameLen);
+	public ByteBuffer toByteBuffer() throws IoError {
+		ByteBuffer buf = ByteBuffer.allocate(4 + 2 + 1 + 1 + this.nameLen);
 
-        Ext2fsDataTypes.putLE32U(buf, this.ino, 0);
-        Ext2fsDataTypes.putLE16U(buf, this.recLen, 4);
-        Ext2fsDataTypes.putLE8U(buf, this.nameLen, 6);
-        Ext2fsDataTypes.putLE8U(buf, this.fileType, 7);
-        if (this.nameLen > 0)
-            Ext2fsDataTypes.putString(buf, this.name, this.nameLen, 8);
+		Ext2fsDataTypes.putLE32U(buf, this.ino, 0);
+		Ext2fsDataTypes.putLE16U(buf, this.recLen, 4);
+		Ext2fsDataTypes.putLE8U(buf, this.nameLen, 6);
+		Ext2fsDataTypes.putLE8U(buf, this.fileType, 7);
+		if (this.nameLen > 0)
+			Ext2fsDataTypes.putString(buf, this.name, this.nameLen, 8);
 
-        return buf;
-    }
+		return buf;
+	}
 
-    @Override
+	@Override
 	public void write() throws IoError {
-        super.write(this.toByteBuffer());
-    }
+		super.write(this.toByteBuffer());
+	}
 
 
-    @Override
+	@Override
 	public int hashCode() {
-        return new HashCodeBuilder()
-            .appendSuper(super.hashCode())
-            .append(ino)
-            .append(recLen)
-            .append(nameLen)
-            .append(fileType)
-            .append(name).toHashCode();
-    }
+		return new HashCodeBuilder()
+		.appendSuper(super.hashCode())
+		.append(ino)
+		.append(recLen)
+		.append(nameLen)
+		.append(fileType)
+		.append(name).toHashCode();
+	}
 }
 
 

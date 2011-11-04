@@ -60,144 +60,144 @@ public class Superblock extends Block {
 	private int groupDescrPerBlock;
 	private int groupsCount;
 	private long dirsCount;
-    private int groupDescrBlocks;
-    private int inodeTableBlocksPerGroup;
-    private int inodesPerBlock;
+	private int groupDescrBlocks;
+	private int inodeTableBlocksPerGroup;
+	private int inodesPerBlock;
 
-    private int overhead = 0;
+	private int overhead = 0;
 
 	public final long getInodesCount() {
-        return inodesCount;
-    }
-    public final long getBlocksCount() {
-        return blocksCount;
-    }
-    public final long getReservedBlocksCount() {
-        return reservedBlocksCount;
-    }
-    public final long getFreeBlocksCount() {
-        return freeBlocksCount;
-    }
-    public final long getFreeInodesCount() {
-        return freeInodesCount;
-    }
-    public final long getFirstDataBlock() {
-        return firstDataBlock;
-    }
-    public final long getLogBlockSize() {
-        return logBlockSize;
-    }
-    public final long getLogFragSize() {
-        return logFragSize;
-    }
-    public final long getBlocksPerGroup() {
-        return blocksPerGroup;
-    }
-    public final long getFragsPerGroup() {
-        return fragsPerGroup;
-    }
-    public final long getInodesPerGroup() {
-        return inodesPerGroup;
-    }
-    public final Date getLastMount() {
-        return lastMount;
-    }
-    public final Date getLastWrite() {
-        return lastWrite;
-    }
-    public final int getMountCount() {
-        return mountCount;
-    }
-    public final int getMaxMountCount() {
-        return maxMountCount;
-    }
-    public final int getMagic() {
-        return magic;
-    }
-    public final int getState() {
-        return state;
-    }
-    public final int getErrors() {
-        return errors;
-    }
-    public final int getMinorRevLevel() {
-        return minorRevLevel;
-    }
-    public final Date getLastCheck() {
-        return lastCheck;
-    }
-    public final long getCheckInterval() {
-        return checkInterval;
-    }
-    public final long getCreatorOs() {
-        return creatorOs;
-    }
-    public final long getRevLevel() {
-        return revLevel;
-    }
-    public final int getDefaultResuid() {
-        return defaultResuid;
-    }
-    public final int getDefaultResgid() {
-        return defaultResgid;
-    }
-    public final long getFirstIno() {
-        return firstIno;
-    }
-    public final int getInodeSize() {
-        return inodeSize;
-    }
-    public final int getBlockGroupNr() {
-        return blockGroupNr;
-    }
-    public final long getFeaturesCompat() {
-        return featuresCompat;
-    }
-    public final long getFeaturesIncompat() {
-        return featuresIncompat;
-    }
-    public final long getFeaturesRoCompat() {
-        return featuresRoCompat;
-    }
-    public final UUID getUuid() {
-        return uuid;
-    }
-    public final String getVolumeName() {
-        return volumeName;
-    }
-    public final String getLastMounted() {
-        return lastMounted;
-    }
-    public final int getBlocksize() {
-        return blocksize;
-    }
-    public final int getGroupDescrPerBlock() {
-        return groupDescrPerBlock;
-    }
-    public final int getGroupDescrBlocks() {
-        return groupDescrBlocks;
-    }
-    public final int getGroupsCount() {
-        return groupsCount;
-    }
-    public final long getDirsCount() {
-        return dirsCount;
-    }
-    public final int getInodeTableBlocksPerGroup() {
-        return inodeTableBlocksPerGroup;
-    }
-    public final int getInodesPerBlock() {
-        return inodesPerBlock;
-    }
-    /**
-     * Return number of blocks used by fs structures
-     */
-    public int getOverhead() {
-        if (this.overhead == 0)
-            this.overhead = calculateOverhead();
-        return this.overhead;
-    }
-    public void setFreeBlocksCount(long freeBlocksCount) {
+		return inodesCount;
+	}
+	public final long getBlocksCount() {
+		return blocksCount;
+	}
+	public final long getReservedBlocksCount() {
+		return reservedBlocksCount;
+	}
+	public final long getFreeBlocksCount() {
+		return freeBlocksCount;
+	}
+	public final long getFreeInodesCount() {
+		return freeInodesCount;
+	}
+	public final long getFirstDataBlock() {
+		return firstDataBlock;
+	}
+	public final long getLogBlockSize() {
+		return logBlockSize;
+	}
+	public final long getLogFragSize() {
+		return logFragSize;
+	}
+	public final long getBlocksPerGroup() {
+		return blocksPerGroup;
+	}
+	public final long getFragsPerGroup() {
+		return fragsPerGroup;
+	}
+	public final long getInodesPerGroup() {
+		return inodesPerGroup;
+	}
+	public final Date getLastMount() {
+		return lastMount;
+	}
+	public final Date getLastWrite() {
+		return lastWrite;
+	}
+	public final int getMountCount() {
+		return mountCount;
+	}
+	public final int getMaxMountCount() {
+		return maxMountCount;
+	}
+	public final int getMagic() {
+		return magic;
+	}
+	public final int getState() {
+		return state;
+	}
+	public final int getErrors() {
+		return errors;
+	}
+	public final int getMinorRevLevel() {
+		return minorRevLevel;
+	}
+	public final Date getLastCheck() {
+		return lastCheck;
+	}
+	public final long getCheckInterval() {
+		return checkInterval;
+	}
+	public final long getCreatorOs() {
+		return creatorOs;
+	}
+	public final long getRevLevel() {
+		return revLevel;
+	}
+	public final int getDefaultResuid() {
+		return defaultResuid;
+	}
+	public final int getDefaultResgid() {
+		return defaultResgid;
+	}
+	public final long getFirstIno() {
+		return firstIno;
+	}
+	public final int getInodeSize() {
+		return inodeSize;
+	}
+	public final int getBlockGroupNr() {
+		return blockGroupNr;
+	}
+	public final long getFeaturesCompat() {
+		return featuresCompat;
+	}
+	public final long getFeaturesIncompat() {
+		return featuresIncompat;
+	}
+	public final long getFeaturesRoCompat() {
+		return featuresRoCompat;
+	}
+	public final UUID getUuid() {
+		return uuid;
+	}
+	public final String getVolumeName() {
+		return volumeName;
+	}
+	public final String getLastMounted() {
+		return lastMounted;
+	}
+	public final int getBlocksize() {
+		return blocksize;
+	}
+	public final int getGroupDescrPerBlock() {
+		return groupDescrPerBlock;
+	}
+	public final int getGroupDescrBlocks() {
+		return groupDescrBlocks;
+	}
+	public final int getGroupsCount() {
+		return groupsCount;
+	}
+	public final long getDirsCount() {
+		return dirsCount;
+	}
+	public final int getInodeTableBlocksPerGroup() {
+		return inodeTableBlocksPerGroup;
+	}
+	public final int getInodesPerBlock() {
+		return inodesPerBlock;
+	}
+	/**
+	 * Return number of blocks used by fs structures
+	 */
+	 public int getOverhead() {
+		if (this.overhead == 0)
+			this.overhead = calculateOverhead();
+		return this.overhead;
+	}
+	public void setFreeBlocksCount(long freeBlocksCount) {
 		this.freeBlocksCount = freeBlocksCount;
 	}
 	public void setFreeInodesCount(long freeInodesCount) {
@@ -216,30 +216,30 @@ public class Superblock extends Block {
 	}
 
 	public final void setMountCount(int mountCount) {
-        this.mountCount = mountCount;
-    }
-    public final void setMaxMountCount(int maxMountCount) {
-        this.maxMountCount = maxMountCount;
-    }
-    public final void setLastMount(Date lastMount) {
-        this.lastMount = lastMount;
-    }
-    public final void setLastWrite(Date lastWrite) {
-        this.lastWrite = lastWrite;
-    }
-    public final void setLastMounted(String lastMounted) {
-        this.lastMounted = lastMounted;
-    }
-    public boolean hasFreeBlocks() {
-	    long freeBlocks = this.freeBlocksCount;
-	    long rootBlocks = this.reservedBlocksCount;
+		this.mountCount = mountCount;
+	}
+	public final void setMaxMountCount(int maxMountCount) {
+		this.maxMountCount = maxMountCount;
+	}
+	public final void setLastMount(Date lastMount) {
+		this.lastMount = lastMount;
+	}
+	public final void setLastWrite(Date lastWrite) {
+		this.lastWrite = lastWrite;
+	}
+	public final void setLastMounted(String lastMounted) {
+		this.lastMounted = lastMounted;
+	}
+	public boolean hasFreeBlocks() {
+		long freeBlocks = this.freeBlocksCount;
+		long rootBlocks = this.reservedBlocksCount;
 
-	    if (freeBlocks < rootBlocks + 1) {
-	        // TODO support reserve blocks
-	        return false;
-	    }
+		if (freeBlocks < rootBlocks + 1) {
+			// TODO support reserve blocks
+			return false;
+		}
 
-	    return true;
+		return true;
 	}
 
 	@Override
@@ -283,9 +283,9 @@ public class Superblock extends Block {
 		this.blocksize = (1024 << this.logBlockSize);
 		this.groupDescrPerBlock = this.blocksize / 32;
 		this.groupsCount = (int)( ((this.blocksCount - this.firstDataBlock) - 1) /
-						   this.blocksPerGroup + 1);
+				this.blocksPerGroup + 1);
 		this.groupDescrBlocks = (this.groupsCount + this.groupDescrPerBlock -1) /
-		                         this.groupDescrPerBlock;
+				this.groupDescrPerBlock;
 		this.inodesPerBlock = this.blocksize / this.inodeSize;
 		this.inodeTableBlocksPerGroup = (int)(this.inodesPerGroup) / this.inodesPerBlock;
 	}
@@ -334,22 +334,22 @@ public class Superblock extends Block {
 
 	// TODO add debug code that checks bitmap
 	public long countFreeInodes() {
-	    long inodes = 0;
-	    for (BlockGroupDescriptor descr :
-	        BlockGroupAccess.getInstance().iterateBlockGroups()) {
-	        inodes += descr.getFreeInodesCount();
-	    }
-	    return inodes;
+		long inodes = 0;
+		for (BlockGroupDescriptor descr :
+			BlockGroupAccess.getInstance().iterateBlockGroups()) {
+			inodes += descr.getFreeInodesCount();
+		}
+		return inodes;
 	}
 
 	// TODO add debug code that checks bitmap
 	public long countFreeBlocks() {
-	    long blocks = 0;
-	    for (BlockGroupDescriptor descr :
-	        BlockGroupAccess.getInstance().iterateBlockGroups()) {
-	        blocks += descr.getFreeBlocksCount();
-	    }
-	    return blocks;
+		long blocks = 0;
+		for (BlockGroupDescriptor descr :
+			BlockGroupAccess.getInstance().iterateBlockGroups()) {
+			blocks += descr.getFreeBlocksCount();
+		}
+		return blocks;
 	}
 
 
@@ -357,14 +357,14 @@ public class Superblock extends Block {
 	 * Calculate the overhead (eg. blocks that are in use by fs structures
 	 */
 	private int calculateOverhead() {
-	    int overhead = (int)getFirstDataBlock();
+		int overhead = (int)getFirstDataBlock();
 
-	    for (BlockGroupDescriptor descr :
-	         BlockGroupAccess.getInstance().iterateBlockGroups()) {
-	        overhead += descr.getOverhead();
-	    }
+		for (BlockGroupDescriptor descr :
+			BlockGroupAccess.getInstance().iterateBlockGroups()) {
+			overhead += descr.getOverhead();
+		}
 
-	    return overhead;
+		return overhead;
 	}
 
 
@@ -411,35 +411,35 @@ public class Superblock extends Block {
 		Superblock sb = new Superblock(-1);
 		ByteBuffer buf = ByteBuffer.allocate(Constants.EXT2_MIN_BLOCK_SIZE);
 		try {
-		    chan.position(1024);
-		    chan.read(buf);
+			chan.position(1024);
+			chan.read(buf);
 		} catch (IOException e) {
-		    throw new IoError();
+			throw new IoError();
 		}
 		sb.read(buf);
 
-	    Superblock.instance = sb;
+		Superblock.instance = sb;
 		return sb;
 	}
 
 	@Override
 	public String toString() {
 		return ToStringBuilder.reflectionToString(this,
-		                                          ToStringStyle.MULTI_LINE_STYLE);
+				ToStringStyle.MULTI_LINE_STYLE);
 	}
 
 	@Override
 	public int hashCode() {
-	    return new HashCodeBuilder()
-	        .appendSuper(super.hashCode())
-	        .append(inodesCount)
-	        .append(blocksCount)
-	        .append(freeBlocksCount)
-	        .append(freeInodesCount)
-	        .append(firstDataBlock)
-	        .append(dirsCount)
-	        .append(uuid.getLeastSignificantBits())
-	        .append(uuid.getMostSignificantBits())
-	        .toHashCode();
+		return new HashCodeBuilder()
+		.appendSuper(super.hashCode())
+		.append(inodesCount)
+		.append(blocksCount)
+		.append(freeBlocksCount)
+		.append(freeInodesCount)
+		.append(firstDataBlock)
+		.append(dirsCount)
+		.append(uuid.getLeastSignificantBits())
+		.append(uuid.getMostSignificantBits())
+		.toHashCode();
 	}
 }

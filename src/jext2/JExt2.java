@@ -27,7 +27,7 @@ class JExt2 {
 			System.out.println("Cannot open block device.. exiting");
 			System.exit(23);
 		} catch (IoError e) {
-		    System.out.println("Unrecoverable IO error occurred.. dying");
+			System.out.println("Unrecoverable IO error occurred.. dying");
 			e.printStackTrace();
 		}
 	}

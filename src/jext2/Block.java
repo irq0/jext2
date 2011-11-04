@@ -15,9 +15,9 @@ import org.apache.commons.lang.builder.ToStringStyle;
 
 public abstract class Block {
 
-    int cleanHashCode = 0;
+	int cleanHashCode = 0;
 
-    /** block location on filesystem */
+	/** block location on filesystem */
 	protected long nr;
 	public long getBlockNr() {
 		return nr;
@@ -29,8 +29,8 @@ public abstract class Block {
 
 	@Override
 	public int hashCode() {
-	    return new HashCodeBuilder()
-	        .append(nr).toHashCode();
+		return new HashCodeBuilder()
+		.append(nr).toHashCode();
 	}
 
 	protected void write(ByteBuffer buf) throws IoError {
@@ -53,27 +53,27 @@ public abstract class Block {
 	@Override
 	public String toString() {
 		return ToStringBuilder.reflectionToString(this,
-				                                         ToStringStyle.MULTI_LINE_STYLE);
+				ToStringStyle.MULTI_LINE_STYLE);
 	}
 
 	/**
 	 * Return dirty if data changed. Relies on hashCode()
 	 */
 	public boolean isDirty() {
-	    int newHashCode = hashCode();
-	    return cleanHashCode != newHashCode;
+		int newHashCode = hashCode();
+		return cleanHashCode != newHashCode;
 	}
 
 	/**
 	 * Mark data clean: Reset the dirty state
 	 */
 	public void cleanDirty() {
-	    this.cleanHashCode = hashCode();
+		this.cleanHashCode = hashCode();
 	}
 
 	public void sync() throws IoError {
-	    write();
-	    cleanDirty();
+		write();
+		cleanDirty();
 	}
 
 

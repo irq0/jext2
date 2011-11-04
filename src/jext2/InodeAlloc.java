@@ -43,14 +43,14 @@ public class InodeAlloc {
 			if (group.getFreeInodesCount() < averageFreeInodes)
 				continue;
 			if (bestGroup == null ||
-			    group.getFreeBlocksCount() > bestGroup.getFreeBlocksCount()) {
+					group.getFreeBlocksCount() > bestGroup.getFreeBlocksCount()) {
 				bestGroup = group;
 				bestNr = group.getBlockGroup();
 			}
 		}
 
 		if (bestGroup == null)
-		    throw new NoSpaceLeftOnDevice();
+			throw new NoSpaceLeftOnDevice();
 		else
 			return bestNr;
 	}
@@ -63,7 +63,7 @@ public class InodeAlloc {
 		int group = parent.getBlockGroup();
 		BlockGroupDescriptor desc = blockGroups.getGroupDescriptor(parent.getBlockGroup());
 		if (desc != null && desc.getFreeInodesCount() > 0 &&
-		    desc.getFreeBlocksCount() > 0) {
+				desc.getFreeBlocksCount() > 0) {
 			return group;
 		}
 
@@ -88,7 +88,7 @@ public class InodeAlloc {
 				group -= groupsCount;
 			desc = blockGroups.getGroupDescriptor(group);
 			if (desc != null && desc.getFreeInodesCount() > 0 &&
-			    desc.getFreeBlocksCount() > 0)
+					desc.getFreeBlocksCount() > 0)
 				return group;
 		}
 
@@ -145,33 +145,33 @@ public class InodeAlloc {
 	 * @throws JExt2Exception
 	 */
 	static void freeInode(Inode inode) throws JExt2Exception {
-        long ino = inode.getIno();
+		long ino = inode.getIno();
 
-        if (ino < superblock.getFirstIno() ||
-                ino > superblock.getInodesCount()) {
-            throw new RuntimeException("reserved or nonexistent inode " + ino);
-        }
+		if (ino < superblock.getFirstIno() ||
+				ino > superblock.getInodesCount()) {
+			throw new RuntimeException("reserved or nonexistent inode " + ino);
+		}
 
-        BlockGroupDescriptor groupDescr =
-            blockGroups.getGroupDescriptor(Calculations.groupOfIno(ino));
-        Bitmap bitmap = bitmaps.openInodeBitmap(groupDescr);
-        int bit = Calculations.localInodeIndex(ino);
+		BlockGroupDescriptor groupDescr =
+				blockGroups.getGroupDescriptor(Calculations.groupOfIno(ino));
+		Bitmap bitmap = bitmaps.openInodeBitmap(groupDescr);
+		int bit = Calculations.localInodeIndex(ino);
 
-        if (!bitmap.isSet(bit)) {
-            throw new RuntimeException("Bit allready cleared for inode " + ino);
-        } else {
-            bitmap.setBit(bit, false);
-            bitmap.write();
-        }
+		if (!bitmap.isSet(bit)) {
+			throw new RuntimeException("Bit allready cleared for inode " + ino);
+		} else {
+			bitmap.setBit(bit, false);
+			bitmap.write();
+		}
 
-        bitmaps.closeBitmap(bitmap);
+		bitmaps.closeBitmap(bitmap);
 
-        groupDescr.setFreeBlocksCount(groupDescr.getFreeInodesCount() + 1);
+		groupDescr.setFreeBlocksCount(groupDescr.getFreeInodesCount() + 1);
 
-        if (inode.isDirectory()) {
-            groupDescr.setUsedDirsCount(groupDescr.getUsedDirsCount() - 1);
-            superblock.setDirsCount(superblock.getDirsCount() - 1);
-        }
+		if (inode.isDirectory()) {
+			groupDescr.setUsedDirsCount(groupDescr.getUsedDirsCount() - 1);
+			superblock.setDirsCount(superblock.getDirsCount() - 1);
+		}
 	}
 
 	/** Register Inode on disk. Find suitable position an reserve this position
@@ -213,7 +213,7 @@ public class InodeAlloc {
 
 			globalIno = ino + (group * superblock.getInodesPerGroup() + 1);
 			if (globalIno < superblock.getFirstIno() ||
-				globalIno > superblock.getInodesCount()) {
+					globalIno > superblock.getInodesCount()) {
 				continue;
 			}
 
@@ -235,7 +235,7 @@ public class InodeAlloc {
 		/* set location metadata of inode */
 		int offset = (ino * superblock.getInodeSize()) % superblock.getBlocksize();
 		long block = descr.getInodeTablePointer() +
-		    (ino * superblock.getInodeSize()) / superblock.getBlocksize();
+				(ino * superblock.getInodeSize()) / superblock.getBlocksize();
 
 		inode.setBlockGroup(group);
 		inode.setBlockNr(block);

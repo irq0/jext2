@@ -8,42 +8,42 @@ import java.lang.reflect.Modifier;
 public class Feature {
 	private static Superblock superblock = Superblock.getInstance();
 
-    // Features
-    public static final int EXT2_COMPAT_DIR_PREALLOC    = 0x0001;
-    public static final int EXT2_COMPAT_IMAGIC_INODES   = 0x0002;
-    public static final int EXT3_COMPAT_HAS_JOURNAL     = 0x0004;
-    public static final int EXT2_COMPAT_EXT_ATTR        = 0x0008;
-    public static final int EXT2_COMPAT_RESIZE_INO      = 0x0010;
-    public static final int EXT2_COMPAT_DIR_INDEX       = 0x0020;
-    public static final int EXT2_COMPAT_ANY             = 0xffffffff;
-    public static final int EXT2_RO_COMPAT_SPARSE_SUPER = 0x0001;
-    public static final int EXT2_RO_COMPAT_LARGE_FILE   = 0x0002;
-    public static final int EXT2_RO_COMPAT_BTREE_DIR    = 0x0004;
-    public static final int EXT2_RO_COMPAT_ANY          = 0xffffffff;
-    public static final int EXT2_INCOMPAT_COMPRESSION   = 0x0001;
-    public static final int EXT2_INCOMPAT_FILETYPE      = 0x0002;
-    public static final int EXT3_INCOMPAT_RECOVER       = 0x0004;
-    public static final int EXT3_INCOMPAT_JOURNAL_DEV   = 0x0008;
-    public static final int EXT2_INCOMPAT_META_BG       = 0x0010;
-    public static final int EXT2_INCOMPAT_ANY           = 0xffffffff;
-    // Features supported by ext2fsprogs
-    public static final int EXT2PROGS_COMPAT_SUPP           = 0;
-    public static final int EXT2PROGS_INCOMPAT_SUPP         = (EXT2_INCOMPAT_FILETYPE);
-    public static final int EXT2PROGS_RO_COMPAT_SUPP        = (EXT2_RO_COMPAT_SPARSE_SUPER|EXT2_RO_COMPAT_LARGE_FILE|EXT2_RO_COMPAT_BTREE_DIR);
-    public static final int EXT2PROGS_RO_COMPAT_UNSUPPORTED = ~EXT2PROGS_RO_COMPAT_SUPP;
-    public static final int EXT2PROGS_INCOMPAT_UNSUPPORTED  = ~EXT2PROGS_INCOMPAT_SUPP;
-    // Features supported by linux 2.6.36
-    public static final int EXT2KERNEL_COMPAT_SUPP           = (EXT2_COMPAT_EXT_ATTR);
-    public static final int EXT2KERNEL_INCOMPAT_SUPP         = (EXT2_INCOMPAT_FILETYPE|EXT2_INCOMPAT_META_BG);
-    public static final int EXT2KERNEL_RO_COMPAT_SUPP        = (EXT2_RO_COMPAT_SPARSE_SUPER|EXT2_RO_COMPAT_LARGE_FILE|EXT2_RO_COMPAT_BTREE_DIR);
-    public static final int EXT2KERNEL_RO_COMPAT_UNSUPPORTED = ~EXT2KERNEL_RO_COMPAT_SUPP;
-    public static final int EXT2KERNEL_INCOMPAT_UNSUPPORTED  = ~EXT2KERNEL_INCOMPAT_SUPP;
-    // Features supported by jext2
-    public static final int JEXT2_COMPAT_SUPP           = 0;
-    public static final int JEXT2_INCOMPAT_SUPP         = (EXT2_INCOMPAT_FILETYPE);
-    public static final int JEXT2_RO_COMPAT_SUPP        = (EXT2_RO_COMPAT_SPARSE_SUPER|EXT2_RO_COMPAT_LARGE_FILE);
-    public static final int JEXT2_RO_COMPAT_UNSUPPORTED = ~JEXT2_RO_COMPAT_SUPP;
-    public static final int JEXT2_INCOMPAT_UNSUPPORTED  = ~JEXT2_INCOMPAT_SUPP;
+	// Features
+	public static final int EXT2_COMPAT_DIR_PREALLOC    = 0x0001;
+	public static final int EXT2_COMPAT_IMAGIC_INODES   = 0x0002;
+	public static final int EXT3_COMPAT_HAS_JOURNAL     = 0x0004;
+	public static final int EXT2_COMPAT_EXT_ATTR        = 0x0008;
+	public static final int EXT2_COMPAT_RESIZE_INO      = 0x0010;
+	public static final int EXT2_COMPAT_DIR_INDEX       = 0x0020;
+	public static final int EXT2_COMPAT_ANY             = 0xffffffff;
+	public static final int EXT2_RO_COMPAT_SPARSE_SUPER = 0x0001;
+	public static final int EXT2_RO_COMPAT_LARGE_FILE   = 0x0002;
+	public static final int EXT2_RO_COMPAT_BTREE_DIR    = 0x0004;
+	public static final int EXT2_RO_COMPAT_ANY          = 0xffffffff;
+	public static final int EXT2_INCOMPAT_COMPRESSION   = 0x0001;
+	public static final int EXT2_INCOMPAT_FILETYPE      = 0x0002;
+	public static final int EXT3_INCOMPAT_RECOVER       = 0x0004;
+	public static final int EXT3_INCOMPAT_JOURNAL_DEV   = 0x0008;
+	public static final int EXT2_INCOMPAT_META_BG       = 0x0010;
+	public static final int EXT2_INCOMPAT_ANY           = 0xffffffff;
+	// Features supported by ext2fsprogs
+	public static final int EXT2PROGS_COMPAT_SUPP           = 0;
+	public static final int EXT2PROGS_INCOMPAT_SUPP         = (EXT2_INCOMPAT_FILETYPE);
+	public static final int EXT2PROGS_RO_COMPAT_SUPP        = (EXT2_RO_COMPAT_SPARSE_SUPER|EXT2_RO_COMPAT_LARGE_FILE|EXT2_RO_COMPAT_BTREE_DIR);
+	public static final int EXT2PROGS_RO_COMPAT_UNSUPPORTED = ~EXT2PROGS_RO_COMPAT_SUPP;
+	public static final int EXT2PROGS_INCOMPAT_UNSUPPORTED  = ~EXT2PROGS_INCOMPAT_SUPP;
+	// Features supported by linux 2.6.36
+	public static final int EXT2KERNEL_COMPAT_SUPP           = (EXT2_COMPAT_EXT_ATTR);
+	public static final int EXT2KERNEL_INCOMPAT_SUPP         = (EXT2_INCOMPAT_FILETYPE|EXT2_INCOMPAT_META_BG);
+	public static final int EXT2KERNEL_RO_COMPAT_SUPP        = (EXT2_RO_COMPAT_SPARSE_SUPER|EXT2_RO_COMPAT_LARGE_FILE|EXT2_RO_COMPAT_BTREE_DIR);
+	public static final int EXT2KERNEL_RO_COMPAT_UNSUPPORTED = ~EXT2KERNEL_RO_COMPAT_SUPP;
+	public static final int EXT2KERNEL_INCOMPAT_UNSUPPORTED  = ~EXT2KERNEL_INCOMPAT_SUPP;
+	// Features supported by jext2
+	public static final int JEXT2_COMPAT_SUPP           = 0;
+	public static final int JEXT2_INCOMPAT_SUPP         = (EXT2_INCOMPAT_FILETYPE);
+	public static final int JEXT2_RO_COMPAT_SUPP        = (EXT2_RO_COMPAT_SPARSE_SUPER|EXT2_RO_COMPAT_LARGE_FILE);
+	public static final int JEXT2_RO_COMPAT_UNSUPPORTED = ~JEXT2_RO_COMPAT_SUPP;
+	public static final int JEXT2_INCOMPAT_UNSUPPORTED  = ~JEXT2_INCOMPAT_SUPP;
 
 	/** Check if file system has compatible feature. The implementation is
 	 * free to support them without risk of damaging meta-data.
@@ -77,16 +77,16 @@ public class Feature {
 			String name = m.getName();
 
 			if (!name.equals("supportedFeatures") && Modifier.isStatic(mod) && Modifier.isPublic(mod)) {
-					try {
-						boolean ret = (Boolean)m.invoke(null);
-						if (ret) {
-							buf.append(m.getName());
-							buf.append(" ");
-						}
-					} catch (IllegalArgumentException ignored) {
-					} catch (IllegalAccessException ignored) {
-					} catch (InvocationTargetException ignored) {
+				try {
+					boolean ret = (Boolean)m.invoke(null);
+					if (ret) {
+						buf.append(m.getName());
+						buf.append(" ");
 					}
+				} catch (IllegalArgumentException ignored) {
+				} catch (IllegalAccessException ignored) {
+				} catch (InvocationTargetException ignored) {
+				}
 
 			}
 		}
