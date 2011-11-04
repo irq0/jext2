@@ -43,6 +43,7 @@ public class RegularInode extends DataInode {
      * @param   size    new size
      * @throws FileTooLarge 
      */
+    @NotThreadSafe(useLock=false)  // XXX will be thread safe once truncate is 
     public void setSizeAndTruncate(long size) throws JExt2Exception, FileTooLarge {
         if (size < 0) 
             throw new IllegalArgumentException("Try to set negative file size");
