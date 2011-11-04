@@ -3,6 +3,7 @@ package jext2;
 import java.nio.ByteBuffer;
 import java.util.Date;
 
+import jext2.annotations.NotThreadSafe;
 import jext2.exceptions.FileTooLarge;
 import jext2.exceptions.IoError;
 import jext2.exceptions.JExt2Exception;

@@ -1,4 +1,4 @@
-package jext2;
+package jext2.annotations;
 
 /**
  * Marks classes and methods that are not thread safe

@@ -6,6 +6,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
+import jext2.annotations.NotThreadSafe;
 import jext2.exceptions.FileTooLarge;
 import jext2.exceptions.IoError;
 import jext2.exceptions.JExt2Exception;

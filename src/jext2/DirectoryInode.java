@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import jext2.annotations.NotThreadSafe;
 import jext2.exceptions.DirectoryNotEmpty;
 import jext2.exceptions.FileExists;
 import jext2.exceptions.FileNameTooLong;
