@@ -23,7 +23,7 @@ public class Mkdir extends jlowfuse.async.tasks.Mkdir<Jext2Context> {
         if (parent == 1) parent = Constants.EXT2_ROOT_INO;
         try {
             Inode parentInode = context.inodes.openInode(parent);
-            if (!(parentInode instanceof DirectoryInode)) {
+            if (!parentInode.isDirectory()) {
                 Reply.err(req, Errno.ENOTDIR);
                 return;
             }

@@ -168,7 +168,7 @@ public class InodeAlloc {
         
         groupDescr.setFreeBlocksCount(groupDescr.getFreeInodesCount() + 1);
         
-        if (inode instanceof DirectoryInode) {
+        if (inode.isDirectory()) {
             groupDescr.setUsedDirsCount(groupDescr.getUsedDirsCount() - 1);
             superblock.setDirsCount(superblock.getDirsCount() - 1);
         }

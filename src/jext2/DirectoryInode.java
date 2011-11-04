@@ -412,7 +412,7 @@ public class DirectoryInode extends DataInode {
 	 * @param  name    name of the directory entry
 	 */ 
 	public void unLinkOther(Inode inode, String name) throws JExt2Exception {
-        if (inode instanceof DirectoryInode)
+        if (inode.isDirectory())
             throw new IllegalArgumentException("Use unLinkDir for directories");
         unlink(inode, name);
 	}

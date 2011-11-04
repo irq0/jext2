@@ -20,7 +20,7 @@ public class Opendir extends jlowfuse.async.tasks.Opendir<Jext2Context> {
 		if (ino == 1) ino = Constants.EXT2_ROOT_INO;
 		try {
             Inode inode = context.inodes.openInode(ino);
-			if (!(inode instanceof DirectoryInode)) {
+			if (!inode.isDirectory()) {
 				Reply.err(req, Errno.ENOTDIR);
 				return;
 			}

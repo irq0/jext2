@@ -163,7 +163,7 @@ public class DataInode extends Inode {
         super.read(buf);
         this.blocks = Ext2fsDataTypes.getLE32U(buf, 28 + offset);
         
-        if (!(this instanceof SymlinkInode && ((SymlinkInode)this).isFastSymlink())) {            
+        if (!isFastSymlink()) {            
             this.block = new long[Constants.EXT2_N_BLOCKS];
             for (int i=0; i<Constants.EXT2_N_BLOCKS; i++) {
                 this.block[i] = Ext2fsDataTypes.getLE32U(buf, 40 + (i*4) + offset);
@@ -173,7 +173,7 @@ public class DataInode extends Inode {
     
     
     protected void write(ByteBuffer buf) throws IoError {
-        if (!(this instanceof SymlinkInode)) {
+        if (!isFastSymlink()) {
             for (int i=0; i<Constants.EXT2_N_BLOCKS; i++) {
                 Ext2fsDataTypes.putLE32U(buf, this.block[i], 40 + (i*4));
             }

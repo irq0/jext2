@@ -727,8 +727,7 @@ public class DataBlockAccess {
 	 *     beyond the max. blocks count
 	 */
 	void truncate(long toSize) throws JExt2Exception, FileTooLarge {
-	    if (inode instanceof SymlinkInode && 
-	            ((SymlinkInode)inode).isFastSymlink())
+	    if (inode.isFastSymlink())
 	        return;
 	    
 	    // TODO check inode flags for append or immutable 

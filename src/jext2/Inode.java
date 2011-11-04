@@ -320,7 +320,7 @@ public class Inode extends PartialBlock {
 	    	    
 	    setDeletionTime(new Date());
 	    setSize(0);
-        if (this instanceof DataInode) {
+        if (hasDataBlocks()) {
             try {
                 ((DataInode)this).accessData().truncate(0);
             } catch (FileTooLarge e) {

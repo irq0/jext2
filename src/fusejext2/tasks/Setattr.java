@@ -50,7 +50,7 @@ public class Setattr extends jlowfuse.async.tasks.Setattr<Jext2Context> {
                 inode.setModificationTime(new Date());
             }            
             if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_SIZE)) {
-                if (inode instanceof RegularInode) {
+                if (inode.isRegularFile()) {
                     ((RegularInode) inode).setSizeAndTruncate(attr.getSize());
                 }
             }            

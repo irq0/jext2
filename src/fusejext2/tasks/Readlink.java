@@ -19,7 +19,7 @@ public class Readlink extends jlowfuse.async.tasks.Readlink<Jext2Context> {
 	    if (ino == 1) ino = Constants.EXT2_ROOT_INO;
 		try {
 		    Inode inode = context.inodes.openInode(ino);
-			if (!(inode instanceof SymlinkInode)) { 
+			if (!inode.isSymlink()) { 
 				Reply.err(req, Errno.EPERM);
 				return;
 			}

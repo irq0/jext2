@@ -31,7 +31,7 @@ public class Util {
 		s.setNlink(inode.getLinksCount());
 		s.setSize(inode.getSize());
 		
-		if (inode instanceof DataInode) 
+		if (inode.hasDataBlocks()) 
 		    s.setBlocks(((DataInode)inode).getBlocks());
 		else 
 		    s.setBlocks(0);
