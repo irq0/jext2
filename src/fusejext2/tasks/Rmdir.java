@@ -13,7 +13,8 @@ public class Rmdir extends jlowfuse.async.tasks.Rmdir<Jext2Context> {
 	public Rmdir(FuseReq req, long parent, String name) {
 		super(req, parent, name);
 	}
-	
+
+	@Override
 	public void run() {
         if (parent == 1) parent = Constants.EXT2_ROOT_INO;
 
@@ -22,9 +23,9 @@ public class Rmdir extends jlowfuse.async.tasks.Rmdir<Jext2Context> {
             	throw new InvalidArgument();
 
             DirectoryInode parentInode = (DirectoryInode)(context.inodes.openInode(parent));
-            DirectoryInode child = 
+            DirectoryInode child =
                 (DirectoryInode)context.inodes.openInode(parentInode.lookup(name).getIno());
-            
+
             child.removeDotLinks(parentInode);
             parentInode.unLinkDir(child, name);
 
@@ -32,7 +33,7 @@ public class Rmdir extends jlowfuse.async.tasks.Rmdir<Jext2Context> {
 
         } catch (JExt2Exception e) {
             Reply.err(req, e.getErrno());
-        }    
+        }
 	}
 
 }

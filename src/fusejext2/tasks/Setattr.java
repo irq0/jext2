@@ -24,42 +24,43 @@ public class Setattr extends jlowfuse.async.tasks.Setattr<Jext2Context> {
 	private boolean checkToSet(int to_set, int attr) {
 	    return ((to_set & attr) != 0);
 	}
-	
+
+	@Override
 	public void run() {
         if (ino == 1) ino = Constants.EXT2_ROOT_INO;
-        
+
         try {
             Inode inode = context.inodes.openInode(ino);
 
             if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_ATIME)) {
                 inode.setAccessTime(Util.timespecToDate(attr.getAtim()));
-            } 
+            }
             if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_ATIME_NOW)) {
                 inode.setAccessTime(new Date());
             }
             if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_GID)) {
                 inode.setGid(attr.getGid());
-            }            
+            }
             if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_MODE)) {
                 inode.setMode(Mode.createWithNumericValue(attr.getMode()));
-            }            
+            }
             if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_MTIME)) {
                 inode.setModificationTime(Util.timespecToDate(attr.getMtim()));
-            }            
+            }
             if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_MTIME_NOW)) {
                 inode.setModificationTime(new Date());
-            }            
+            }
             if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_SIZE)) {
                 if (inode.isRegularFile()) {
                     ((RegularInode) inode).setSizeAndTruncate(attr.getSize());
                 }
-            }            
+            }
             if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_UID)) {
                 inode.setUid(attr.getUid());
-            }            
-            
+            }
+
             inode.write();
-            
+
             Stat s = Util.inodeToStat(context.superblock, inode);
             Reply.attr(req, s, 0.0);
 

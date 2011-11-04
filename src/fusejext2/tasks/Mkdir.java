@@ -19,16 +19,17 @@ public class Mkdir extends jlowfuse.async.tasks.Mkdir<Jext2Context> {
 		super(req, parent, name, mode);
 	}
 
+	@Override
 	public void run() {
         if (parent == 1) parent = Constants.EXT2_ROOT_INO;
         try {
             Inode parentInode = context.inodes.openInode(parent);
             if (!parentInode.isDirectory())
             	throw new NotADirectory();
-            
-        	FuseContext fuseContext = req.getContext();            
-            DirectoryInode inode = 
-                DirectoryInode.createEmpty();            
+
+        	FuseContext fuseContext = req.getContext();
+            DirectoryInode inode =
+                DirectoryInode.createEmpty();
             inode.setMode(new ModeBuilder().directory()
 		            .mask(mode & ~fuseContext.getUmask())
 		            .create());
@@ -36,10 +37,10 @@ public class Mkdir extends jlowfuse.async.tasks.Mkdir<Jext2Context> {
             inode.setGid(fuseContext.getGid());
             InodeAlloc.registerInode(parentInode, inode);
             inode.addDotLinks((DirectoryInode)parentInode);
-            
+
             ((DirectoryInode)parentInode).addLink(inode, name);
             inode.sync();
-            Reply.entry(req, Util.inodeToEntryParam(context.superblock, inode));    
+            Reply.entry(req, Util.inodeToEntryParam(context.superblock, inode));
 
         } catch (JExt2Exception e) {
             Reply.err(req, e.getErrno());

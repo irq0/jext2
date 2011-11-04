@@ -13,15 +13,16 @@ public class Releasedir extends jlowfuse.async.tasks.Releasedir<Jext2Context> {
 		super(arg0, arg1, arg2);
 	}
 
+	@Override
 	public void run() {
 	    if (ino == 1) ino = Constants.EXT2_ROOT_INO;
-	    
+
 	    try {
 	        Inode inode = context.inodes.openInode(ino);
 	        inode.sync();
 	        Reply.err(req, 0);
 	    } catch (JExt2Exception e) {
 	        Reply.err(req, e.getErrno());
-	    }	
+	    }
 	}
 }

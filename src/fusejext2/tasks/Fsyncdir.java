@@ -14,12 +14,13 @@ public class Fsyncdir extends jlowfuse.async.tasks.Fsync<Jext2Context> {
 		super(arg0, arg1, arg2, arg3);
 	}
 
+	@Override
 	public void run() {
 		if (ino == 1) ino = Constants.EXT2_ROOT_INO;
 		try {
 			/*
 			 * Do a full disk flush:
-			 * Since we are in userland and have no control over blocks 
+			 * Since we are in userland and have no control over blocks
 			 * and disks, just sync the inode and force the file channel
 			 * to flush
 			 */

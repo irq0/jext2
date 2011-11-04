@@ -14,29 +14,29 @@ import jext2.InodeAccess;
 
 public class Init extends jlowfuse.async.tasks.Init<Jext2Context> {
 
-	
+
 	private void performBasicFilesystemChecks()
 	{
     	checkExt2Features();
         checkExt2Magic();
         checkExt2Revision();
-        checkExt2MountState();	
+        checkExt2MountState();
 	}
-	
+
 	private void checkExt2Features() {
         if (Feature.incompatUnsupported() || Feature.roCompatUnsupported()) {
             System.out.println("Featureset incompatible with JExt2 :(");
             System.exit(23);
         }
 	}
-	
+
 	private void checkExt2Magic() {
         if (context.superblock.getMagic() != 0xEF53) {
             System.out.println("Wrong magic -> no ext2");
             System.exit(23);
         }
 	}
-	
+
 	private void checkExt2Revision() {
         /* ext2_setup_super */
         if (context.superblock.getRevLevel() > Constants.JEXT2_MAX_SUPP_REV) {
@@ -44,11 +44,11 @@ public class Init extends jlowfuse.async.tasks.Init<Jext2Context> {
             System.exit(23);
         }
 	}
-	
-	private void checkExt2MountState() { 
+
+	private void checkExt2MountState() {
 		if ((context.superblock.getState() & Constants.EXT2_VALID_FS) == 0)
-			System.out.println("Mounting uncheckt fs");	        
-		else if ((context.superblock.getState() & Constants.EXT2_ERROR_FS) > 0) 
+			System.out.println("Mounting uncheckt fs");
+		else if ((context.superblock.getState() & Constants.EXT2_ERROR_FS) > 0)
 			System.out.println("Mounting fs with errors");
 		else if ((context.superblock.getMaxMountCount() >= 0) &&
 				(context.superblock.getMountCount() >= context.superblock.getMaxMountCount()))
@@ -57,26 +57,27 @@ public class Init extends jlowfuse.async.tasks.Init<Jext2Context> {
 		if (context.superblock.getMaxMountCount() == 0)
 			context.superblock.setMaxMountCount(Constants.EXT2_DFL_MAX_MNT_COUNT);
 	}
-	
+
 	private void markExt2AsMounted() {
         context.superblock.setMountCount(context.superblock.getMountCount() + 1);
         context.superblock.setLastMount(new Date());
         context.superblock.setLastMounted("jext2");
 	}
-	
-    public void run() {
+
+    @Override
+	public void run() {
 	    super.run();
-	    
-		
+
+
 	    try {
 	    	context.blocks = new BlockAccess(context.blockDev);
 	    	context.superblock = Superblock.fromBlockAccess(context.blocks);
 	    	context.blocks.initialize(context.superblock);
 
-	    	performBasicFilesystemChecks();        	        
-	        markExt2AsMounted();        
+	    	performBasicFilesystemChecks();
+	        markExt2AsMounted();
 	        // TODO set times, volume name, etc in  superblock
-	        
+
 	        context.blockGroups = BlockGroupAccess.getInstance();
 	        context.blockGroups.readDescriptors();
 		    context.inodes = InodeAccess.getInstance();

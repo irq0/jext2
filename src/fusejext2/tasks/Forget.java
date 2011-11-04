@@ -13,11 +13,12 @@ public class Forget extends jlowfuse.async.tasks.Forget<Jext2Context> {
 		super(arg0, arg1, arg2);
 	}
 
-	
+
+	@Override
 	public void run() {
-		
+
         if (ino == 1) ino = Constants.EXT2_ROOT_INO;
-        
+
         // try to sync if inode is open - which it shouldn't be
         try {
             Inode inode = context.inodes.getOpened(ino);
@@ -25,10 +26,10 @@ public class Forget extends jlowfuse.async.tasks.Forget<Jext2Context> {
                 inode.sync();
         } catch (JExt2Exception ignored) {
         }
-        
-        
+
+
         context.inodes.closeInode(ino);
         Reply.none(req);
-        
+
 	}
 }

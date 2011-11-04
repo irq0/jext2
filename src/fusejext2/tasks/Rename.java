@@ -16,6 +16,7 @@ public class Rename extends jlowfuse.async.tasks.Rename<Jext2Context> {
 		super(req, parent, name, newparent, newname);
 	}
 
+	@Override
 	public void run() {
 		if (parent == 1) parent = Constants.EXT2_ROOT_INO;
 		if (newparent == 1) newparent = Constants.EXT2_ROOT_INO;
@@ -31,14 +32,14 @@ public class Rename extends jlowfuse.async.tasks.Rename<Jext2Context> {
 			newEntry.setIno(entry.getIno());
 			newEntry.setFileType(entry.getFileType());
 
-			/* 
-			 * When NEW directory entry already exists try to 
-			 * delete it. 
+			/*
+			 * When NEW directory entry already exists try to
+			 * delete it.
 			 */
 			try {
 				DirectoryEntry existingEntry = newparentInode.lookup(newname);
 				if (existingEntry.getFileType() == DirectoryEntry.FILETYPE_DIR) {
-					DirectoryInode existingDir = 
+					DirectoryInode existingDir =
 							(DirectoryInode)(context.inodes.openInode(existingEntry.getIno()));
 
 					newparentInode.unLinkDir(existingDir, newname);
@@ -54,7 +55,7 @@ public class Rename extends jlowfuse.async.tasks.Rename<Jext2Context> {
 			 * and the nlinks of the parents.
 			 */
 			if (newEntry.getFileType() == DirectoryEntry.FILETYPE_DIR) {
-				DirectoryInode newDir = 
+				DirectoryInode newDir =
 						(DirectoryInode)(context.inodes.openInode(newEntry.getIno()));
 
 				DirectoryEntry dotdot = newDir.lookup("..");
@@ -66,7 +67,7 @@ public class Rename extends jlowfuse.async.tasks.Rename<Jext2Context> {
 			}
 
 			/*
-			 * Finally: Change the Directories 
+			 * Finally: Change the Directories
 			 */
 			newparentInode.addDirectoryEntry(newEntry);
 			parentInode.removeDirectoryEntry(name);

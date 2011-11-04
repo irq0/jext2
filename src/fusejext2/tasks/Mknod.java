@@ -21,7 +21,8 @@ public class Mknod extends jlowfuse.async.tasks.Mknod<Jext2Context> {
 	public Mknod(FuseReq req, long parent, String name, short mode, short rdev) {
 		super(req, parent, name, mode, rdev);
 	}
-	
+
+	@Override
 	public void run() {
         if (parent == 1) parent = Constants.EXT2_ROOT_INO;
         try {
@@ -34,9 +35,9 @@ public class Mknod extends jlowfuse.async.tasks.Mknod<Jext2Context> {
             Inode parentInode = context.inodes.openInode(parent);
             if (!parentInode.isDirectory())
             	throw new NotADirectory();
-            	
-            FuseContext fuseContext = req.getContext();           
-            RegularInode inode = RegularInode.createEmpty();            
+
+            FuseContext fuseContext = req.getContext();
+            RegularInode inode = RegularInode.createEmpty();
             inode.setMode(new ModeBuilder().regularFile()
 		            .numeric(createMode.numeric() & ~fuseContext.getUmask())
 		            .create() );
@@ -44,10 +45,10 @@ public class Mknod extends jlowfuse.async.tasks.Mknod<Jext2Context> {
             inode.setUid(fuseContext.getUid());
             inode.setGid(fuseContext.getGid());
             InodeAlloc.registerInode(parentInode, inode);
-            
-            ((DirectoryInode)parentInode).addLink(inode, name);            
+
+            ((DirectoryInode)parentInode).addLink(inode, name);
             inode.sync();
-            Reply.entry(req, Util.inodeToEntryParam(context.superblock, inode));    
+            Reply.entry(req, Util.inodeToEntryParam(context.superblock, inode));
 
         } catch (JExt2Exception e) {
             Reply.err(req, e.getErrno());

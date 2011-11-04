@@ -15,18 +15,19 @@ public class Write extends jlowfuse.async.tasks.Write<Jext2Context> {
 	public Write(FuseReq req, long ino, ByteBuffer buf, long off, FileInfo fi) {
 		super(req, ino, buf, off, fi);
 	}
-	
+
+	@Override
 	public void run() {
 	    try {
 	        RegularInode inode = (RegularInode)(context.inodes.getOpened(ino));
 	        buf.rewind();
 	        int count = inode.writeData(buf, off);
-	        
-	        if (count < 1) 
+
+	        if (count < 1)
 	            throw new IoError();
-	        
+
 	        Reply.write(req, count);
-	    
+
 	    } catch (JExt2Exception e) {
 	        Reply.err(req, e.getErrno());
 	    }
