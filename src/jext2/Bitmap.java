@@ -2,6 +2,7 @@ package jext2;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.concurrent.locks.ReentrantLock;
 
 import jext2.exceptions.IoError;
 
@@ -9,9 +10,13 @@ public class Bitmap extends Block {
     private boolean dirty = false;
     
 	private ByteBuffer bmap = ByteBuffer.allocate(Superblock.getInstance().getBlocksize());
+	private ReentrantLock bmapLock = new ReentrantLock();
+	
 	protected void read(ByteBuffer buf) throws IoError {
+		bmapLock.lock();
 	    this.bmap = buf;
 	    this.bmap.order(ByteOrder.LITTLE_ENDIAN);
+		bmapLock.unlock();
 	}
 
 	/**
@@ -20,8 +25,11 @@ public class Bitmap extends Block {
 	 * byte will just check a single bit.
 	 */
 	public int getNextZeroBitPos(int start, int numBytes) {
-	    if ((bmap.limit() - start) == 0)
+		bmapLock.lock();
+	    if ((bmap.limit() - start) == 0) {
+			bmapLock.unlock();
 	        return -1;
+	    }
 	    
 		int pos = -1;
 		int byteNum = start / 8;
@@ -50,6 +58,7 @@ public class Bitmap extends Block {
 		}
 		
 		assert !isSet(pos);
+		bmapLock.unlock();
 		return pos;
 	}		
 
@@ -66,7 +75,11 @@ public class Bitmap extends Block {
 	}
 
 	public String getBitStringContaining(int pos) {
-	    return Bitmap.formatByte(bmap.get(pos/8));
+		bmapLock.lock();
+		byte b = bmap.get(pos/8);
+		bmapLock.unlock();
+
+	    return Bitmap.formatByte(b);
 	}
 	
 	
@@ -77,7 +90,10 @@ public class Bitmap extends Block {
         int byteNum = pos / 8;
         byte offset = (byte) (pos % 8);
         
+		bmapLock.lock();
 	    byte chunk = bmap.get(byteNum);
+		bmapLock.unlock();
+
 	    byte mask = (byte)(1 << offset);
 	    
 	    return ((mask & chunk) != 0);
@@ -86,9 +102,10 @@ public class Bitmap extends Block {
 	/**
 	 * set bit to value
 	 */
-	public void setBit(int pos, boolean value) {
+	public synchronized void setBit(int pos, boolean value) {
 		int byteNum = pos / 8;
 		byte offset = (byte) (pos % 8);
+		bmapLock.lock();
 		byte chunk = bmap.get(byteNum);
 		
 		if (value) // set to 1
@@ -97,6 +114,7 @@ public class Bitmap extends Block {
 			chunk = (byte) (chunk & (0xFF ^ (1 << offset))); 
 
 		bmap.put(byteNum, chunk);
+		bmapLock.unlock();
 
 		if (value)
 		    assert isSet(pos);
@@ -148,7 +166,9 @@ public class Bitmap extends Block {
 	}
 	
 	public void write() throws IoError {
+		bmapLock.lock();
 		write(bmap);
+		bmapLock.unlock();
 	}	    
 	
 	public String toString() {
@@ -160,6 +180,7 @@ public class Bitmap extends Block {
 		sb.append("\n");
 	    sb.append("  bitmap=\n");
 	    
+		bmapLock.lock();
 	    bmap.rewind();
 	    for (int i=0; i<bmap.limit()/(Integer.SIZE/8); i++) {
 		    StringBuilder binstr = new StringBuilder();
@@ -167,6 +188,7 @@ public class Bitmap extends Block {
 	        sb.append(binstr.reverse());
 	        sb.append("\n");
 	    }
+		bmapLock.unlock();
 	    
 	    sb.append("]");
 	    return sb.toString();
