@@ -34,6 +34,7 @@ public class DirectoryInode extends DataInode {
 	 * to check that.
 	 * @returns Directory iterator for this inode
 	 */
+	@NotThreadSafe(useLock=true)
 	public DirectoryIterator iterateDirectory() {
 		return new DirectoryIterator();
 	}
