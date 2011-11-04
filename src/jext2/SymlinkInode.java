@@ -115,19 +115,7 @@ public class SymlinkInode extends DataInode {
 		super(blockNr, offset);
 	}
 
-	/**
-	 * Check if inode is a fast symlink. A fast symlink stores the link in the
-	 * data block pointers instead of data blocks itself
-	 * 
-	 * @return true if Inode is fast symlink; false otherwise.
-	 */
-	public boolean isFastSymlink() {
-	    return (getBlocks() == 0);
-	}
-	
-	public boolean isSlowSymlink() {
-		return !isFastSymlink();
-	}
+
     
 	protected void read(ByteBuffer buf) throws IoError {
         super.read(buf);
@@ -196,4 +184,17 @@ public class SymlinkInode extends DataInode {
     public boolean isRegularFile() {
     	return false;
     }
+	/**
+	 * Check if inode is a fast symlink. A fast symlink stores the link in the
+	 * data block pointers instead of data blocks itself
+	 * 
+	 * @return true if Inode is fast symlink; false otherwise.
+	 */
+	public boolean isFastSymlink() {
+	    return (getBlocks() == 0);
+	}
+	
+	public boolean isSlowSymlink() {
+		return !isFastSymlink();
+	}
 }
