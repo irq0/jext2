@@ -23,7 +23,13 @@ public class DataBlockAccess {
 	protected static BitmapAccess bitmaps = BitmapAccess.getInstance();
 	protected DataInode inode = null;
 
-	private ReentrantReadWriteLock dataBlockLock = new ReentrantReadWriteLock(true);
+	/** 
+	 * This is one of the most important locks. It synchronizes changes to the
+	 * inode's block hierarchy. The linux implementation has something simillar 
+	 * called the truncate_lock
+	 */ 
+	private ReentrantReadWriteLock hierarchyLock = new ReentrantReadWriteLock(true);
+	
 	// used by findGoal
 	private long lastAllocLogicalBlock = 0;
 	private long lastAllocPhysicalBlock = 0;
@@ -101,8 +107,8 @@ public class DataBlockAccess {
 		}
 	}
 
-	public ReentrantReadWriteLock.ReadLock lock() {
-		return dataBlockLock.readLock();
+	public void unlockHierarchyChanges() {
+		hierarchyLock.readLock().unlock();
 	}
 	
 	public DataBlockIterator iterateBlocks() {
@@ -153,16 +159,14 @@ public class DataBlockAccess {
 	 *
 	 * If the chain is incomplete return.length < offsets.length
 	 */
+	@NotThreadSafe(useLock=true)
 	private long[] getBranch(int[] offsets) throws IoError {
-		dataBlockLock.readLock().lock();
-		
 		int depth = offsets.length;
 		long[] blockNrs = new long[depth];
 
 		blockNrs[0] = inode.getBlock()[offsets[0]];
 
 		if (blockNrs[0] == 0) {
-			dataBlockLock.readLock().unlock();
 			return new long[] {};
 		}
 
@@ -176,12 +180,10 @@ public class DataBlockAccess {
 				long[] result = new long[i];
 				for (int k=0; k<i; k++)
 					result[k] = blockNrs[k];
-				dataBlockLock.readLock().unlock();
 				return result;
 			}
 		}
 
-		dataBlockLock.readLock().unlock();
 		return blockNrs;
 	}
 
@@ -190,6 +192,7 @@ public class DataBlockAccess {
 	 * @param  block   block we want
 	 * @return Preferrred place for a block (the goal)
 	 */
+	@NotThreadSafe(useLock=true)
 	private long findGoal(long block, long[] blockNrs, int[] offsets) throws IoError {
 		if (block == (lastAllocLogicalBlock + 1)
 				&& (lastAllocPhysicalBlock != 0)) {
@@ -209,16 +212,15 @@ public class DataBlockAccess {
 	 *     - if pointer will live in indirect block - allocate near that block
 	 *     - if pointer will live in inode - allocate in the same cylinder group
 	 */
+	@NotThreadSafe(useLock=true)
 	private long findNear(DataInode inode, long[] blockNrs, int[] offsets) throws IoError {
 		int depth = blockNrs.length;
 
-		dataBlockLock.readLock().lock();
 		/* Try to find previous block */
 		if (depth == 0)  { /* search direct blocks */
 			long[] directBlocks = inode.getBlock();
 			for (int i=directBlocks.length-1; i >= 0; i--) {
 				if (directBlocks[i] != 0) {
-					dataBlockLock.readLock().unlock();
 					return directBlocks[i];
 				}
 			}
@@ -228,7 +230,6 @@ public class DataBlockAccess {
 			for (int i=offsets[depth-1]-1; i>= 0; i--) {
 				long pointer = Ext2fsDataTypes.getLE32U(indirectBlock, i*4);
 				if (pointer != 0) {
-					dataBlockLock.readLock().unlock();
 					return pointer;
 				}
 			}
@@ -246,7 +247,6 @@ public class DataBlockAccess {
 		long colour = (Filesystem.getPID() % 16) *
 				(superblock.getBlocksPerGroup() / 16);
 		
-		dataBlockLock.readLock().unlock();
 		return bgStart + colour;
 
 	}
@@ -262,12 +262,11 @@ public class DataBlockAccess {
 	 * This function allocates num blocks, zeros out all but the last one, links
 	 * them into a chain and writes them to disk.
 	 */
+	@NotThreadSafe(useLock=true)
 	private LinkedList<Long> allocBranch(int num, long goal,
 			int[] offsets, long[] blockNrs)
 					throws JExt2Exception, NoSpaceLeftOnDevice {
 		
-		dataBlockLock.writeLock().lock();
-
 		int n = 0;
 		LinkedList<Long> result = new LinkedList<Long>();
 
@@ -298,8 +297,6 @@ public class DataBlockAccess {
 				freeBlocks(new long[] {nr});
 			}
 		}
-
-		dataBlockLock.writeLock().unlock();
 		
 		if (num == n)  /* Allocation successful */
 			return result;
@@ -312,11 +309,10 @@ public class DataBlockAccess {
 	 * Splice the allocated branch onto inode
 	 * @throws IOException
 	 */
+	@NotThreadSafe(useLock=true)
 	private void spliceBranch(long logicalBlock,
 			int[] offsets, long[] blockNrs, LinkedList<Long> newBlockNrs)
 					throws IoError {
-
-		dataBlockLock.writeLock().lock();
 
 		int existDepth = blockNrs.length;
 
@@ -336,9 +332,7 @@ public class DataBlockAccess {
 
 		inode.setBlocks(inode.getBlocks() +
 				newBlockNrs.size() * (superblock.getBlocksize()/ 512));
-		inode.setModificationTime(new Date());
-		
-		dataBlockLock.writeLock().unlock();
+		inode.setModificationTime(new Date());		
 	}
 
 
@@ -424,7 +418,7 @@ public class DataBlockAccess {
 				Constants.EXT2_NDIR_BLOCKS - offsets[0] - 1;
 
 			int count = 1;
-			dataBlockLock.readLock().lock();
+			hierarchyLock.readLock().lock();
 			while(count < maxBlocks && count <= blocksToBoundary) {
 
 				long nextByNumber = firstBlockNr + count;
@@ -443,27 +437,30 @@ public class DataBlockAccess {
 					break;
 				}
 			}
-			dataBlockLock.readLock().unlock();
+			/* NOTICE: The lock is not returned here. This must be done by the caller */
 			return result;
 		}
 
-		/* Next simple case - plain lookup */
+		hierarchyLock.readLock().unlock();
+		
+		/* Next simple case - plain lookup mode */
 		if (!create) {
 			return null;
 		}
 
 		/* Okay, we need to do block allocation. */
-		Object lock = new Object();
-		LinkedList<Long> newBlockNrs;
-		synchronized (lock){
-			long goal = findGoal(fileBlockNr, blockNrs, offsets);
-			int count = depth - existDepth;
+		hierarchyLock.writeLock().lock();
+		long goal = findGoal(fileBlockNr, blockNrs, offsets);
+		int count = depth - existDepth;
 
-			newBlockNrs = allocBranch(count, goal, offsets, blockNrs);
-			spliceBranch(fileBlockNr, offsets, blockNrs, newBlockNrs);
-		}
+		LinkedList<Long> newBlockNrs = allocBranch(count, goal, offsets, blockNrs);
+		spliceBranch(fileBlockNr, offsets, blockNrs, newBlockNrs);
 		
 		result.add(newBlockNrs.getLast());
+		hierarchyLock.readLock().lock();
+		hierarchyLock.writeLock().unlock();
+		
+		/* Again return with an open read lock */
 		return result;
 	}
 
@@ -471,6 +468,7 @@ public class DataBlockAccess {
 	 * Try to allocate a block by looping over block groups and calling
 	 * newBlockInGroup
 	 */
+	@NotThreadSafe(useLock=true)
 	private static long newBlock(long goal) throws JExt2Exception, NoSpaceLeftOnDevice {
 		if (! superblock.hasFreeBlocks()) {
 			throw new NoSpaceLeftOnDevice();
@@ -513,6 +511,7 @@ public class DataBlockAccess {
 	 * @throws IOException
 	 * @throws NoSpaceLeftOnDevice
 	 */
+	@NotThreadSafe(useLock=true)
 	private static long allocateBlock(long goal) throws NoSpaceLeftOnDevice, JExt2Exception {
 		long blockNr = newBlock(goal);
 
@@ -528,7 +527,8 @@ public class DataBlockAccess {
 	 * @return      block number or -1
 	 * @throws JExt2Exception
 	 */
-	private synchronized static long newBlockInGroup(int start, BlockGroupDescriptor descr) throws JExt2Exception {
+	@NotThreadSafe(useLock=true)
+	private static long newBlockInGroup(int start, BlockGroupDescriptor descr) throws JExt2Exception {
 		Bitmap bitmap = bitmaps.openDataBitmap(descr);
 
 		if (descr.getFreeBlocksCount() > 0) {
@@ -578,6 +578,7 @@ public class DataBlockAccess {
 	 * Free single data block. Update inode.blocks.
 	 * @param  blockNr physical block to free
 	 */
+	@NotThreadSafe(useLock=true)
 	private void freeDataBlock(long blockNr) throws JExt2Exception {
 		freeDataBlocksContiguous(blockNr, 1);
 	}
@@ -589,7 +590,7 @@ public class DataBlockAccess {
 	 * @throws JExt2Exception
 	 */
 	@NotThreadSafe(useLock=true)
-	private synchronized void freeDataBlocksContiguous(long blockNr, long count) throws JExt2Exception {
+	private void freeDataBlocksContiguous(long blockNr, long count) throws JExt2Exception {
 		/* counter to set {superblock|blockgroup}.freeBlocksCount */
 		int groupFreed = 0;
 		int freed = 0;
@@ -659,7 +660,7 @@ public class DataBlockAccess {
 	 * @param  blockNrs       array of block numbers
 	 */
 	@NotThreadSafe(useLock=true)
-	private synchronized void freeBlocks(long[] blockNrs) throws JExt2Exception {
+	private void freeBlocks(long[] blockNrs) throws JExt2Exception {
 		long blockToFree = 0;
 		long count = 0;
 
@@ -692,7 +693,7 @@ public class DataBlockAccess {
 	 *
 	 */
 	@NotThreadSafe(useLock=true)
-	private synchronized void freeBranches(int depth, long[] blockNrs) throws JExt2Exception {
+	private void freeBranches(int depth, long[] blockNrs) throws JExt2Exception {
 		if (depth > 0) { /* indirection exists -> go down */
 			depth -= 1;
 			for (long nr : blockNrs) {
@@ -713,7 +714,7 @@ public class DataBlockAccess {
 	 * debuggung of the block allocation. toString uses this as well
 	 */
 	public String dumpHierachy() {
-		dataBlockLock.readLock().lock();
+		hierarchyLock.readLock().lock();
 		StringBuilder sb =
 				new StringBuilder("Inode has " + inode.getBlocks() + " blocks");
 
@@ -734,7 +735,7 @@ public class DataBlockAccess {
 			}
 		} catch (JExt2Exception e) {
 		}
-		dataBlockLock.readLock().unlock();
+		hierarchyLock.readLock().unlock();
 		return sb.toString();
 	}
 	
@@ -767,11 +768,11 @@ public class DataBlockAccess {
 	 * @throws FileTooLarge When you try to truncate to a size
 	 *     beyond the max. blocks count
 	 */
-	public synchronized void truncate(long toSize) throws JExt2Exception, FileTooLarge {
+	public void truncate(long toSize) throws JExt2Exception, FileTooLarge {
 		if (inode.isFastSymlink())
 			return;
 
-		dataBlockLock.writeLock().lock();
+		hierarchyLock.writeLock().lock();
 		// TODO check inode flags for append or immutable
 
 		long[] directBlocks = inode.getBlock();
@@ -831,7 +832,7 @@ public class DataBlockAccess {
 			}
 		case Constants.EXT2_TIND_BLOCK:
 		}
-		dataBlockLock.writeLock().unlock();
+		hierarchyLock.writeLock().unlock();
 	}
 
 	@Override
