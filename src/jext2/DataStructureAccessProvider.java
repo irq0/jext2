@@ -58,6 +58,7 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 
 		if (ds == null) {
 			add(key, createInstance(key));
+			ds = getValueAndUsage(key);
 		}
 
 		assert ds != null;
