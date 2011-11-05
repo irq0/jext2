@@ -10,7 +10,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * not the object identity.
  */
 public class BlockSynchronizer {
-	private static BlockSynchronizer instance;
+	private static BlockSynchronizer instance = new BlockSynchronizer();
 
 	private Map<Long, ReentrantReadWriteLock> locks;
 	private ReentrantLock locksLock;
