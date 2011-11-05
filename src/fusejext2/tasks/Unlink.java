@@ -14,26 +14,26 @@ public class Unlink extends jlowfuse.async.tasks.Unlink<Jext2Context> {
 	public Unlink(FuseReq req, long parent, String name) {
 		super(req, parent, name);
 	}
-	
+
+	@Override
 	public void run() {
-        if (parent == 1) parent = Constants.EXT2_ROOT_INO;
+		if (parent == 1) parent = Constants.EXT2_ROOT_INO;
 
+		try {
+			if (name.equals(".") || name.equals(".."))
+				throw new InvalidArgument();
 
-        try {
-            if (name.equals(".") || name.equals(".."))
-            	throw new InvalidArgument();
+			DirectoryInode parentInode = (DirectoryInode)(context.inodes.openInode(parent));
+			Inode child =
+					context.inodes.openInode(parentInode.lookup(name).getIno());
 
-            DirectoryInode parentInode = (DirectoryInode)(context.inodes.openInode(parent));
-            Inode child = 
-                    context.inodes.openInode(parentInode.lookup(name).getIno());
-                
-            parentInode.unLinkOther(child, name);
-                
-            Reply.err(req, 0);
+			parentInode.unLinkOther(child, name);
 
-        } catch (JExt2Exception e) {
-            Reply.err(req, e.getErrno());
-        }
+			Reply.err(req, 0);
+
+		} catch (JExt2Exception e) {
+			Reply.err(req, e.getErrno());
+		}
 	}
 
 }
