@@ -14,6 +14,7 @@ public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 
 	public JextThreadPoolExecutor(int numberOfThreads) {
 		this(numberOfThreads, numberOfThreads, 23, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+		setThreadFactory(new JextThreadFactory());
 	}
 
 	public JextThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue) {
@@ -23,13 +24,16 @@ public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 
 	@Override
 	protected void beforeExecute(Thread t, Runnable r) {
-		logger.fine(String.format("THREAD %s: Running task %s", t, r));
+	    super.beforeExecute(t, r);
+	    t.setName(new StringBuilder().append(t.getName()).append("(").append(r).append(")").toString());
+		logger.fine(String.format("START thread=%s task=%s", t.getName(), r));
 	}
 
 
 	@Override
 	protected void afterExecute(Runnable r, Throwable t) {
-		logger.fine(String.format("Task %s finished", r));
+	    super.afterExecute(r, t);
+		logger.fine(String.format("  END task=%s", r));
 	}
 
 }
