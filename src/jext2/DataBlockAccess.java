@@ -51,9 +51,13 @@ public class DataBlockAccess {
 		Inode inode;
 		long remaining;
 		long current;
+		int locks;
 		LinkedList<Long> blocks; /* cache for block nrs */
 
 		DataBlockIterator(DataInode inode, long start) {
+			hierarchyLock.readLock().lock();
+
+			this.locks = 1;
 			this.inode = inode;
 			this.current = start;
 			this.remaining = inode.getBlocks()/(superblock.getBlocksize()/512);
@@ -75,6 +79,7 @@ public class DataBlockAccess {
 					if (blocks == null || blocks.size() == 0) { /* blockNr cache empty */
 						try {
 							blocks = getBlocks(current + 1, remaining);
+							this.locks += 1;
 						} catch (FileTooLarge e) {
 							blocks = null;
 						}
@@ -105,6 +110,16 @@ public class DataBlockAccess {
 		@Override
 		public DataBlockIterator iterator() {
 			return this;
+		}
+
+		public void unlockHierarchyChanges() {
+			assert locks <= hierarchyLock.getReadLockCount();
+			assert locks == hierarchyLock.getReadHoldCount();
+
+			/* return all locks acquired so far */
+			for (int i=0; i<locks; i++) {
+				hierarchyLock.readLock().unlock();
+			}
 		}
 	}
 
