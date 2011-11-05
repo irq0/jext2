@@ -91,6 +91,7 @@ public class DataInode extends Inode {
 
 			start += count;
 			offset = 0;
+			accessData().unlockHierarchyChanges();
 		}
 
 		result.position(firstInBuffer);
@@ -142,6 +143,7 @@ public class DataInode extends Inode {
 
 			start += 1;
 			startOff = 0;
+			accessData().unlockHierarchyChanges();
 		}
 		int written = buf.position();
 

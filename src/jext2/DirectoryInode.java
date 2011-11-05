@@ -270,6 +270,7 @@ public class DirectoryInode extends DataInode {
 		setStatusChangeTime(new Date());
 
 		directoryEntries.release(newEntry);
+		accessData().unlockHierarchyChanges();
 		directoryLock.writeLock().unlock();
 	}
 

@@ -125,6 +125,7 @@ public class DataBlockAccess {
 
 	public void unlockHierarchyChanges() {
 		hierarchyLock.readLock().unlock();
+		assert hierarchyLock.getReadHoldCount() == 0;
 	}
 	
 	public DataBlockIterator iterateBlocks() {
