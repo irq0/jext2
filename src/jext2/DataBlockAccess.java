@@ -10,6 +10,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
 
+import jext2.annotations.MustReturnLock;
 import jext2.annotations.NotThreadSafe;
 import jext2.exceptions.FileTooLarge;
 import jext2.exceptions.IoError;
@@ -345,6 +346,7 @@ public class DataBlockAccess {
 	 * @throws FileTooLarge fileBlockNr bigger than maximum indirection offset
 	 * @throws IOException
 	 */
+	@MustReturnLock
 	public LinkedList<Long> getBlocks(long fileBlockNr, long maxBlocks)
 			throws JExt2Exception, FileTooLarge {
 		try {
@@ -367,6 +369,7 @@ public class DataBlockAccess {
 	 * @see #getBlocks(long fileBlockNr, long maxBlocks, boolean create)
 	 * @see #getBlocks(long fileBlockNr, long maxBlocks)
 	 */
+	@MustReturnLock
 	public LinkedList<Long> getBlocksAllocate(long fileBlockNr, long maxBlocks)
 			throws JExt2Exception, NoSpaceLeftOnDevice, FileTooLarge {
 		return getBlocks(fileBlockNr, maxBlocks, true);
@@ -385,6 +388,7 @@ public class DataBlockAccess {
 	 * @throws FileTooLarge
 	 * @throws IOException
 	 */
+	@MustReturnLock
 	private LinkedList<Long> getBlocks(long fileBlockNr, long maxBlocks, boolean create)
 			throws JExt2Exception, NoSpaceLeftOnDevice, FileTooLarge {
 
