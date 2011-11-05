@@ -15,16 +15,17 @@ public class DirectoryEntryAccess extends DataStructureAccessProvider<String, Di
 	}
 
 	public void add(DirectoryEntry entry) {
-		assert !hasEntry(entry);
+		assert entry != null;
 		add(entry.getName(), entry);
 	}
 
 	public void release(DirectoryEntry entry) {
-		assert hasEntry(entry);
+		assert entry != null;
 		release(entry.getName());
 	}
 
 	public DirectoryEntry retain(DirectoryEntry entry) {
+		assert entry != null;
 		assert hasEntry(entry);
 		return retain(entry.getName());
 	}
@@ -34,6 +35,7 @@ public class DirectoryEntryAccess extends DataStructureAccessProvider<String, Di
 	}
 
 	public boolean hasEntry(DirectoryEntry entry) {
+		assert entry != null;
 		boolean result;
 
 		lock.lock();

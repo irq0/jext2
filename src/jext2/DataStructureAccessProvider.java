@@ -116,12 +116,12 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 		lock.lock();
 
 		ValueAndUsage ds = table.get(key);
-		assert ds != null;
+		if (ds != null) {		
+			ds.usage -= 1;
 
-		ds.usage -= 1;
-
-		if (ds.usage <= 0) {
-			table.remove(key);
+			if (ds.usage <= 0) {
+				table.remove(key);
+			}
 		}
 
 		lock.unlock();

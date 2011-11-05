@@ -66,8 +66,17 @@ public class DirectoryInode extends DataInode {
 			blockIter = accessData().iterateBlocks();
 			this.previousEntry = null;
 			this.entry = fetchNextEntry(null);
+			addToAccessProvider(entry);
+
 		}
 
+		private void addToAccessProvider(DirectoryEntry entry) {
+			if (entry != null) {
+				directoryEntries.add(entry);
+				directoryEntries.retain(entry);
+			}
+		}
+		
 		@Override
 		public boolean hasNext() {
 			return (entry != null);
@@ -83,8 +92,6 @@ public class DirectoryInode extends DataInode {
 					block = blocks.read(blockNr);
 
 					DirectoryEntry entry = DirectoryEntry.fromByteBuffer(block, blockNr, 0);
-					directoryEntries.add(entry);
-					directoryEntries.retain(entry);
 					return entry;
 				}
 
@@ -108,8 +115,6 @@ public class DirectoryInode extends DataInode {
 
 				// fetch next entry from block
 				DirectoryEntry entry = DirectoryEntry.fromByteBuffer(block, blockNr, offset);
-				directoryEntries.add(entry);
-				directoryEntries.retain(entry);
 				return entry;
 			} catch (IoError e) {
 				return null;
@@ -118,12 +123,18 @@ public class DirectoryInode extends DataInode {
 
 		@Override
 		public DirectoryEntry next() {
-			directoryEntries.release(previousEntry);
+			DirectoryEntry releaseMe = previousEntry;
 
-			DirectoryEntry result = this.entry;
 			this.previousEntry = this.entry;
-			this.entry = fetchNextEntry(entry);
-			return result;
+			this.entry = fetchNextEntry(previousEntry);
+			
+			if (releaseMe != null) {
+				Filesystem.getLogger().fine(releaseMe.toString());
+				directoryEntries.release(releaseMe);
+			}
+			
+			addToAccessProvider(entry);
+			return previousEntry;
 		}
 
 		@Override
