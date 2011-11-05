@@ -47,7 +47,7 @@ public class DataBlockAccess {
 	/** number of triple indirect blocks */
 	public static final long trippleBlocks = ptrs*ptrs*ptrs;
 
-	class DataBlockIterator implements Iterator<Long>, Iterable<Long>{
+	public class DataBlockIterator implements Iterator<Long>, Iterable<Long>{
 		Inode inode;
 		long remaining;
 		long current;
@@ -55,9 +55,6 @@ public class DataBlockAccess {
 		LinkedList<Long> blocks; /* cache for block nrs */
 
 		DataBlockIterator(DataInode inode, long start) {
-			hierarchyLock.readLock().lock();
-
-			this.locks = 1;
 			this.inode = inode;
 			this.current = start;
 			this.remaining = inode.getBlocks()/(superblock.getBlocksize()/512);
@@ -79,10 +76,11 @@ public class DataBlockAccess {
 					if (blocks == null || blocks.size() == 0) { /* blockNr cache empty */
 						try {
 							blocks = getBlocks(current + 1, remaining);
-							this.locks += 1;
+							unlockHierarchyChanges();
 						} catch (FileTooLarge e) {
 							blocks = null;
 						}
+
 						if (blocks == null) {
 							remaining = 0;
 							return;
@@ -111,16 +109,10 @@ public class DataBlockAccess {
 		public DataBlockIterator iterator() {
 			return this;
 		}
+	}
 
-		public void unlockHierarchyChanges() {
-			assert locks <= hierarchyLock.getReadLockCount();
-			assert locks == hierarchyLock.getReadHoldCount();
-
-			/* return all locks acquired so far */
-			for (int i=0; i<locks; i++) {
-				hierarchyLock.readLock().unlock();
-			}
-		}
+	public void lockHierarchyChanges() {
+		hierarchyLock.readLock().lock();
 	}
 
 	public void unlockHierarchyChanges() {
@@ -128,10 +120,12 @@ public class DataBlockAccess {
 		assert hierarchyLock.getReadHoldCount() == 0;
 	}
 	
+	@NotThreadSafe(useLock=true)
 	public DataBlockIterator iterateBlocks() {
 		return new DataBlockIterator(inode);
 	}
 
+	@NotThreadSafe(useLock=true)
 	public DataBlockIterator iterateBlocksStartAt(long start) {
 		return new DataBlockIterator(inode, start);
 	}
