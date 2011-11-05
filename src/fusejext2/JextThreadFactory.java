@@ -33,7 +33,7 @@ public class JextThreadFactory implements ThreadFactory {
 					.append("Uncaught Exception in thread ")
 					.append(name)
 					.append("\n")
-					.append(ExceptionUtils.getRootCauseMessage(e))
+					.append(ExceptionUtils.getMessage(e))
 					.append("\n")
 					.append(ExceptionUtils.getFullStackTrace(e))
 					.toString());

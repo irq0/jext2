@@ -25,15 +25,14 @@ public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 	@Override
 	protected void beforeExecute(Thread t, Runnable r) {
 	    super.beforeExecute(t, r);
-	    t.setName(new StringBuilder().append(t.getName()).append("(").append(r).append(")").toString());
-		logger.fine(String.format("START thread=%s task=%s", t.getName(), r));
+		logger.fine(String.format(">>> START thread=[%s] task=[%s]", t.getName(), r));
 	}
 
 
 	@Override
 	protected void afterExecute(Runnable r, Throwable t) {
 	    super.afterExecute(r, t);
-		logger.fine(String.format("  END task=%s", r));
+		logger.fine(String.format("<<<   END task=[%s]", r));
 	}
 
 }
