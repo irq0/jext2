@@ -8,7 +8,7 @@ import jext2.exceptions.JExt2Exception;
 
 public abstract class DataStructureAccessProvider<KEY,VAL> {
 	protected Map<KEY, ValueAndUsage> table;
-	protected ReentrantLock lock;
+	protected ReentrantLock lock = new ReentrantLock(true);
 
 	protected class ValueAndUsage {
 		VAL value;

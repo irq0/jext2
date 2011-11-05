@@ -18,7 +18,7 @@ public class BlockSynchronizer {
 
 	public BlockSynchronizer() {
 		locks = new HashMap<Long, ReentrantReadWriteLock>();
-		locksLock = new ReentrantLock();
+		locksLock = new ReentrantLock(true);
 	}
 
 	private ReentrantReadWriteLock getLock(long nr) {
@@ -27,7 +27,7 @@ public class BlockSynchronizer {
 		ReentrantReadWriteLock lock = locks.get(nr);
 
 		if (lock == null) {
-			lock = new ReentrantReadWriteLock();
+			lock = new ReentrantReadWriteLock(true);
 			locks.put(nr, lock);
 		}
 
