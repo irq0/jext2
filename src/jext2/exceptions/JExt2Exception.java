@@ -6,16 +6,15 @@ import jext2.Filesystem;
 
 public class JExt2Exception extends Exception {
 
-	int errno = 0;
+	protected final static int ERRNO = 0;
 
 	private static final long serialVersionUID = -7429088074385678308L;
 
-	public JExt2Exception(int errno) {
-		this.errno = errno;
+	public JExt2Exception() {
 		log("");
 	}
 
-	protected JExt2Exception(String msg) {
+	public JExt2Exception(String msg) {
 		log(msg);
 	}
 
@@ -25,14 +24,15 @@ public class JExt2Exception extends Exception {
 
 		StackTraceElement[] stack = getStackTrace();
 
-		StringBuilder log = new StringBuilder(80);
-
+		StringBuilder log = new StringBuilder();
+		log.append("!!! EXCEP ");
+		log.append(" exception=");
 		log.append(this.getClass().getSimpleName());
-		log.append(" IN ");
+		log.append(" source=");
 		log.append(stack[0].getClassName());
 		log.append("->");
 		log.append(stack[0].getMethodName());
-		log.append(" ");
+		log.append(" msg=");
 		log.append(msg);
 
 		logger.fine(log.toString());
@@ -40,6 +40,6 @@ public class JExt2Exception extends Exception {
 
 
 	public int getErrno() {
-		return errno;
+		return ERRNO;
 	}
 }

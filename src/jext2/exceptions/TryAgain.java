@@ -5,7 +5,5 @@ import fuse.Errno;
 
 public class TryAgain extends JExt2Exception {
 	static final long serialVersionUID = 42;
-	public TryAgain() {
-		super(Errno.EAGAIN);
-	}
+	protected final static int ERRNO = Errno.EAGAIN;
 }

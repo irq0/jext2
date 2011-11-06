@@ -5,7 +5,5 @@ import fuse.Errno;
 
 public class NoSpaceLeftOnDevice extends JExt2Exception {
 	static final long serialVersionUID = 42;
-	public NoSpaceLeftOnDevice() {
-		super(Errno.ENOSPC);
-	}
+	protected final static int ERRNO = Errno.ENOSPC;
 }

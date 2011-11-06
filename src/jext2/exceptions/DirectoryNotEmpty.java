@@ -5,7 +5,5 @@ import fuse.Errno;
 
 public class DirectoryNotEmpty extends JExt2Exception {
 	static final long serialVersionUID = 42;
-	public DirectoryNotEmpty() {
-		super(Errno.ENOTEMPTY);
-	}
+	protected final static int ERRNO = Errno.ENOTEMPTY;
 }

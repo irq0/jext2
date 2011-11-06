@@ -5,7 +5,5 @@ import fuse.Errno;
 
 public class OutOfMemory extends JExt2Exception {
 	static final long serialVersionUID = 42;
-	public OutOfMemory() {
-		super(Errno.ENOMEM);
-	}
+	protected final static int ERRNO = Errno.ENOMEM;
 }

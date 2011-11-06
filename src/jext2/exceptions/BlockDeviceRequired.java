@@ -5,7 +5,5 @@ import fuse.Errno;
 
 public class BlockDeviceRequired extends JExt2Exception {
 	static final long serialVersionUID = 42;
-	public BlockDeviceRequired() {
-		super(Errno.ENOTBLK);
-	}
+	protected final static int ERRNO = Errno.ENOTBLK;
 }

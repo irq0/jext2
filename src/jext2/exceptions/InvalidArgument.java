@@ -5,7 +5,5 @@ import fuse.Errno;
 
 public class InvalidArgument extends JExt2Exception {
 	static final long serialVersionUID = 42;
-	public InvalidArgument() {
-		super(Errno.EINVAL);
-	}
+	protected final static int ERRNO = Errno.EINVAL;
 }
