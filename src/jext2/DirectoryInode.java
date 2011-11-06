@@ -129,7 +129,6 @@ public class DirectoryInode extends DataInode {
 			this.entry = fetchNextEntry(previousEntry);
 			
 			if (releaseMe != null) {
-				Filesystem.getLogger().fine(releaseMe.toString());
 				directoryEntries.release(releaseMe);
 			}
 			
