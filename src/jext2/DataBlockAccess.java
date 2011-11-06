@@ -455,7 +455,10 @@ public class DataBlockAccess {
 			return result;
 		}
 
-		hierarchyLock.readLock().unlock();
+		assert hierarchyLock.getReadHoldCount() == 0 ||
+				hierarchyLock.getReadHoldCount() == 1;
+		if (hierarchyLock.getReadHoldCount() > 0)
+			hierarchyLock.readLock().unlock();
 		
 		/* Next simple case - plain lookup mode */
 		if (!create) {
