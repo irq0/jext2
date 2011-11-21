@@ -166,13 +166,15 @@ public class DirectoryInode extends DataInode {
 			throw new TooManyLinks();
 
 		DirectoryEntry newDir = DirectoryEntry.create(name);
+		newDir.setIno(inode.getIno());
+		newDir.setFileType(inode.getFileType());
+		
 		assert !directoryEntries.hasEntry(newDir);
 
 		directoryEntries.add(newDir);
 		directoryEntries.retain(newDir);
 
-		newDir.setIno(inode.getIno());
-		newDir.setFileType(inode.getFileType());
+
 
 		addDirectoryEntry(newDir);
 
