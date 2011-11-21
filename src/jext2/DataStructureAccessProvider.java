@@ -3,6 +3,7 @@ package jext2;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Logger;
 
 import jext2.exceptions.JExt2Exception;
 
@@ -15,6 +16,22 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 		long usage = 0;
 	}
 
+	protected void log(String op, String msg) {
+		Logger logger = Filesystem.getLogger();
+
+		StringBuilder log = new StringBuilder();
+		log.append("~~~ DASTP ");
+		log.append(" class=");
+		log.append(this.getClass().getSimpleName());
+		log.append(" op=");
+		log.append(op);
+		log.append(" msg=");
+		log.append(msg);
+
+		logger.fine(log.toString());
+		
+	}
+	
 	protected DataStructureAccessProvider() {
 		table = new HashMap<KEY, ValueAndUsage>();
 	}
@@ -26,9 +43,11 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 	protected long usageCounter(KEY key) {
 		ValueAndUsage ds = getValueAndUsage(key);
 
-		if (ds == null || ds.usage <= 0) {
+		if (ds == null || ds.usage < 0) {
+			log("usageCounter","key:" + key + " counter:-1");
 			return -1;
 		} else {
+			log("usageCounter","key:" + key + " counter:" + ds.usage);
 			return ds.usage;
 		}
 	}
@@ -45,6 +64,7 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 		lock.lock();
 		table.put(key, ds);
 		lock.unlock();
+		log("add","key:" + key);
 	}
 
 
@@ -63,7 +83,8 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 
 		assert ds != null;
 		ds.usage += 1;
-
+		
+		log("open",":" + key);
 		return ds.value;
 	}
 
@@ -75,13 +96,17 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 		lock.lock();
 		ValueAndUsage ds = table.get(key);
 
-		if (ds == null || ds.usage <= 0) {
+		if (ds == null) {
 			lock.unlock();
+			log("retain","nosuccess:" + key);
 			return null;
 		} else {
 			lock.unlock();
+			
+			assert ds.usage >= 0;
 			assert ds.value != null;
 			ds.usage += 1;
+			log("retain","success:" + key);
 			return ds.value;
 		}
 	}
@@ -102,9 +127,11 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 		ValueAndUsage ds = getValueAndUsage(key);
 
 		if (ds == null || ds.usage <= 0) {
+			log("get","nosuccess:" + key);
 			return null;
 		} else {
 			assert ds.value != null;
+			log("get","success:" + key);
 			return ds.value;
 		}
 	}
@@ -113,14 +140,17 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 	 * Release entry. Decreases usage counter and might remove entry from table
 	 */
 	protected void release(KEY key) {
+		log("release","key:" + key);
 		lock.lock();
 
 		ValueAndUsage ds = table.get(key);
 		if (ds != null) {		
 			ds.usage -= 1;
-
+			
 			if (ds.usage <= 0) {
 				table.remove(key);
+				log("release","removed:" + key);
+
 			}
 		}
 
