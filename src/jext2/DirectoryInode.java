@@ -23,7 +23,7 @@ public class DirectoryInode extends DataInode {
 	private static BlockAccess blocks = BlockAccess.getInstance();
 	private static Superblock superblock = Superblock.getInstance();
 
-	private DirectoryEntryAccess directoryEntries = DirectoryEntryAccess.createForDirectoy(this);
+	public DirectoryEntryAccess directoryEntries = DirectoryEntryAccess.createForDirectoy(this);
 
 	private ReentrantReadWriteLock directoryLock =
 			new ReentrantReadWriteLock(true);
@@ -31,8 +31,8 @@ public class DirectoryInode extends DataInode {
 	/**
 	 * Lock to use when iterating a directory with {@link #iterateDirectory()}
 	 */
-	public ReentrantReadWriteLock.ReadLock lockForIterateDirectory() {
-		return directoryLock.readLock();
+	public ReentrantReadWriteLock directoryLock() {
+		return directoryLock;
 	}
 
 	/**
@@ -71,10 +71,8 @@ public class DirectoryInode extends DataInode {
 		}
 
 		private void addToAccessProvider(DirectoryEntry entry) {
-			if (entry != null) {
-				directoryEntries.add(entry);
-				directoryEntries.retain(entry);
-			}
+			directoryEntries.add(entry);
+			directoryEntries.retain(entry);
 		}
 		
 		@Override
@@ -92,6 +90,7 @@ public class DirectoryInode extends DataInode {
 					block = blocks.read(blockNr);
 
 					DirectoryEntry entry = DirectoryEntry.fromByteBuffer(block, blockNr, 0);
+					addToAccessProvider(entry);
 					return entry;
 				}
 
@@ -115,6 +114,7 @@ public class DirectoryInode extends DataInode {
 
 				// fetch next entry from block
 				DirectoryEntry entry = DirectoryEntry.fromByteBuffer(block, blockNr, offset);
+				addToAccessProvider(entry);
 				return entry;
 			} catch (IoError e) {
 				return null;
@@ -123,17 +123,21 @@ public class DirectoryInode extends DataInode {
 
 		@Override
 		public DirectoryEntry next() {
-			DirectoryEntry releaseMe = previousEntry;
+			DirectoryEntry releaseMe = this.previousEntry;
 
 			this.previousEntry = this.entry;
 			this.entry = fetchNextEntry(previousEntry);
 			
+
 			if (releaseMe != null) {
+				assert !releaseMe.equals(this.previousEntry);
+				assert !(releaseMe == this.previousEntry);
+				
 				directoryEntries.release(releaseMe);
 			}
 			
-			addToAccessProvider(entry);
-			return previousEntry;
+			assert directoryEntries.hasEntry(this.previousEntry);
+			return this.previousEntry;
 		}
 
 		@Override
@@ -165,12 +169,15 @@ public class DirectoryInode extends DataInode {
 		assert !directoryEntries.hasEntry(newDir);
 
 		directoryEntries.add(newDir);
+		directoryEntries.retain(newDir);
+
 		newDir.setIno(inode.getIno());
 		newDir.setFileType(inode.getFileType());
 
 		addDirectoryEntry(newDir);
 
 		inode.setLinksCount(inode.getLinksCount() + 1);
+		directoryEntries.release(newDir);
 	}
 
 	/**
