@@ -22,12 +22,24 @@ public class Lookup extends jlowfuse.async.tasks.Lookup<Jext2Context> {
 		long parent = this.parent;
 		
 		if (parent == 1) parent = Constants.EXT2_ROOT_INO;
+
+		Inode parentInode = null;
 		try {
-			Inode parentInode = context.inodes.openInode(parent);
+			parentInode = context.inodes.openInode(parent);
+			
 			if (!parentInode.isDirectory())
 				throw new NotADirectory();
+			
+		} catch (JExt2Exception e) {
+			Reply.err(req, e.getErrno());
+			return;
+		}
+		
+		DirectoryEntry entry = null;
+		try {
+			entry = ((DirectoryInode)parentInode).lookup(name);
+			((DirectoryInode)parentInode).directoryEntries.release(entry);
 
-			DirectoryEntry entry = ((DirectoryInode)parentInode).lookup(name);
 			Inode child = context.inodes.openInode(entry.getIno());
 			Reply.entry(req, Util.inodeToEntryParam(context.superblock, child));
 
