@@ -19,6 +19,8 @@ public class Lookup extends jlowfuse.async.tasks.Lookup<Jext2Context> {
 
 	@Override
 	public void run() {
+		long parent = this.parent;
+		
 		if (parent == 1) parent = Constants.EXT2_ROOT_INO;
 		try {
 			Inode parentInode = context.inodes.openInode(parent);
