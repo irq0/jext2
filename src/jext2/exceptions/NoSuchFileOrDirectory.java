@@ -5,5 +5,9 @@ import fuse.Errno;
 
 public class NoSuchFileOrDirectory extends JExt2Exception {
 	static final long serialVersionUID = 42;
-	protected final static int ERRNO = Errno.ENOENT;
+	protected static final int ERRNO = Errno.ENOENT;
+	
+	public int getErrno() {
+		return ERRNO;
+	}
 }

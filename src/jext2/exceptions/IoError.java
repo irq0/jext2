@@ -12,4 +12,7 @@ public class IoError extends JExt2Exception {
 	public IoError() {
 		super();
 	}
+	public int getErrno() {
+		return ERRNO;
+	}
 }

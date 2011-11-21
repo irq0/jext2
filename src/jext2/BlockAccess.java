@@ -40,7 +40,7 @@ public class BlockAccess {
 			synchronizer.readUnlock(nr);
 		} catch (IOException e) {
 			synchronizer.readUnlock(nr);
-			throw new IoError();
+			throw new IoError(e.getMessage());
 		}
 
 		return buf;
@@ -60,7 +60,7 @@ public class BlockAccess {
 			buf.order(ByteOrder.BIG_ENDIAN);
 			blockdev.read(buf, position);
 		} catch (IOException e) {
-			throw new IoError();
+			throw new IoError(e.getMessage());
 		}
 	}
 
@@ -70,7 +70,7 @@ public class BlockAccess {
 		try {
 			blockdev.write(buf, position);
 		} catch (IOException e) {
-			throw new IoError();
+			throw new IoError(e.getMessage());
 		}
 	}
 
@@ -94,7 +94,7 @@ public class BlockAccess {
 			synchronizer.writeUnlock(nr);
 		} catch (IOException e) {
 			synchronizer.writeUnlock(nr);
-			throw new IoError();
+			throw new IoError(e.getMessage());
 		}
 	}
 
@@ -107,7 +107,7 @@ public class BlockAccess {
 				}
 				System.out.println();
 			}
-		} catch (Exception e) {
+		} catch (Exception ignored) {
 		}
 	}
 
@@ -118,7 +118,7 @@ public class BlockAccess {
 		try {
 			blockdev.force(false);
 		} catch (IOException e) {
-			throw new IoError();
+			throw new IoError(e.getMessage());
 		}
 	}
 
@@ -140,7 +140,7 @@ public class BlockAccess {
 
 		} catch (IOException e) {
 			synchronizer.writeUnlock(nr);
-			throw new IoError();
+			throw new IoError(e.getMessage());
 		}
 	}
 
