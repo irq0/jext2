@@ -32,7 +32,7 @@ public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 	@Override
 	protected void afterExecute(Runnable r, Throwable t) {
 	    super.afterExecute(r, t);
-		logger.fine(String.format("<<<   END task=[%s]", r));
+		logger.fine(String.format("<<< END task=[%s]", r));
 	}
 
 }
