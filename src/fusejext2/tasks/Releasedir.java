@@ -9,8 +9,8 @@ import jlowfuse.FuseReq;
 import jlowfuse.Reply;
 
 public class Releasedir extends jlowfuse.async.tasks.Releasedir<Jext2Context> {
-	public Releasedir(FuseReq arg0, long arg1, FileInfo arg2) {
-		super(arg0, arg1, arg2);
+	public Releasedir(FuseReq req, long ino, FileInfo fi) {
+		super(req, ino, fi);
 	}
 
 	@Override
