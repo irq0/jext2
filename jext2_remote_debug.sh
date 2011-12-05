@@ -5,4 +5,7 @@ java -Xdebug \
     -Djava.compiler=NONE \
     -enableassertions \
     -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005 \
+    -XX:+PrintGC \
+    -XX:+PrintGCDetails \
+    -XX:+PrintGCTimeStamps \
     -Djava.library.path="$LIBRARY_PATH" -jar dist/jext2-plusdepends.jar ${*}
