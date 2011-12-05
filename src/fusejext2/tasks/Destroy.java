@@ -9,6 +9,7 @@ public class Destroy extends jlowfuse.async.tasks.Destroy<Jext2Context> {
 	@Override
 	public void run() {
 		try {
+			System.out.println("DESTROY");
 			context.superblock.setLastWrite(new Date());
 			context.superblock.sync();
 			context.blockGroups.syncDescriptors();

@@ -4,16 +4,23 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.lang.reflect.Constructor;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.Arrays;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Handler;
+import java.util.logging.Logger;
 
 import jext2.Filesystem;
 import jlowfuse.JLowFuse;
 import jlowfuse.JLowFuseArgs;
+import jlowfuse.async.AsyncLowlevelOps;
 import jlowfuse.async.DefaultTaskImplementations;
 import jlowfuse.async.TaskImplementations;
+import jlowfuse.async.tasks.JLowFuseTask;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -40,23 +47,26 @@ public class FuseJExt2 {
 	private static boolean daemon = false;
 	private static String fuseCommandline = "-o foo,subtype=jext2";
 
+	private static TaskImplementations<Jext2Context> impls;
+	private static Jext2Context context;
 
 	private static JextThreadPoolExecutor service;
+	
 
 	static class FuseShutdownHook extends Thread {
-		@Override
-		public void run() {
-			System.out.println("Shutdown ");
+		private Logger logger;
 
-			/* this should not be nesseccrry but fuse/jlowfuse does not call
-			 * DESTROY
-			 */
-
-			service.shutdown();
-
-			Session.removeChan(chan);
-			Session.exit(sess);
-			Fuse.unmount(mountpoint, chan);
+		private void submitDestroyTask() {
+				Class<? extends JLowFuseTask<Jext2Context>> impl = impls.destroyImpl;
+		    	Constructor<? extends JLowFuseTask<Jext2Context>> c = TaskImplementations.getTaskConstructor(impl);
+		    	JLowFuseTask<Jext2Context> task = TaskImplementations.instantiateTask(c);
+		    	task.initContext(context);
+		    	logger.info("Running DESTROY Task");
+		    	task.run();
+		}
+		
+		private void shutdownBlockDev() {
+	    	logger.info("Shutting down access to block device");
 
 			try {
 				blockDev.force(false);
@@ -66,7 +76,54 @@ public class FuseJExt2 {
 				System.err.println(e.getLocalizedMessage());
 			}
 		}
+		
+		private void shutdownThreadPool() {
+	    	logger.info("Shutting down thread pool");
+
+			service.shutdown();
+			
+			try {
+		    	logger.info("Waiting for "+ service.getTaskCount() + " tasks to finish");
+				System.out.println("Awaiting Termination of: " + service.getQueue());
+				service.awaitTermination(120, TimeUnit.SECONDS);
+			} catch (InterruptedException e) {
+				System.err.println("Thread pool shutdown interrupted!");
+				System.err.println(Arrays.toString(e.getStackTrace()));
+			}
+		}
+
+		private void shutdownFuse() {
+	    	logger.info("Fuse shutdown, Unmounting..");
+			Session.removeChan(chan);
+			Session.exit(sess);
+			Fuse.unmount(mountpoint, chan);
+		}
+		
+		private void flushLog() {
+			for (Handler h : Filesystem.getLogger().getHandlers()) {
+				h.flush();
+				h.close();
+			}
+		}
+			
+		@Override 
+		public void run() {
+			logger = Filesystem.getLogger();
+			System.out.println("Shutdown.. ");
+
+			/* this should not be nesseccrry but fuse/jlowfuse does not call
+			 * DESTROY
+			 */
+			// TODO integrate this into jlowfuse
+			
+			shutdownThreadPool();
+			submitDestroyTask();
+			shutdownFuse();
+			shutdownBlockDev();
+			flushLog();
+		}
 	}
+
 
 	@SuppressWarnings("static-access")
 	public static void parseCommandline(String[] args) {
@@ -175,9 +232,8 @@ public class FuseJExt2 {
 		FuseShutdownHook hook = new FuseShutdownHook();
 		Runtime.getRuntime().addShutdownHook(hook);
 
-		Jext2Context context = new Jext2Context(blockDev);
-		DefaultTaskImplementations<Jext2Context> impls =
-				new DefaultTaskImplementations<Jext2Context>();
+		context = new Jext2Context(blockDev);
+		impls =	new DefaultTaskImplementations<Jext2Context>();
 
 		// for i in *.java; do n=${i%.*}; c=${n,*}; echo impls.${c}Impl = TaskImplementations.getImpl\(\"fusejext2.tasks.$n\"\)\;>
 		impls.accessImpl = TaskImplementations.getImpl("fusejext2.tasks.Access");
@@ -208,7 +264,7 @@ public class FuseJExt2 {
 
 		service = new JextThreadPoolExecutor(10);
 
-		SWIGTYPE_p_fuse_session sess = JLowFuse.asyncTasksNew(fuseArgs, impls,
+		sess = JLowFuse.asyncTasksNew(fuseArgs, impls,
 				service, context);
 
 		Session.addChan(sess, chan);
