@@ -412,6 +412,8 @@ public class DataBlockAccess {
 		int depth;
 		int existDepth;
 
+		hierarchyLock.readLock().lock();
+
 		offsets = blockToPath(fileBlockNr);
 		depth = offsets.length;
 
@@ -419,7 +421,7 @@ public class DataBlockAccess {
 		existDepth = blockNrs.length;
 
 		/* Simplest case - block found, no allocation needed */
-		if (depth == existDepth) {
+		if (depth == existDepth) {			
 			long firstBlockNr = blockNrs[depth-1];
 			result.addFirst(firstBlockNr);
 
@@ -432,7 +434,6 @@ public class DataBlockAccess {
 				Constants.EXT2_NDIR_BLOCKS - offsets[0] - 1;
 
 			int count = 1;
-			hierarchyLock.readLock().lock();
 			while(count < maxBlocks && count <= blocksToBoundary) {
 
 				long nextByNumber = firstBlockNr + count;
@@ -457,13 +458,15 @@ public class DataBlockAccess {
 
 		assert hierarchyLock.getReadHoldCount() == 0 ||
 				hierarchyLock.getReadHoldCount() == 1;
-		if (hierarchyLock.getReadHoldCount() > 0)
-			hierarchyLock.readLock().unlock();
 		
 		/* Next simple case - plain lookup mode */
 		if (!create) {
+			assert hierarchyLock.getReadHoldCount() == 1;
 			return null;
 		}
+		
+		if (hierarchyLock.getReadHoldCount() > 0)
+			hierarchyLock.readLock().unlock();
 
 		/* Okay, we need to do block allocation. */
 		hierarchyLock.writeLock().lock();
