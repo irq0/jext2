@@ -83,8 +83,9 @@ public class FuseJExt2 {
 			service.shutdown();
 			
 			try {
-		    	logger.info("Waiting for "+ service.getActiveCount()+ " tasks to finish");
-				System.out.println("Awaiting Termination of: " + service.getQueue());
+		    	logger.info("Waiting for "+ (service.getActiveCount()+service.getQueue().size()) + " tasks to finish");
+				System.out.println("Awaiting Termination... Queued: " + service.getQueue() 
+														  +" Running: " + service.getActiveCount());
 				service.awaitTermination(120, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
 				System.err.println("Thread pool shutdown interrupted!");
