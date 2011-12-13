@@ -499,7 +499,10 @@ public class DirectoryInode extends DataInode {
 				toDelete = current;
 				break;
 			}
-			directoryEntries.release(prev);
+			
+			if (prev != null)
+				directoryEntries.release(prev);
+			
 			prev = current;
 		}
 
