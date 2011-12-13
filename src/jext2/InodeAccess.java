@@ -15,17 +15,17 @@ public class InodeAccess extends DataStructureAccessProvider<Long, Inode>{
 	private InodeAccess() {
 	}
 
-	public static Inode readFromByteBuffer(ByteBuffer buf, int offset) throws IoError {
-		Mode mode = Mode.createWithNumericValue(Ext2fsDataTypes.getLE16(buf, offset));
+	public static Inode readFromByteBuffer(ByteBuffer buf) throws IoError {
+		Mode mode = Mode.createWithNumericValue(Ext2fsDataTypes.getLE16(buf, 0)); /* NOTE: mode is first field in inode */
 
 		if (mode.isDirectory()) {
-			return DirectoryInode.fromByteBuffer(buf, offset);
+			return DirectoryInode.fromByteBuffer(buf, 0);
 		} else if (mode.isRegular()) {
-			return RegularInode.fromByteBuffer(buf, offset);
+			return RegularInode.fromByteBuffer(buf, 0);
 		} else if (mode.isSymlink()) {
-			return SymlinkInode.fromByteBuffer(buf, offset);
+			return SymlinkInode.fromByteBuffer(buf, 0);
 		} else {
-			return Inode.fromByteBuffer(buf, offset);
+			return Inode.fromByteBuffer(buf, 0);
 		}
 	}
 
@@ -46,11 +46,13 @@ public class InodeAccess extends DataStructureAccessProvider<Long, Inode>{
 		if (absBlock < 0 || relOffset < 0)
 			throw new IoError();
 
-		ByteBuffer table = blocks.read(absBlock);
-		Inode inode = InodeAccess.readFromByteBuffer(table, relOffset);
+		assert getInstance().get(ino) == null; /* access provider shuldn't have an old reference */
+		
+		ByteBuffer rawInode = Inode.allocateByteBuffer();
+		blocks.readToBuffer(absBlock, relOffset, rawInode);
+		Inode inode = InodeAccess.readFromByteBuffer(rawInode);
 
 		// TODO check for NOENT exception
-		// TODO add blockNr and offset to readFrom call
 
 		inode.setBlockGroup(group);
 		inode.setIno(ino);

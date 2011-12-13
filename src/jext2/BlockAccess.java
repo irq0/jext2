@@ -46,6 +46,20 @@ public class BlockAccess {
 		return buf;
 	}
 
+	public void readToBuffer(long nr, long offsetInBlock, ByteBuffer buf) throws IoError {
+		try {
+			buf.order(ByteOrder.BIG_ENDIAN);
+
+			synchronizer.readLock(nr);
+			blockdev.read(buf, ((nr & 0xffffffff) * blocksize) + offsetInBlock);
+			synchronizer.readUnlock(nr);
+		} catch (IOException e) {
+			synchronizer.readUnlock(nr);
+			throw new IoError(e.getMessage());
+		}
+	}
+
+	
 	/**
 	 * Read data from device to buffer starting at postion. To use this method set the
 	 * limit and position of the buffer to your needs and note that position is

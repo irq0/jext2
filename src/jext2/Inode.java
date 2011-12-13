@@ -240,7 +240,7 @@ public class Inode extends PartialBlock {
 	}
 
 	/** allocate a ByteBuffer big enough for a Inode */
-	protected ByteBuffer allocateByteBuffer() {
+	public static ByteBuffer allocateByteBuffer() {
 		ByteBuffer buf = ByteBuffer.allocate(Superblock.getInstance().getInodeSize());
 		buf.rewind();
 		return buf;
