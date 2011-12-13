@@ -170,7 +170,7 @@ public class Mode {
 		StringBuilder s = new StringBuilder();
 		s.append("Mode: ");
 		s.append(unixStringRepresentation());
-		s.append("  ");
+		s.append("  0");
 		s.append(Integer.toOctalString(mode));
 
 		return s.toString();
