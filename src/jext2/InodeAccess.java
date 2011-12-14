@@ -83,7 +83,7 @@ public class InodeAccess extends DataStructureAccessProvider<Long, Inode>{
 	public Inode openInode(long ino) throws JExt2Exception {
 		Inode inode = open(ino);
 
-		assert !inode.isDeleted();
+		assert !inode.isDeleted() : "Inode is marked as deleted ?!";
 
 		return inode;
 	}
