@@ -56,7 +56,7 @@ public class FuseJExt2 {
 	static class FuseShutdownHook extends Thread {
 		private Logger logger;
 
-		private void submitDestroyTask() {
+		private void runDestroyTask() {
 				Class<? extends JLowFuseTask<Jext2Context>> impl = impls.destroyImpl;
 		    	Constructor<? extends JLowFuseTask<Jext2Context>> c = TaskImplementations.getTaskConstructor(impl);
 		    	JLowFuseTask<Jext2Context> task = TaskImplementations.instantiateTask(c);
@@ -118,7 +118,7 @@ public class FuseJExt2 {
 			// TODO integrate this into jlowfuse
 			
 			shutdownThreadPool();
-			submitDestroyTask();
+			runDestroyTask();
 			shutdownFuse();
 			shutdownBlockDev();
 			flushLog();
