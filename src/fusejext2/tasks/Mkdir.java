@@ -30,9 +30,11 @@ public class Mkdir extends jlowfuse.async.tasks.Mkdir<Jext2Context> {
 			FuseContext fuseContext = req.getContext();
 			DirectoryInode inode =
 					DirectoryInode.createEmpty();
-			inode.setMode(new ModeBuilder().directory()
-					.mask(mode & ~fuseContext.getUmask())
-					.create());
+			inode.setMode(new ModeBuilder()
+								.directory()
+								.numeric(mode)
+								.mask(~fuseContext.getUmask())
+								.create());
 			inode.setUid(fuseContext.getUid());
 			inode.setGid(fuseContext.getGid());
 			InodeAlloc.registerInode(parentInode, inode);
