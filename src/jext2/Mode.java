@@ -15,15 +15,16 @@ public class Mode {
 		return m;
 	}
 
-	public static boolean mask(int mode, int mask) {
+	
+	private boolean isTypeMaskSet(int mask) {
 		return (mode & IFMT) == mask;
 	}
 
-	public boolean isMaskSet(int mask) {
-		return mask(mode, mask);
+	private boolean isPermisionMaskSet(int mask) {
+		return (mode & mask) != 0;
 	}
 
-	public static final int IFMT  = 00170000;
+	public static final int IFMT = 00170000;
 	public static final int IFSOC = 0140000;
 	public static final int IFLNK = 0120000;
 	public static final int IFREG = 0100000;
@@ -64,61 +65,61 @@ public class Mode {
 	public static final int IXOTH = 00001;
 
 	public boolean isSocket() {
-		return isMaskSet(IFSOC);
+		return isTypeMaskSet(IFSOC);
 	}
 	public boolean isSymlink() {
-		return isMaskSet(IFLNK);
+		return isTypeMaskSet(IFLNK);
 	}
 	public boolean isRegular() {
-		return isMaskSet(IFREG);
+		return isTypeMaskSet(IFREG);
 	}
 	public boolean isBlockdev() {
-		return isMaskSet(IFBLK);
+		return isTypeMaskSet(IFBLK);
 	}
 	public boolean isDirectory() {
-		return isMaskSet(IFDIR);
+		return isTypeMaskSet(IFDIR);
 	}
 	public boolean isChardev() {
-		return isMaskSet(IFCHR);
+		return isTypeMaskSet(IFCHR);
 	}
 	public boolean isFifo() {
-		return isMaskSet(IFIFO);
+		return isTypeMaskSet(IFIFO);
 	}
 	public boolean isSetUid() {
-		return isMaskSet(ISUID);
+		return isPermisionMaskSet(ISUID);
 	}
 	public boolean isSetGid() {
-		return isMaskSet(ISGID);
+		return isPermisionMaskSet(ISGID);
 	}
 	public boolean isSticky() {
-		return isMaskSet(ISVTX);
+		return isPermisionMaskSet(ISVTX);
 	}
 	public boolean isOwnerReadable() {
-		return isMaskSet(IRUSR);
+		return isPermisionMaskSet(IRUSR);
 	}
 	public boolean isOwnerWritable() {
-		return isMaskSet(IWUSR);
+		return isPermisionMaskSet(IWUSR);
 	}
 	public boolean isOwnerExecutable() {
-		return isMaskSet(IXUSR);
+		return isPermisionMaskSet(IXUSR);
 	}
 	public boolean isGroupReadable() {
-		return isMaskSet(IRGRP);
+		return isPermisionMaskSet(IRGRP);
 	}
 	public boolean isGroupWritable() {
-		return isMaskSet(IWGRP);
+		return isPermisionMaskSet(IWGRP);
 	}
 	public boolean isGroupExecutable() {
-		return isMaskSet(IXGRP);
+		return isPermisionMaskSet(IXGRP);
 	}
 	public boolean isOtherReadable() {
-		return isMaskSet(IROTH);
+		return isPermisionMaskSet(IROTH);
 	}
 	public boolean isOtherWritable() {
-		return isMaskSet(IWOTH);
+		return isPermisionMaskSet(IWOTH);
 	}
 	public boolean isOtherExecutable() {
-		return isMaskSet(IXOTH);
+		return isPermisionMaskSet(IXOTH);
 	}
 
 	private char charIfTrue(char chr, boolean truth) {
@@ -143,6 +144,13 @@ public class Mode {
 			c = '-';
 
 		return c;
+	}
+	
+	public String octalStringRepresentation() {
+		if (mode == 0)
+			return "0";
+		else
+			return "0" + Integer.toOctalString(mode);
 	}
 
 	public String unixStringRepresentation() {
@@ -170,8 +178,8 @@ public class Mode {
 		StringBuilder s = new StringBuilder();
 		s.append("Mode: ");
 		s.append(unixStringRepresentation());
-		s.append("  0");
-		s.append(Integer.toOctalString(mode));
+		s.append("  ");
+		s.append(octalStringRepresentation());
 
 		return s.toString();
 	}
