@@ -116,7 +116,7 @@ public class FuseJExt2 {
 			 * DESTROY
 			 */
 			// TODO integrate this into jlowfuse
-			
+			// TODO add code to sync all the stuff in the data structure access provider
 			shutdownThreadPool();
 			runDestroyTask();
 			shutdownFuse();
