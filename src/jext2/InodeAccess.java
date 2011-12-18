@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import jext2.exceptions.InvalidArgument;
 import jext2.exceptions.IoError;
 import jext2.exceptions.JExt2Exception;
+import jext2.exceptions.NoSuchFileOrDirectory;
 
 public class InodeAccess extends DataStructureAccessProvider<Long, Inode>{
 	private static InodeAccess _instance = new InodeAccess();
@@ -83,13 +84,20 @@ public class InodeAccess extends DataStructureAccessProvider<Long, Inode>{
 	public Inode openInode(long ino) throws JExt2Exception {
 		Inode inode = open(ino);
 
-		assert !inode.isDeleted() : "Inode is marked as deleted ?!";
-
 		return inode;
 	}
+	
+	public long retainCount(long ino) {
+		return usageCounter(ino);
+	}
+	
+	public void retainInode(long ino) {
+		retain(ino);
+	}
 
-	public void closeInode(long ino) {
-		release(ino);
+	public void forgetInode(long ino, long times) {
+		for (long i=0; i<times; i++) 
+			release(ino);
 	}
 
 	@Override

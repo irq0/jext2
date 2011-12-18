@@ -179,6 +179,8 @@ public class InodeAlloc {
 	 * @throws JExt2Exception
 	 */
 	public static synchronized void registerInode(Inode dir, Inode inode) throws JExt2Exception {
+		assert inode.getIno() == -1 : "It's my job to set the ino!";
+		
 		/* find best suitable block group */
 		int group;
 
@@ -216,6 +218,8 @@ public class InodeAlloc {
 					globalIno > superblock.getInodesCount()) {
 				continue;
 			}
+
+			assert InodeAccess.getInstance().getOpened(globalIno) == null : "Found inode in cache with same number - inode caching is broken :(";
 
 			bmap.setBit(ino, true);
 			bmap.write();

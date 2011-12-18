@@ -22,6 +22,7 @@ public class Release extends jlowfuse.async.tasks.Release<Jext2Context> {
 		try {
 			Inode inode = context.inodes.openInode(ino);
 			inode.sync();
+			
 			Reply.err(req, 0);
 		} catch (JExt2Exception e) {
 			Reply.err(req, e.getErrno());

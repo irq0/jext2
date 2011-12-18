@@ -72,11 +72,9 @@ public class Rename extends jlowfuse.async.tasks.Rename<Jext2Context> {
 							(DirectoryInode)(context.inodes.openInode(existingEntry.getIno()));
 
 					newparentInode.unLinkDir(existingDir, newname);
-					context.inodes.closeInode(existingDir.getIno());
 				} else {
 					Inode existing = context.inodes.openInode(existingEntry.getIno());
 					newparentInode.unLinkOther(existing, newname);
-					context.inodes.closeInode(existing.getIno());
 				}
 				newparentEntries.release(existingEntry);
 			} catch (NoSuchFileOrDirectory ignored) {
@@ -98,7 +96,6 @@ public class Rename extends jlowfuse.async.tasks.Rename<Jext2Context> {
 				parentInode.setLinksCount(parentInode.getLinksCount() - 1);
 				
 				newDir.directoryEntries.release(dotdot);
-				context.inodes.closeInode(newDir.getIno());
 			}
 
 			/*

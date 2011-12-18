@@ -16,20 +16,19 @@ public class Forget extends jlowfuse.async.tasks.Forget<Jext2Context> {
 
 	@Override
 	public void run() {
-
 		if (ino == 1) ino = Constants.EXT2_ROOT_INO;
 
-		// try to sync if inode is open - which it shouldn't be
-		try {
-			Inode inode = context.inodes.getOpened(ino);
-			if (inode != null)
-				inode.sync();
-		} catch (JExt2Exception ignored) {
-		}
+		
 
+		assert context.inodes.getOpened(ino) != null : "Inode allready flushed from cache";
 
-		context.inodes.closeInode(ino);
+		assert context.inodes.retainCount(ino) >= nlookup : "Can't forget more than the retains stored";
+		
+		System.out.println("nlookup: " + nlookup + "retain: " + context.inodes.retainCount(ino));
+
+		context.inodes.retainInode(ino);
+		context.inodes.forgetInode(ino, nlookup);
+		
 		Reply.none(req);
-
 	}
 }

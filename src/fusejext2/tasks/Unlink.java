@@ -3,6 +3,7 @@ package fusejext2.tasks;
 import jext2.Constants;
 import jext2.DirectoryInode;
 import jext2.Inode;
+import jext2.InodeAccess;
 import jext2.exceptions.InvalidArgument;
 import jext2.exceptions.JExt2Exception;
 import fusejext2.Jext2Context;
