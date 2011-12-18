@@ -182,7 +182,7 @@ public class InodeAlloc {
 		/* find best suitable block group */
 		int group;
 
-		if (inode.getMode().isDirectory()) {
+		if (inode.isDirectory()) {
 			group = InodeAlloc.findGroupDir(dir);
 		} else {
 			group = InodeAlloc.findGroupOther(dir);
