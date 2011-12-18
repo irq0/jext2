@@ -5,6 +5,9 @@ import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+
 import jext2.exceptions.JExt2Exception;
 
 public abstract class DataStructureAccessProvider<KEY,VAL> {
@@ -14,6 +17,11 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 	protected class ValueAndUsage {
 		VAL value;
 		long usage = 0;
+		
+		public String toString() {
+			return ToStringBuilder.reflectionToString(this,
+					ToStringStyle.MULTI_LINE_STYLE);
+		}
 	}
 
 	protected void log(String op, String msg) {
