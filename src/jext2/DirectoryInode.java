@@ -509,7 +509,7 @@ public class DirectoryInode extends DataInode {
 		assert toDelete != null;
 
 		if (prev != null)
-			assert directoryEntries.usageCounter(prev) > 0;
+			assert prev.isUnused() || directoryEntries.usageCounter(prev) > 0;
 		assert directoryEntries.usageCounter(toDelete) > 0;
 
 		directoryLock.readLock().unlock();
