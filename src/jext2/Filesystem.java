@@ -18,6 +18,7 @@ import java.util.logging.Logger;
 public class Filesystem {
 	private static Charset charset = Charset.defaultCharset();
 	private static Logger logger = Logger.getLogger("jext2");
+	private static boolean loggingEnabled = false;
 
 	static class Jext2Formatter extends Formatter {
 		private static final DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
@@ -75,10 +76,16 @@ public class Filesystem {
 		logger.addHandler(handler);
 		logger.setLevel(Level.ALL);
 		logger.info("jext2 start");
+
+		loggingEnabled = true;
 	}
 
 	public static Logger getLogger() {
 		return logger;
+	}
+
+	public static boolean loggingEnabled() {
+		return loggingEnabled;
 	}
 
 }
