@@ -506,7 +506,9 @@ public class DirectoryInode extends DataInode {
 			prev = current;
 		}
 
-		assert directoryEntries.usageCounter(prev) > 0;
+		assert toDelete != null;
+
+		assert prev != null && directoryEntries.usageCounter(prev) > 0;
 		assert directoryEntries.usageCounter(toDelete) > 0;
 
 		directoryLock.readLock().unlock();
@@ -516,11 +518,11 @@ public class DirectoryInode extends DataInode {
 			directoryEntries.release(toDelete);
 			throw new NoSuchFileOrDirectory();
 		}
+
 		/*
 		 * When we are at the beginning of a block there is
 		 * no prev entry we can use
 		 */
-		assert toDelete != null;
 		directoryLock.writeLock().lock();
 		if (toDelete.getOffset() == 0) {
 			toDelete.setIno(0);
