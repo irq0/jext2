@@ -1,12 +1,15 @@
 package jext2;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
+import org.apache.commons.lang.text.StrBuilder;
 
 import jext2.exceptions.JExt2Exception;
 
@@ -24,19 +27,39 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 		}
 	}
 
+	private StackTraceElement[] filterStrackTraceForLog(StackTraceElement[] stack) {
+		LinkedList<StackTraceElement> interresting = new LinkedList<StackTraceElement>();
+		
+		for (StackTraceElement element : stack) {
+			if (element.getClassName().contains("jext2"))
+				interresting.add(element);		
+		}
+		
+		return interresting.toArray(new StackTraceElement[0]);	
+	}
+	
 	protected void log(String op, String msg) {
 		Logger logger = Filesystem.getLogger();
 
-		StringBuilder log = new StringBuilder();
-		log.append("~~~ DASTP ");
-		log.append(" class=");
-		log.append(this.getClass().getSimpleName());
-		log.append(" op=");
-		log.append(op);
-		log.append(" msg=");
-		log.append(msg);
+		if (Filesystem.loggingEnabled()) {
+			StackTraceElement[] fullStack = Thread.currentThread().getStackTrace();
+			StackTraceElement[] interrestingStackElements = filterStrackTraceForLog(fullStack);	
+			ArrayUtils.reverse(interrestingStackElements);
+			
+			String strstack = new StrBuilder().appendWithSeparators(interrestingStackElements, "->").toString();		
+			
+			StringBuilder log = new StringBuilder();
+			log.append(" class=");
+			log.append(this.getClass().getSimpleName());
+			log.append(" op=");
+			log.append(op);
+			log.append(" msg=");
+			log.append(msg);
+			log.append(" source=");
+			log.append(strstack);
 
-		logger.fine(log.toString());
+			logger.fine(log.toString());
+		}
 		
 	}
 	
