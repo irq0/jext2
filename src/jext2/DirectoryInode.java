@@ -527,6 +527,8 @@ public class DirectoryInode extends DataInode {
 			toDelete.clearName();
 			toDelete.setFileType(DirectoryEntry.FILETYPE_UNKNOWN);
 			toDelete.write();
+
+			directoryEntries.release(toDelete);
 			/*
 			 * set the record length of the predecessor to skip
 			 * the toDelete entry
@@ -535,13 +537,12 @@ public class DirectoryInode extends DataInode {
 			assert prev != null;
 			prev.setRecLen(prev.getRecLen() + toDelete.getRecLen());
 			prev.write(); // ok here: is meta data
-		}
 
-		directoryEntries.release(toDelete);
-		directoryEntries.release(prev);
+			directoryEntries.release(toDelete);
+			directoryEntries.release(prev);
+		}
 
 		directoryLock.writeLock().unlock();
 		setModificationTime(new Date());
-
 	}
 }
