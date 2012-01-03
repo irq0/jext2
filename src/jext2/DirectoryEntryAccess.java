@@ -25,7 +25,7 @@ public class DirectoryEntryAccess extends DataStructureAccessProvider<String, Di
 		assert entry != null;
 
 		if (entry.isUnused()) return;
-		assert hasEntry(entry);
+//		assert hasEntry(entry);
 		release(entry.getName());
 	}
 
