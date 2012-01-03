@@ -22,8 +22,13 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 		long usage = 0;
 		
 		public String toString() {
-			return ToStringBuilder.reflectionToString(this,
-					ToStringStyle.MULTI_LINE_STYLE);
+			if (value instanceof Inode) {
+				return "[Inode: " + ((Inode)value).getIno() + " #" + usage + "]";  
+			} else if (value instanceof DirectoryEntry) {
+				return "[DirEntry: " + ((DirectoryEntry)value).getName() + " #" + usage + "]";
+			} else {
+				return "[" + value.getClass() + " #" + usage + "]";
+			}
 		}
 	}
 
@@ -191,12 +196,23 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 
 		lock.unlock();
 	}
-
+	
 	protected void remove(KEY key) {
 		log("remove", "key:" + key);
 		lock.lock();
 		table.remove(key);
 		lock.unlock();
 	}
-
+	
+	public String toString() {
+		lock.lock();
+		String s = new StringBuilder()
+			.append(this.getClass().getCanonicalName())
+			.append(": ")
+			.append(table)
+			.toString();
+		lock.unlock();
+		return s;
+		
+	}
 }
