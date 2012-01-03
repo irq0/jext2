@@ -219,7 +219,11 @@ public class InodeAlloc {
 				continue;
 			}
 
-			assert InodeAccess.getInstance().getOpened(globalIno) == null : "Found inode in cache with same number - inode caching is broken :(";
+			InodeAccess inodes = InodeAccess.getInstance();
+			if (inodes.getOpened(globalIno) != null) {
+				Filesystem.getLogger().warning("Found inode in cache with same number - inode caching is broken :(");
+				inodes.remove(globalIno);
+			}
 
 			bmap.setBit(ino, true);
 			bmap.write();

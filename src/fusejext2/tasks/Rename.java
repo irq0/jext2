@@ -32,12 +32,9 @@ public class Rename extends jlowfuse.async.tasks.Rename<Jext2Context> {
 		try {
 			DirectoryInode parentInode;
 			DirectoryInode newparentInode; 
-			try {
-				parentInode = (DirectoryInode)context.inodes.openInode(parent);
-				newparentInode = (DirectoryInode)context.inodes.openInode(newparent);
-			} catch (JExt2Exception e) {
-				throw new RuntimeException("If this ever happens rethink rename command");
-			}
+
+			parentInode = (DirectoryInode)context.inodes.getOpened(parent);
+			newparentInode = (DirectoryInode)context.inodes.getOpened(newparent);
 			
 			parentLock = parentInode.directoryLock();
 			newparentLock = newparentInode.directoryLock();
@@ -69,11 +66,11 @@ public class Rename extends jlowfuse.async.tasks.Rename<Jext2Context> {
 				DirectoryEntry existingEntry = newparentInode.lookup(newname);
 				if (existingEntry.isDirectory()) {
 					DirectoryInode existingDir =
-							(DirectoryInode)(context.inodes.openInode(existingEntry.getIno()));
+							(DirectoryInode)(context.inodes.getOpened(existingEntry.getIno()));
 
 					newparentInode.unLinkDir(existingDir, newname);
 				} else {
-					Inode existing = context.inodes.openInode(existingEntry.getIno());
+					Inode existing = context.inodes.getOpened(existingEntry.getIno());
 					newparentInode.unLinkOther(existing, newname);
 				}
 				newparentEntries.release(existingEntry);
@@ -86,7 +83,7 @@ public class Rename extends jlowfuse.async.tasks.Rename<Jext2Context> {
 			 */
 			if (newEntry.isDirectory()) {
 				DirectoryInode newDir =
-						(DirectoryInode)(context.inodes.openInode(newEntry.getIno()));
+						(DirectoryInode)(context.inodes.getOpened(newEntry.getIno())); // ?? not open?
 
 				DirectoryEntry dotdot = newDir.lookup("..");
 				dotdot.setIno(newparentInode.getIno());

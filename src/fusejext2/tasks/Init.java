@@ -10,6 +10,7 @@ import jext2.Constants;
 import jext2.Feature;
 import jext2.Superblock;
 import jext2.exceptions.IoError;
+import jext2.exceptions.JExt2Exception;
 import jext2.InodeAccess;
 
 public class Init extends jlowfuse.async.tasks.Init<Jext2Context> {
@@ -81,6 +82,13 @@ public class Init extends jlowfuse.async.tasks.Init<Jext2Context> {
 			context.blockGroups = BlockGroupAccess.getInstance();
 			context.blockGroups.readDescriptors();
 			context.inodes = InodeAccess.getInstance();
+
+
+			try {
+				context.inodes.openInode(Constants.EXT2_ROOT_INO);
+			} catch (JExt2Exception e) {
+				throw new RuntimeException("Cannot open root inode");
+			}
 
 		} catch (IoError e) {
 			System.out.println("init() failed :(");

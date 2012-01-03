@@ -47,7 +47,7 @@ public class InodeAccess extends DataStructureAccessProvider<Long, Inode>{
 		if (absBlock < 0 || relOffset < 0)
 			throw new IoError();
 
-		assert getInstance().get(ino) == null; /* access provider shuldn't have an old reference */
+		assert getInstance().get(ino) == null : "Access provider shouldn't have an old reference";
 		
 		ByteBuffer rawInode = Inode.allocateByteBuffer();
 		blocks.readToBuffer(absBlock, relOffset, rawInode);
@@ -96,8 +96,11 @@ public class InodeAccess extends DataStructureAccessProvider<Long, Inode>{
 	}
 
 	public void forgetInode(long ino, long times) {
-		for (long i=0; i<times; i++) 
-			release(ino);
+		release(ino, times);
+	}
+
+	public void removeInode(long ino) {
+		remove(ino);
 	}
 
 	@Override

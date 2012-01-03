@@ -171,12 +171,16 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 	 * Release entry. Decreases usage counter and might remove entry from table
 	 */
 	protected void release(KEY key) {
+		release(key, 1);
+	}
+	
+	protected void release(KEY key, long times) {
 		log("release","key:" + key);
 		lock.lock();
 
 		ValueAndUsage ds = table.get(key);
 		if (ds != null) {		
-			ds.usage -= 1;
+			ds.usage -= times;
 			
 			if (ds.usage <= 0) {
 				table.remove(key);
@@ -187,4 +191,12 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 
 		lock.unlock();
 	}
+
+	protected void remove(KEY key) {
+		log("remove", "key:" + key);
+		lock.lock();
+		table.remove(key);
+		lock.unlock();
+	}
+
 }
