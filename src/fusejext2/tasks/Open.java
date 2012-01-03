@@ -17,7 +17,7 @@ public class Open extends jlowfuse.async.tasks.Open<Jext2Context> {
 	@Override
 	public void run() {
 		try {
-			Inode inode = context.inodes.getOpened(ino);
+			Inode inode = context.inodes.openInode(ino);
 			if (!inode.isRegularFile())
 				throw new OperationNotPermitted();
 
