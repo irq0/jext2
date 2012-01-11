@@ -1,5 +1,8 @@
 package jext2;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import jext2.exceptions.JExt2Exception;
 import jext2.exceptions.NoSpaceLeftOnDevice;
 
@@ -13,6 +16,7 @@ public class InodeAlloc {
 	private static BlockGroupAccess blockGroups = BlockGroupAccess.getInstance();
 	private static BitmapAccess bitmaps = BitmapAccess.getInstance();
 
+	private static Logger logger = Filesystem.getLogger();
 
 	public static long countFreeInodes() {
 		long count = 0;
@@ -221,7 +225,7 @@ public class InodeAlloc {
 
 			InodeAccess inodes = InodeAccess.getInstance();
 			if (inodes.getOpened(globalIno) != null) {
-				Filesystem.getLogger().warning("Found inode in cache with same number - inode caching is broken :(");
+				logger.warning("Found inode in cache with same number - inode caching is broken :(");
 				inodes.remove(globalIno);
 			}
 
@@ -249,6 +253,22 @@ public class InodeAlloc {
 		inode.setBlockNr(block);
 		inode.setOffset(offset);
 		inode.setIno(globalIno);
+		
+		if (logger.isLoggable(Level.FINE)) {
+			String s = new StringBuilder()
+				.append("Registered Inode #")
+				.append(ino)
+				.append(" in block group ")
+				.append(group)
+				.append(" stored in block ")
+				.append(block)
+				.append("-")
+				.append(offset)
+				.toString();
+			logger.fine(s);
+		}
+			
+			
 	}
 
 }
