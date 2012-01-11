@@ -51,6 +51,7 @@ public class FuseJExt2 {
 	private static Jext2Context context;
 
 	private static JextThreadPoolExecutor service;
+	private static int numberOfThreads;
 	
 
 	static class FuseShutdownHook extends Thread {
@@ -133,18 +134,30 @@ public class FuseJExt2 {
 		Options options = new Options();
 		options.addOption("d", "daemonize", false, "java side of daemonzation - use jext_daemon.sh");
 		options.addOption("h", "help", false, "print this usage text");
-		options.addOption(OptionBuilder.withDescription("options passed directly to FUSE")
+		options.addOption(OptionBuilder
+				.withDescription("options passed directly to FUSE")
+				.withLongOpt("fuse-options")
 				.hasArg()
 				.withArgName("FUSE_OPTIONS")
 				.create("o"));
-		options.addOption(OptionBuilder.withDescription("charset used for file system string conversion")
+		options.addOption(OptionBuilder
+				.withDescription("charset used for file system string conversion")
+				.withLongOpt("charset")
 				.hasArg()
 				.withArgName("CHARSET")
 				.create("c"));
-		options.addOption(OptionBuilder.withDescription("log to file")
+		options.addOption(OptionBuilder
+				.withDescription("log to file")
+				.withLongOpt("log")
 				.hasArg()
 				.withArgName("FILENAME")
 				.create("l"));
+		options.addOption(OptionBuilder
+				.withDescription("number of threads to execute jext2 tasks")
+				.withLongOpt("threads")
+				.hasArg()
+				.withArgName("NTHREADS")
+				.create("n"));
 		try {
 			CommandLine cmd = parser.parse(options, args);
 
@@ -183,6 +196,20 @@ public class FuseJExt2 {
 			if (cmd.hasOption("o")) {
 				fuseCommandline += "," + cmd.getOptionValue("o");
 			}
+			
+			if (cmd.hasOption("n")) {
+				try {
+					int n = Integer.parseInt(cmd.getOptionValue("n"));
+					
+					if (n < 1)
+						throw new ParseException("Number of threads must be positive");
+					else
+						numberOfThreads = n;					
+
+				} catch (NumberFormatException e) {
+					throw new ParseException("Number of threads must be numeric");
+				}
+			}				
 
 		} catch (ParseException e) {
 			HelpFormatter usage = new HelpFormatter();
@@ -263,7 +290,7 @@ public class FuseJExt2 {
 		impls.unlinkImpl = TaskImplementations.getImpl("fusejext2.tasks.Unlink");
 		impls.writeImpl = TaskImplementations.getImpl("fusejext2.tasks.Write");
 
-		service = new JextThreadPoolExecutor(10);
+		service = new JextThreadPoolExecutor(numberOfThreads);
 
 		sess = JLowFuse.asyncTasksNew(fuseArgs, impls,
 				service, context);

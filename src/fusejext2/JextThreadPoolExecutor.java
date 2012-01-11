@@ -15,9 +15,10 @@ public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 	public JextThreadPoolExecutor(int numberOfThreads) {
 		this(numberOfThreads, numberOfThreads, 23, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 		setThreadFactory(new JextThreadFactory());
+		logger.fine("Starting Thread Pool Executor with " + numberOfThreads + " Threads");
 	}
 
-	public JextThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue) {
+	private JextThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue) {
 		super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
 	}
 
