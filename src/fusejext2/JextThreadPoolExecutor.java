@@ -4,6 +4,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jext2.Filesystem;
@@ -15,7 +16,7 @@ public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 	public JextThreadPoolExecutor(int numberOfThreads) {
 		this(numberOfThreads, numberOfThreads, 23, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 		setThreadFactory(new JextThreadFactory());
-		logger.fine("Starting Thread Pool Executor with " + numberOfThreads + " Threads");
+		logger.info("Starting Thread Pool Executor with " + numberOfThreads + " Threads");
 	}
 
 	private JextThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue) {
@@ -26,14 +27,16 @@ public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 	@Override
 	protected void beforeExecute(Thread t, Runnable r) {
 	    super.beforeExecute(t, r);
-		logger.fine(String.format(">>> START thread=[%s] task=[%s]", t.getName(), r));
+	    if (logger.isLoggable(Level.FINE))
+	    	logger.fine(String.format(">>> START thread=[%s] task=[%s]", t.getName(), r));
 	}
 
 
 	@Override
 	protected void afterExecute(Runnable r, Throwable t) {
 	    super.afterExecute(r, t);
-		logger.fine(String.format("<<< END task=[%s]", r));
+	    if (logger.isLoggable(Level.FINE))
+	    	logger.fine(String.format("<<< END task=[%s]", r));
 	}
 
 }

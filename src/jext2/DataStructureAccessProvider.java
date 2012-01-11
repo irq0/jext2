@@ -4,11 +4,10 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
 import org.apache.commons.lang.text.StrBuilder;
 
 import jext2.exceptions.JExt2Exception;
@@ -16,6 +15,8 @@ import jext2.exceptions.JExt2Exception;
 public abstract class DataStructureAccessProvider<KEY,VAL> {
 	protected Map<KEY, ValueAndUsage> table;
 	protected ReentrantLock lock = new ReentrantLock(true);
+
+	Logger logger = Filesystem.getLogger();
 
 	protected class ValueAndUsage {
 		VAL value;
@@ -43,10 +44,8 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 		return interresting.toArray(new StackTraceElement[0]);	
 	}
 	
-	protected void log(String op, String msg) {
-		Logger logger = Filesystem.getLogger();
-
-		if (Filesystem.loggingEnabled()) {
+	protected void log(String op, String msg) {		
+		if (logger.isLoggable(Level.FINE)) {
 			StackTraceElement[] fullStack = Thread.currentThread().getStackTrace();
 			StackTraceElement[] interrestingStackElements = filterStrackTraceForLog(fullStack);	
 			ArrayUtils.reverse(interrestingStackElements);

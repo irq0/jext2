@@ -18,7 +18,7 @@ fi
 JAVA_COMMAND="$JAVA_COMMAND -jar $SCRIPTPATH/dist/jext2-plusdepends.jar"
 
 
-function launch_daemon() 
+function launch_daemon()
 {
     /bin/sh <<EOF
 ${*} >&- &
@@ -27,7 +27,7 @@ echo \${pid}
 EOF
 }
 
-pid=$(launch_daemon $JAVA_COMMAND -d $COMMANDLINE)
+pid=$(launch_daemon $JAVA_COMMAND --daemon $COMMANDLINE)
 sleep 3
 
 if ps -p "${pid}" 2>&1 > /dev/null; then

@@ -21,11 +21,11 @@ public class JextThreadFactory implements ThreadFactory {
 		.append("[")
 		.append(count.getAndIncrement())
 		.append("]").toString();
-		
+
 		Thread t = new Thread(r);
-		
+
 		t.setName(name);
-		
+
 		t.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
 			@Override
 			public void uncaughtException(Thread t, Throwable e) {
@@ -39,6 +39,9 @@ public class JextThreadFactory implements ThreadFactory {
 					.toString());
 			}
 		});
+
+		logger.info("Created new Thread: " + name);
+
 		return t;
-		}
+	}
 }

@@ -6,9 +6,11 @@ import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Level;
+import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
@@ -17,8 +19,7 @@ import java.util.logging.Logger;
 //      This then should replace the direct superblock, etc. references in each class
 public class Filesystem {
 	private static Charset charset = Charset.defaultCharset();
-	private static Logger logger = Logger.getLogger("jext2");
-	private static boolean loggingEnabled = false;
+	private static Logger logger;
 
 	static class Jext2Formatter extends Formatter {
 		private static final DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
@@ -49,10 +50,6 @@ public class Filesystem {
 		}
 	}
 
-
-
-
-
 	public static Charset getCharset() {
 		return charset;
 	}
@@ -74,18 +71,31 @@ public class Filesystem {
 		handler.setFormatter(new Jext2Formatter());
 
 		logger.addHandler(handler);
-		logger.setLevel(Level.ALL);
-		logger.info("jext2 start");
-
-		loggingEnabled = true;
+		logger.setLevel(Level.WARNING);
 	}
 
+	public static void initializeLogging() {
+		LogManager logman = LogManager.getLogManager();
+		logman.reset();
+		
+		logger = Logger.getLogger("jext2");
+		
+		ConsoleHandler handler = new ConsoleHandler();
+		handler.setFormatter(new Jext2Formatter());
+		
+		logger.addHandler(handler);
+		logger.setLevel(Level.WARNING);
+	}
+	
+	public static void activateDebugLogging() {
+		logger.setLevel(Level.ALL);
+	}
+	
+	public static void activateVerboseLogging() {
+		logger.setLevel(Level.INFO);
+	}
+	
 	public static Logger getLogger() {
 		return logger;
 	}
-
-	public static boolean loggingEnabled() {
-		return loggingEnabled;
-	}
-
 }

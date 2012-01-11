@@ -53,7 +53,9 @@ public class FuseJExt2 {
 	private static JextThreadPoolExecutor service;
 	private static int numberOfThreads;
 	
-
+	private static CommandLineParser parser;
+	private static Options options;
+	
 	static class FuseShutdownHook extends Thread {
 		private Logger logger;
 
@@ -126,14 +128,19 @@ public class FuseJExt2 {
 		}
 	}
 
-
 	@SuppressWarnings("static-access")
-	public static void parseCommandline(String[] args) {
-		CommandLineParser parser = new PosixParser();
+	private static void initializeCommandLineParser() {
+		parser = new PosixParser();
 
-		Options options = new Options();
-		options.addOption("d", "daemonize", false, "java side of daemonzation - use jext_daemon.sh");
-		options.addOption("h", "help", false, "print this usage text");
+		options = new Options();		
+		options.addOption(OptionBuilder
+				.withDescription("java side of daemonzation - use jext2_daemon.sh")
+				.withLongOpt("daemon")
+				.create("D"));
+		options.addOption(OptionBuilder
+				.withDescription("print this")
+				.withLongOpt("help")
+				.create("h"));
 		options.addOption(OptionBuilder
 				.withDescription("options passed directly to FUSE")
 				.withLongOpt("fuse-options")
@@ -158,12 +165,20 @@ public class FuseJExt2 {
 				.hasArg()
 				.withArgName("NTHREADS")
 				.create("n"));
+		options.addOption(OptionBuilder
+				.withDescription("debug output")
+				.withLongOpt("debug")
+				.create("d"));
+		options.addOption(OptionBuilder
+				.withDescription("verbose output")
+				.withLongOpt("verbose")
+				.create("v"));
+	}
+
+	public static void parseCommandline(String[] args) {	
 		try {
 			CommandLine cmd = parser.parse(options, args);
 
-			if (cmd.hasOption("f")) {
-				daemon = false;
-			}
 			if (cmd.hasOption("h")) {
 				throw new ParseException("");
 			}
@@ -183,6 +198,18 @@ public class FuseJExt2 {
 				} catch (IOException e) {
 					throw new ParseException("Can't open file for logging");
 				}
+			}
+			
+			if (cmd.hasOption("v")) {
+				Filesystem.activateVerboseLogging();
+			}
+			
+			if (cmd.hasOption("d")) {
+				Filesystem.activateDebugLogging();
+			}
+			
+			if (cmd.hasOption("D")) {
+				daemon = true;
 			}
 
 			String[] leftover = cmd.getArgs();
@@ -234,6 +261,9 @@ public class FuseJExt2 {
 	}
 
 	public static void main(String[] args) {
+		Filesystem.initializeLogging();
+		
+		initializeCommandLineParser();
 		parseCommandline(args);
 
 		JLowFuseArgs fuseArgs = JLowFuseArgs.parseCommandline(new String[] {fuseCommandline});
