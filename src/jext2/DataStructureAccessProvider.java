@@ -45,7 +45,7 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 	}
 	
 	protected void log(String op, String msg) {		
-		if (logger.isLoggable(Level.FINE)) {
+		if (logger.isLoggable(Level.FINEST)) {
 			StackTraceElement[] fullStack = Thread.currentThread().getStackTrace();
 			StackTraceElement[] interrestingStackElements = filterStrackTraceForLog(fullStack);	
 			ArrayUtils.reverse(interrestingStackElements);
