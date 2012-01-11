@@ -1,7 +1,7 @@
 package fusejext2;
 
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -14,7 +14,12 @@ public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 
 
 	public JextThreadPoolExecutor(int numberOfThreads) {
-		this(numberOfThreads, numberOfThreads, 23, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+		this(numberOfThreads, 
+				numberOfThreads*10, 
+				1, 
+				TimeUnit.SECONDS, 
+				new SynchronousQueue<Runnable>(true));
+
 		setThreadFactory(new JextThreadFactory());
 		logger.info("Starting Thread Pool Executor with " + numberOfThreads + " Threads");
 	}
