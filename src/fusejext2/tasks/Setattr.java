@@ -30,7 +30,7 @@ public class Setattr extends jlowfuse.async.tasks.Setattr<Jext2Context> {
 		if (ino == 1) ino = Constants.EXT2_ROOT_INO;
 
 		try {
-			Inode inode = context.inodes.getOpened(ino);
+			Inode inode = context.inodes.openInode(ino);
 
 			if (checkToSet(to_set, FuseConstants.FUSE_SET_ATTR_ATIME)) {
 				inode.setAccessTime(Util.timespecToDate(attr.getAtim()));
@@ -64,6 +64,7 @@ public class Setattr extends jlowfuse.async.tasks.Setattr<Jext2Context> {
 			Stat s = Util.inodeToStat(context.superblock, inode);
 			Reply.attr(req, s, 0.0);
 
+			context.inodes.forgetInode(ino, 1);
 		} catch (JExt2Exception e) {
 			Reply.err(req, e.getErrno());
 		}
