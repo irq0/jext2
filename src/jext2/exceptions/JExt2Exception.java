@@ -25,8 +25,7 @@ public class JExt2Exception extends Exception {
 			StackTraceElement[] stack = getStackTrace();
 
 			StringBuilder log = new StringBuilder();
-			log.append("!!! EXCEP ");
-			log.append(" exception=");
+			log.append("JEXT2 exception was raised: ");
 			log.append(this.getClass().getSimpleName());
 			log.append(" source=");
 			log.append(stack[0].getClassName());
