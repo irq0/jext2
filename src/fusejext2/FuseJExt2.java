@@ -134,43 +134,54 @@ public class FuseJExt2 {
 
 		options = new Options();		
 		options.addOption(OptionBuilder
-				.withDescription("java side of daemonzation - use jext2_daemon.sh")
+				.withDescription("Activate daemon mode in jext2. Don't use directly, " +
+						"use jext2_daemon.sh instead")
 				.withLongOpt("daemon")
 				.create("D"));
 		options.addOption(OptionBuilder
-				.withDescription("print this")
+				.withDescription("Print usage")
 				.withLongOpt("help")
 				.create("h"));
 		options.addOption(OptionBuilder
-				.withDescription("options passed directly to FUSE")
+				.withDescription("Options forwarded to FUSE")
 				.withLongOpt("fuse-options")
 				.hasArg()
 				.withArgName("FUSE_OPTIONS")
 				.create("o"));
 		options.addOption(OptionBuilder
-				.withDescription("charset used for file system string conversion")
+				.withDescription("Charset for file system string conversion")
 				.withLongOpt("charset")
 				.hasArg()
 				.withArgName("CHARSET")
 				.create("c"));
 		options.addOption(OptionBuilder
-				.withDescription("log to file")
+				.withDescription("Log to file, ")
 				.withLongOpt("log")
 				.hasArg()
 				.withArgName("FILENAME")
 				.create("l"));
 		options.addOption(OptionBuilder
-				.withDescription("number of threads to execute jext2 tasks")
+				.withDescription("Number of threads to execute jext2 tasks")
 				.withLongOpt("threads")
 				.hasArg()
 				.withArgName("NTHREADS")
 				.create("n"));
 		options.addOption(OptionBuilder
-				.withDescription("debug output")
+				.withDescription("Debug output, possible values:\n" +
+						"SEVERE (highest value)\n" + 
+						"WARNING\n" + 
+						"INFO\n" + 
+						"CONFIG\n" + 
+						"FINE\n" + 
+						"FINER\n" + 
+						"FINEST (lowest value)\n" +
+						"Default: FINE" )
+				.hasOptionalArg()
+				.withArgName("LEVEL")
 				.withLongOpt("debug")
 				.create("d"));
 		options.addOption(OptionBuilder
-				.withDescription("verbose output")
+				.withDescription("Verbose output (same as --debug INFO)")
 				.withLongOpt("verbose")
 				.create("v"));
 	}
@@ -201,11 +212,11 @@ public class FuseJExt2 {
 			}
 			
 			if (cmd.hasOption("v")) {
-				Filesystem.activateVerboseLogging();
+				Filesystem.setLogLevel("INFO");
 			}
 			
 			if (cmd.hasOption("d")) {
-				Filesystem.activateDebugLogging();
+				Filesystem.setLogLevel(cmd.getOptionValue("d", "FINE"));
 			}
 			
 			if (cmd.hasOption("D")) {

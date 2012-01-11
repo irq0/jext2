@@ -71,7 +71,6 @@ public class Filesystem {
 		handler.setFormatter(new Jext2Formatter());
 
 		logger.addHandler(handler);
-		logger.setLevel(Level.WARNING);
 	}
 
 	public static void initializeLogging() {
@@ -87,12 +86,8 @@ public class Filesystem {
 		logger.setLevel(Level.WARNING);
 	}
 	
-	public static void activateDebugLogging() {
-		logger.setLevel(Level.ALL);
-	}
-	
-	public static void activateVerboseLogging() {
-		logger.setLevel(Level.INFO);
+	public static void setLogLevel(String level) {
+		logger.setLevel(Level.parse(level));
 	}
 	
 	public static Logger getLogger() {
