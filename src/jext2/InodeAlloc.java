@@ -257,7 +257,7 @@ public class InodeAlloc {
 		if (logger.isLoggable(Level.FINE)) {
 			String s = new StringBuilder()
 				.append("Registered Inode #")
-				.append(ino)
+				.append(globalIno)
 				.append(" in block group ")
 				.append(group)
 				.append(" stored in block ")
