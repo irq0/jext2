@@ -26,7 +26,7 @@ public class Readdir extends jlowfuse.async.tasks.Readdir<Jext2Context> {
 		Dirbuf buf = new Dirbuf();
 
 		inode.directoryLock().readLock().lock();
-		
+
 		for (DirectoryEntry d : inode.iterateDirectory()) {
 			inode.directoryEntries.retain(d);
 			if (d.isUnused()) continue;
@@ -37,10 +37,10 @@ public class Readdir extends jlowfuse.async.tasks.Readdir<Jext2Context> {
 					d.getFileType());
 			inode.directoryEntries.release(d);
 		}
-		
+
 
 		Reply.dirBufLimited(req, buf, off, size);
-		
+
 		inode.directoryLock().readLock().unlock();
  	}
 }

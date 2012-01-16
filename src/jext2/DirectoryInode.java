@@ -74,7 +74,7 @@ public class DirectoryInode extends DataInode {
 			directoryEntries.add(entry);
 			directoryEntries.retain(entry);
 		}
-		
+
 		@Override
 		public boolean hasNext() {
 			return (entry != null);
@@ -127,15 +127,15 @@ public class DirectoryInode extends DataInode {
 
 			this.previousEntry = this.entry;
 			this.entry = fetchNextEntry(previousEntry);
-			
+
 
 			if (releaseMe != null) {
 				assert !releaseMe.equals(this.previousEntry);
 				assert !(releaseMe == this.previousEntry);
-				
+
 				directoryEntries.release(releaseMe);
 			}
-			
+
 			assert directoryEntries.hasEntry(this.previousEntry);
 			return this.previousEntry;
 		}
@@ -168,7 +168,7 @@ public class DirectoryInode extends DataInode {
 		DirectoryEntry newDir = DirectoryEntry.create(name);
 		newDir.setIno(inode.getIno());
 		newDir.setFileType(inode.getFileType());
-		
+
 		assert !directoryEntries.hasEntry(newDir);
 
 		directoryEntries.add(newDir);
@@ -499,10 +499,10 @@ public class DirectoryInode extends DataInode {
 				toDelete = current;
 				break;
 			}
-			
+
 			if (prev != null)
 				directoryEntries.release(prev);
-			
+
 			prev = current;
 		}
 

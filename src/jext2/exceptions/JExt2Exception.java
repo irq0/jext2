@@ -20,7 +20,7 @@ public class JExt2Exception extends Exception {
 		log(msg);
 	}
 
-	private void log(String msg) {		
+	private void log(String msg) {
 		if (logger.isLoggable(Level.FINE)) {
 			StackTraceElement[] stack = getStackTrace();
 

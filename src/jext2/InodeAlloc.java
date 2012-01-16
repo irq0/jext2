@@ -184,7 +184,7 @@ public class InodeAlloc {
 	 */
 	public static synchronized void registerInode(Inode dir, Inode inode) throws JExt2Exception {
 		assert inode.getIno() == -1 : "It's my job to set the ino!";
-		
+
 		/* find best suitable block group */
 		int group;
 
@@ -253,7 +253,7 @@ public class InodeAlloc {
 		inode.setBlockNr(block);
 		inode.setOffset(offset);
 		inode.setIno(globalIno);
-		
+
 		if (logger.isLoggable(Level.FINE)) {
 			String s = new StringBuilder()
 				.append("Registered Inode #")
@@ -267,8 +267,8 @@ public class InodeAlloc {
 				.toString();
 			logger.fine(s);
 		}
-			
-			
+
+
 	}
 
 }

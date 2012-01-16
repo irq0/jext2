@@ -59,7 +59,7 @@ public class BlockAccess {
 		}
 	}
 
-	
+
 	/**
 	 * Read data from device to buffer starting at postion. To use this method set the
 	 * limit and position of the buffer to your needs and note that position is

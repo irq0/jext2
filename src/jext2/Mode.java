@@ -15,7 +15,7 @@ public class Mode {
 		return m;
 	}
 
-	
+
 	private boolean isTypeMaskSet(int mask) {
 		return (mode & IFMT) == mask;
 	}
@@ -145,7 +145,7 @@ public class Mode {
 
 		return c;
 	}
-	
+
 	public String octalStringRepresentation() {
 		if (mode == 0)
 			return "0";

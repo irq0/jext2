@@ -34,7 +34,7 @@ public class ModeTest {
 		assertTrue(mode.isOtherReadable());
 		assertFalse(mode.isOtherWritable());
 
-		assertEquals(mode.numeric(), 
+		assertEquals(mode.numeric(),
 				Mode.createWithNumericValue(040754).numeric());
 	}
 
@@ -66,7 +66,7 @@ public class ModeTest {
 		assertTrue(mode.isOtherReadable());
 		assertFalse(mode.isOtherWritable());
 
-		assertEquals(mode.numeric(), 
+		assertEquals(mode.numeric(),
 				Mode.createWithNumericValue(0100664).numeric());
 	}
 }

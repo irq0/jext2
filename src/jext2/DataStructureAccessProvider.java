@@ -21,10 +21,10 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 	protected class ValueAndUsage {
 		VAL value;
 		long usage = 0;
-		
+
 		public String toString() {
 			if (value instanceof Inode) {
-				return "[Inode: " + ((Inode)value).getIno() + " #" + usage + "]";  
+				return "[Inode: " + ((Inode)value).getIno() + " #" + usage + "]";
 			} else if (value instanceof DirectoryEntry) {
 				return "[DirEntry: " + ((DirectoryEntry)value).getName() + " #" + usage + "]";
 			} else {
@@ -35,23 +35,23 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 
 	private StackTraceElement[] filterStrackTraceForLog(StackTraceElement[] stack) {
 		LinkedList<StackTraceElement> interresting = new LinkedList<StackTraceElement>();
-		
+
 		for (StackTraceElement element : stack) {
 			if (element.getClassName().contains("jext2"))
-				interresting.add(element);		
+				interresting.add(element);
 		}
-		
-		return interresting.toArray(new StackTraceElement[0]);	
+
+		return interresting.toArray(new StackTraceElement[0]);
 	}
-	
-	protected void log(String op, String msg) {		
+
+	protected void log(String op, String msg) {
 		if (logger.isLoggable(Level.FINEST)) {
 			StackTraceElement[] fullStack = Thread.currentThread().getStackTrace();
-			StackTraceElement[] interrestingStackElements = filterStrackTraceForLog(fullStack);	
+			StackTraceElement[] interrestingStackElements = filterStrackTraceForLog(fullStack);
 			ArrayUtils.reverse(interrestingStackElements);
-			
-			String strstack = new StrBuilder().appendWithSeparators(interrestingStackElements, "->").toString();		
-			
+
+			String strstack = new StrBuilder().appendWithSeparators(interrestingStackElements, "->").toString();
+
 			StringBuilder log = new StringBuilder();
 			log.append(" class=");
 			log.append(this.getClass().getSimpleName());
@@ -64,9 +64,9 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 
 			logger.fine(log.toString());
 		}
-		
+
 	}
-	
+
 	protected DataStructureAccessProvider() {
 		table = new HashMap<KEY, ValueAndUsage>();
 	}
@@ -118,7 +118,7 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 
 		assert ds != null;
 		ds.usage += 1;
-		
+
 		log("open",":" + key);
 		return ds.value;
 	}
@@ -137,7 +137,7 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 			return null;
 		} else {
 			lock.unlock();
-			
+
 			assert ds.usage >= 0;
 			assert ds.value != null;
 			ds.usage += 1;
@@ -177,15 +177,15 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 	protected void release(KEY key) {
 		release(key, 1);
 	}
-	
+
 	protected void release(KEY key, long times) {
 		log("release","key:" + key);
 		lock.lock();
 
 		ValueAndUsage ds = table.get(key);
-		if (ds != null) {		
+		if (ds != null) {
 			ds.usage -= times;
-			
+
 			if (ds.usage <= 0) {
 				table.remove(key);
 				log("release","removed:" + key);
@@ -195,14 +195,14 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 
 		lock.unlock();
 	}
-	
+
 	protected void remove(KEY key) {
 		log("remove", "key:" + key);
 		lock.lock();
 		table.remove(key);
 		lock.unlock();
 	}
-	
+
 	public String toString() {
 		lock.lock();
 		String s = new StringBuilder()
@@ -212,6 +212,6 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 			.toString();
 		lock.unlock();
 		return s;
-		
+
 	}
 }

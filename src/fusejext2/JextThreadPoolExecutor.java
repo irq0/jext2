@@ -14,10 +14,10 @@ public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 
 
 	public JextThreadPoolExecutor(int numberOfThreads) {
-		this(numberOfThreads, 
-				numberOfThreads*10, 
-				1, 
-				TimeUnit.SECONDS, 
+		this(numberOfThreads,
+				numberOfThreads*10,
+				1,
+				TimeUnit.SECONDS,
 				new SynchronousQueue<Runnable>(true));
 
 		setThreadFactory(new JextThreadFactory());

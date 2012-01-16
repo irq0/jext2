@@ -18,7 +18,7 @@ public class Rename extends jlowfuse.async.tasks.Rename<Jext2Context> {
 	public Rename(FuseReq req, long parent, String name, long newparent, String newname) {
 		super(req, parent, name, newparent, newname);
 	}
-	
+
 	/* XXX this is probably broken */
 
 	@Override
@@ -28,27 +28,27 @@ public class Rename extends jlowfuse.async.tasks.Rename<Jext2Context> {
 
 		ReentrantReadWriteLock parentLock = null;
 		ReentrantReadWriteLock newparentLock = null;
-		
+
 		try {
 			DirectoryInode parentInode;
-			DirectoryInode newparentInode; 
+			DirectoryInode newparentInode;
 
 			parentInode = (DirectoryInode)context.inodes.getOpened(parent);
 			newparentInode = (DirectoryInode)context.inodes.getOpened(newparent);
-			
+
 			parentLock = parentInode.directoryLock();
 			newparentLock = newparentInode.directoryLock();
-			
+
 			if (parentInode.equals(newparentInode)) {
 				parentLock.writeLock().lock();
 			} else {
 				parentLock.writeLock().lock();
 				newparentLock.writeLock().lock();
 			}
-			
+
 			DirectoryEntryAccess parentEntries = ((DirectoryInode)parentInode).directoryEntries;
-			DirectoryEntryAccess newparentEntries = ((DirectoryInode)newparentInode).directoryEntries;		
-			
+			DirectoryEntryAccess newparentEntries = ((DirectoryInode)newparentInode).directoryEntries;
+
 			/* create entries */
 			DirectoryEntry entry = parentInode.lookup(name);
 
@@ -91,7 +91,7 @@ public class Rename extends jlowfuse.async.tasks.Rename<Jext2Context> {
 
 				newparentInode.setLinksCount(newparentInode.getLinksCount() + 1);
 				parentInode.setLinksCount(parentInode.getLinksCount() - 1);
-				
+
 				newDir.directoryEntries.release(dotdot);
 			}
 
@@ -110,7 +110,7 @@ public class Rename extends jlowfuse.async.tasks.Rename<Jext2Context> {
 				parentLock.writeLock().unlock();
 				newparentLock.writeLock().unlock();
 			}
-				
+
 			Reply.err(req, 0);
 		} catch (JExt2Exception e) {
 			assert parentLock.getWriteHoldCount() == 1;

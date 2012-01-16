@@ -11,9 +11,9 @@ import jext2.Filesystem;
 public class JextThreadFactory implements ThreadFactory {
 	private Logger logger = Filesystem.getLogger();
 	private String threadPrefix = "jext2thread";
-	
+
 	AtomicInteger count = new AtomicInteger(1);
-		
+
 	@Override
 	public synchronized Thread newThread(Runnable r) {
 		final String name = new StringBuilder()

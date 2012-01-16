@@ -86,31 +86,31 @@ public class DirectoryEntry extends PartialBlock {
 	public boolean isOfUnknownFileType() {
 		return getFileType() == FILETYPE_UNKNOWN;
 	}
-	
+
 	public boolean isRegularFile() {
 		return getFileType() == FILETYPE_REG_FILE;
 	}
-	
+
 	public boolean isDirectory() {
 		return getFileType() == FILETYPE_DIR;
 	}
-	
+
 	public boolean isCharacterDevice() {
 		return getFileType() == FILETYPE_CHRDEV;
 	}
-	
+
 	public boolean isBlockDevice() {
 		return getFileType() == FILETYPE_BLKDEV;
 	}
-	
+
 	public boolean isFiFo() {
 		return getFileType() == FILETYPE_FIFO;
 	}
-	
+
 	public boolean isSocket() {
 		return getFileType() == FILETYPE_SOCK;
 	}
-	
+
 	public boolean isSymlink() {
 		return getFileType() == FILETYPE_SYMLINK;
 	}

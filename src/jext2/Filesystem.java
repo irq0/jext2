@@ -76,20 +76,20 @@ public class Filesystem {
 	public static void initializeLogging() {
 		LogManager logman = LogManager.getLogManager();
 		logman.reset();
-		
+
 		logger = Logger.getLogger("jext2");
-		
+
 		ConsoleHandler handler = new ConsoleHandler();
 		handler.setFormatter(new Jext2Formatter());
-		
+
 		logger.addHandler(handler);
 		logger.setLevel(Level.WARNING);
 	}
-	
+
 	public static void setLogLevel(String level) {
 		logger.setLevel(Level.parse(level));
 	}
-	
+
 	public static Logger getLogger() {
 		return logger;
 	}

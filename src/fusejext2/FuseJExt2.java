@@ -52,10 +52,10 @@ public class FuseJExt2 {
 
 	private static JextThreadPoolExecutor service;
 	private static int numberOfThreads;
-	
+
 	private static CommandLineParser parser;
 	private static Options options;
-	
+
 	static class FuseShutdownHook extends Thread {
 		private Logger logger;
 
@@ -67,7 +67,7 @@ public class FuseJExt2 {
 		    	logger.info("Running DESTROY Task");
 		    	task.run();
 		}
-		
+
 		private void shutdownBlockDev() {
 	    	logger.info("Shutting down access to block device");
 
@@ -79,15 +79,15 @@ public class FuseJExt2 {
 				System.err.println(e.getLocalizedMessage());
 			}
 		}
-		
+
 		private void shutdownThreadPool() {
 	    	logger.info("Shutting down thread pool");
 
 			service.shutdown();
-			
+
 			try {
 		    	logger.info("Waiting for "+ (service.getActiveCount()+service.getQueue().size()) + " tasks to finish");
-				System.out.println("Awaiting Termination... Queued: " + service.getQueue() 
+				System.out.println("Awaiting Termination... Queued: " + service.getQueue()
 														  +" Running: " + service.getActiveCount());
 				service.awaitTermination(120, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
@@ -102,15 +102,15 @@ public class FuseJExt2 {
 			Session.exit(sess);
 			Fuse.unmount(mountpoint, chan);
 		}
-		
+
 		private void flushLog() {
 			for (Handler h : Filesystem.getLogger().getHandlers()) {
 				h.flush();
 				h.close();
 			}
 		}
-			
-		@Override 
+
+		@Override
 		public void run() {
 			logger = Filesystem.getLogger();
 			System.out.println("Shutdown.. ");
@@ -132,7 +132,7 @@ public class FuseJExt2 {
 	private static void initializeCommandLineParser() {
 		parser = new PosixParser();
 
-		options = new Options();		
+		options = new Options();
 		options.addOption(OptionBuilder
 				.withDescription("Activate daemon mode in jext2. Don't use directly, " +
 						"use jext2_daemon.sh instead")
@@ -168,12 +168,12 @@ public class FuseJExt2 {
 				.create("n"));
 		options.addOption(OptionBuilder
 				.withDescription("Debug output, possible values:\n" +
-						"SEVERE (highest value)\n" + 
-						"WARNING\n" + 
-						"INFO\n" + 
-						"CONFIG\n" + 
-						"FINE\n" + 
-						"FINER\n" + 
+						"SEVERE (highest value)\n" +
+						"WARNING\n" +
+						"INFO\n" +
+						"CONFIG\n" +
+						"FINE\n" +
+						"FINER\n" +
 						"FINEST (lowest value)\n" +
 						"Default: FINE" )
 				.hasOptionalArg()
@@ -186,7 +186,7 @@ public class FuseJExt2 {
 				.create("v"));
 	}
 
-	public static void parseCommandline(String[] args) {	
+	public static void parseCommandline(String[] args) {
 		try {
 			CommandLine cmd = parser.parse(options, args);
 
@@ -210,15 +210,15 @@ public class FuseJExt2 {
 					throw new ParseException("Can't open file for logging");
 				}
 			}
-			
+
 			if (cmd.hasOption("v")) {
 				Filesystem.setLogLevel("INFO");
 			}
-			
+
 			if (cmd.hasOption("d")) {
 				Filesystem.setLogLevel(cmd.getOptionValue("d", "FINE"));
 			}
-			
+
 			if (cmd.hasOption("D")) {
 				daemon = true;
 			}
@@ -234,20 +234,20 @@ public class FuseJExt2 {
 			if (cmd.hasOption("o")) {
 				fuseCommandline += "," + cmd.getOptionValue("o");
 			}
-			
+
 			if (cmd.hasOption("n")) {
 				try {
 					int n = Integer.parseInt(cmd.getOptionValue("n"));
-					
+
 					if (n < 1)
 						throw new ParseException("Number of threads must be positive");
 					else
-						numberOfThreads = n;					
+						numberOfThreads = n;
 
 				} catch (NumberFormatException e) {
 					throw new ParseException("Number of threads must be numeric");
 				}
-			}				
+			}
 
 		} catch (ParseException e) {
 			HelpFormatter usage = new HelpFormatter();
@@ -273,7 +273,7 @@ public class FuseJExt2 {
 
 	public static void main(String[] args) {
 		Filesystem.initializeLogging();
-		
+
 		initializeCommandLineParser();
 		parseCommandline(args);
 
