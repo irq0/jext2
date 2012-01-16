@@ -32,7 +32,7 @@ public class Mknod extends jlowfuse.async.tasks.Mknod<Jext2Context> {
 			if (!createMode.isRegular())
 				throw new FunctionNotImplemented();
 
-			Inode parentInode = context.inodes.openInode(parent);
+			Inode parentInode = context.inodes.getOpened(parent);
 			if (!parentInode.isDirectory())
 				throw new NotADirectory();
 
@@ -48,8 +48,10 @@ public class Mknod extends jlowfuse.async.tasks.Mknod<Jext2Context> {
 
 			((DirectoryInode)parentInode).addLink(inode, name);
 			inode.sync();
-			Reply.entry(req, Util.inodeToEntryParam(context.superblock, inode));
 
+			context.inodes.retainInode(inode.getIno());
+
+			Reply.entry(req, Util.inodeToEntryParam(context.superblock, inode));
 		} catch (JExt2Exception e) {
 			Reply.err(req, e.getErrno());
 		}

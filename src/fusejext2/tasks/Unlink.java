@@ -24,14 +24,14 @@ public class Unlink extends jlowfuse.async.tasks.Unlink<Jext2Context> {
 			if (name.equals(".") || name.equals(".."))
 				throw new InvalidArgument();
 
-			DirectoryInode parentInode = (DirectoryInode)(context.inodes.openInode(parent));
-			Inode child =
-					context.inodes.openInode(parentInode.lookup(name).getIno());
+			DirectoryInode parentInode = (DirectoryInode)(context.inodes.getOpened(parent));
+			Inode child = context.inodes.openInode(parentInode.lookup(name).getIno());
 
 			parentInode.unLinkOther(child, name);
 
-			Reply.err(req, 0);
+			context.inodes.forgetInode(child.getIno(), 1);
 
+			Reply.err(req, 0);
 		} catch (JExt2Exception e) {
 			Reply.err(req, e.getErrno());
 		}

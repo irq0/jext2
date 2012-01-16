@@ -14,9 +14,9 @@ public class Forget extends jlowfuse.async.tasks.Forget<Jext2Context> {
 
 	@Override
 	public void run() {
-		if (ino == 1) ino = Constants.EXT2_ROOT_INO;
-		context.inodes.forgetInode(ino, nlookup);
-		
+		if (ino != 1)
+			context.inodes.forgetInode(ino, nlookup);
+
 		Reply.none(req);
 	}
 }

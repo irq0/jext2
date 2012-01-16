@@ -21,15 +21,8 @@ public class Getattr extends jlowfuse.async.tasks.Getattr<Jext2Context> {
 	@Override
 	public void run() {
 		if (ino == 1) ino = Constants.EXT2_ROOT_INO;
-		Inode inode;
-		try {
-			inode = context.inodes.openInode(ino);
-	 		Stat stat = Util.inodeToStat(context.superblock, inode);
-			Reply.attr(req, stat, 0.0);
-			context.inodes.forgetInode(ino, 1);
-		} catch (JExt2Exception e) {
-			Reply.err(req, e.getErrno());
-		}
-
+		Inode inode = context.inodes.getOpened(ino);
+		Stat stat = Util.inodeToStat(context.superblock, inode);
+		Reply.attr(req, stat, 0.0);
 	}
 }

@@ -22,12 +22,14 @@ public class Rmdir extends jlowfuse.async.tasks.Rmdir<Jext2Context> {
 			if (name.equals(".") || name.equals(".."))
 				throw new InvalidArgument();
 
-			DirectoryInode parentInode = (DirectoryInode)(context.inodes.openInode(parent));
+			DirectoryInode parentInode = (DirectoryInode)(context.inodes.getOpened(parent));
 			DirectoryInode child =
 					(DirectoryInode)context.inodes.openInode(parentInode.lookup(name).getIno());
 
 			parentInode.unLinkDir(child, name);
 			child.removeDotLinks(parentInode);
+
+			context.inodes.forgetInode(child.getIno(), 1);
 
 			Reply.err(req, 0);
 

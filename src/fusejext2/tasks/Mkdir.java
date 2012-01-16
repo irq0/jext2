@@ -23,13 +23,12 @@ public class Mkdir extends jlowfuse.async.tasks.Mkdir<Jext2Context> {
 	public void run() {
 		if (parent == 1) parent = Constants.EXT2_ROOT_INO;
 		try {
-			Inode parentInode = context.inodes.openInode(parent);
+			Inode parentInode = context.inodes.getOpened(parent);
 			if (!parentInode.isDirectory())
 				throw new NotADirectory();
 
 			FuseContext fuseContext = req.getContext();
-			DirectoryInode inode =
-					DirectoryInode.createEmpty();
+			DirectoryInode inode = DirectoryInode.createEmpty();
 			inode.setMode(new ModeBuilder()
 								.directory()
 								.numeric(mode)
@@ -42,8 +41,10 @@ public class Mkdir extends jlowfuse.async.tasks.Mkdir<Jext2Context> {
 
 			((DirectoryInode)parentInode).addLink(inode, name);
 			inode.sync();
-			Reply.entry(req, Util.inodeToEntryParam(context.superblock, inode));
 
+			context.inodes.retainInode(inode.getIno());
+
+			Reply.entry(req, Util.inodeToEntryParam(context.superblock, inode));
 		} catch (JExt2Exception e) {
 			Reply.err(req, e.getErrno());
 		}

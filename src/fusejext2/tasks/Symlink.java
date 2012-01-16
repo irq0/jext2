@@ -2,6 +2,7 @@ package fusejext2.tasks;
 
 import jext2.Constants;
 import jext2.DirectoryInode;
+import jext2.Inode;
 import jext2.InodeAlloc;
 import jext2.SymlinkInode;
 import jext2.exceptions.JExt2Exception;
@@ -22,7 +23,7 @@ public class Symlink extends jlowfuse.async.tasks.Symlink<Jext2Context> {
 	public void run() {
 		if (parent == 1) parent = Constants.EXT2_ROOT_INO;
 		try {
-			DirectoryInode parentInode = (DirectoryInode)context.inodes.openInode(parent);
+			DirectoryInode parentInode = (DirectoryInode)context.inodes.getOpened(parent);
 
 			FuseContext fuseContext = req.getContext();
 			SymlinkInode inode = SymlinkInode.createEmpty();
@@ -34,8 +35,9 @@ public class Symlink extends jlowfuse.async.tasks.Symlink<Jext2Context> {
 			parentInode.addLink(inode, name);
 			inode.setSymlink(link);
 
-			Reply.entry(req, Util.inodeToEntryParam(context.superblock, inode));
+			context.inodes.retainInode(inode.getIno());
 
+			Reply.entry(req, Util.inodeToEntryParam(context.superblock, inode));
 		} catch (JExt2Exception e) {
 			Reply.err(req, e.getErrno());
 		}

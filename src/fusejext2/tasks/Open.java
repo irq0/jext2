@@ -17,12 +17,11 @@ public class Open extends jlowfuse.async.tasks.Open<Jext2Context> {
 	@Override
 	public void run() {
 		try {
-			Inode inode = context.inodes.openInode(ino);
+			Inode inode = context.inodes.getOpened(ino);
 			if (!inode.isRegularFile())
 				throw new OperationNotPermitted();
 
 			Reply.open(req, fi);
-
 		} catch (JExt2Exception e) {
 			Reply.err(req, e.getErrno());
 		}
