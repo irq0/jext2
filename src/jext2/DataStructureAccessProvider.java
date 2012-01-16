@@ -62,7 +62,7 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 			log.append(" source=");
 			log.append(strstack);
 
-			logger.fine(log.toString());
+			logger.finest(log.toString());
 		}
 
 	}
@@ -179,7 +179,7 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 	}
 
 	protected void release(KEY key, long times) {
-		log("release","key:" + key);
+		log("release","key:" + key + " times=" + times);
 		lock.lock();
 
 		ValueAndUsage ds = table.get(key);
