@@ -1,5 +1,6 @@
 package jext2;
 import java.nio.ByteBuffer;
+import java.util.logging.Level;
 
 import jext2.exceptions.InvalidArgument;
 import jext2.exceptions.IoError;
@@ -96,6 +97,16 @@ public class InodeAccess extends DataStructureAccessProvider<Long, Inode>{
 	}
 
 	public void forgetInode(long ino, long times) {
+		if (logger.isLoggable(Level.FINER)) {
+			String s = new StringBuffer()
+				.append("Forgetting Inode ")
+				.append(ino)
+				.append(" retain_count=")
+				.append(retainCount(ino))
+				.append(" to_forget=")
+				.append(times).toString();
+			logger.finer(s);
+		}			
 		release(ino, times);
 	}
 
