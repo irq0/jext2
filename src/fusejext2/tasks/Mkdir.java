@@ -42,7 +42,8 @@ public class Mkdir extends jlowfuse.async.tasks.Mkdir<Jext2Context> {
 			((DirectoryInode)parentInode).addLink(inode, name);
 			inode.sync();
 
-			context.inodes.retainInode(inode.getIno());
+			Inode cached = context.inodes.openInode(inode.getIno());
+			assert cached.equals(inode);
 
 			Reply.entry(req, Util.inodeToEntryParam(context.superblock, inode));
 		} catch (JExt2Exception e) {
