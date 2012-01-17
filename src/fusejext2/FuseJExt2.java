@@ -51,7 +51,7 @@ public class FuseJExt2 {
 	private static Jext2Context context;
 
 	private static JextThreadPoolExecutor service;
-	private static int numberOfThreads;
+	private static int numberOfThreads = 3;
 
 	private static CommandLineParser parser;
 	private static Options options;
