@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 export SCRIPTPATH=$(dirname $0)
 export JEXT2_PIDFILE="$(tempfile)"
 export LIBRARY_PATH="/usr/lib:/usr/local/lib:$HOME/opt/lib"
