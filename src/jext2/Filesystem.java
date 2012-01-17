@@ -73,16 +73,18 @@ public class Filesystem {
 		logger.addHandler(handler);
 	}
 
+	public static void initializeLoggingToConsole() {
+		ConsoleHandler handler = new ConsoleHandler();
+		handler.setFormatter(new Jext2Formatter());
+
+		logger.addHandler(handler);
+	}
+	
 	public static void initializeLogging() {
 		LogManager logman = LogManager.getLogManager();
 		logman.reset();
 
 		logger = Logger.getLogger("jext2");
-
-		ConsoleHandler handler = new ConsoleHandler();
-		handler.setFormatter(new Jext2Formatter());
-
-		logger.addHandler(handler);
 		logger.setLevel(Level.WARNING);
 	}
 

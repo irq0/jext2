@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash
+set -x
 export SCRIPTPATH=$(dirname $0)
 export JEXT2_PIDFILE="$(tempfile)"
 export LIBRARY_PATH="/usr/lib:/usr/local/lib:$HOME/opt/lib"
@@ -21,7 +22,7 @@ JAVA_COMMAND="$JAVA_COMMAND -jar $SCRIPTPATH/dist/jext2-plusdepends.jar"
 function launch_daemon()
 {
     /bin/sh <<EOF
-${*} >&- &
+nohup ${*} > /dev/null 2>&1 &
 pid=\$!
 echo \${pid}
 EOF

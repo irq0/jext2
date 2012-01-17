@@ -1,7 +1,6 @@
 package fusejext2.tasks;
 
 import fusejext2.Jext2Context;
-import jext2.Constants;
 import jlowfuse.FuseReq;
 import jlowfuse.Reply;
 
@@ -16,7 +15,7 @@ public class Forget extends jlowfuse.async.tasks.Forget<Jext2Context> {
 	public void run() {
 		if (ino != 1)
 			context.inodes.forgetInode(ino, nlookup);
-
+		
 		Reply.none(req);
 	}
 }

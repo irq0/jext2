@@ -257,6 +257,7 @@ public class FuseJExt2 {
 					e.getMessage());
 			System.exit(1);
 		}
+		
 	}
 
 
@@ -279,10 +280,6 @@ public class FuseJExt2 {
 
 		JLowFuseArgs fuseArgs = JLowFuseArgs.parseCommandline(new String[] {fuseCommandline});
 
-		if (daemon)
-			daemonize();
-
-
 		try {
 			RandomAccessFile blockDevFile = new RandomAccessFile(filename, "rw");
 			blockDev = blockDevFile.getChannel();
@@ -296,6 +293,12 @@ public class FuseJExt2 {
 		if (chan == null) {
 			System.out.println("Can't mount on " + mountpoint);
 			System.exit(1);
+		}
+		
+		if (daemon) {
+			daemonize();
+		} else {
+			Filesystem.initializeLoggingToConsole();
 		}
 
 		FuseShutdownHook hook = new FuseShutdownHook();
