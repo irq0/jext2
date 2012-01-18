@@ -71,7 +71,10 @@ public class DirectoryInode extends DataInode {
 		}
 
 		private void addToAccessProvider(DirectoryEntry entry) {
-			directoryEntries.add(entry);
+			/* There may be parallel executions of the iterator -> entry allready present */
+			if (!directoryEntries.hasEntry(entry)) {
+				directoryEntries.add(entry);
+			} 
 			directoryEntries.retain(entry);
 		}
 
@@ -84,7 +87,7 @@ public class DirectoryInode extends DataInode {
 			try {
 				if (last == null && block == null) {
 					if (!blockIter.hasNext())
-						throw new RuntimeException("DirectoryInode whithout data blocks!");
+						throw new RuntimeException("DirectoryInode whithout data blocks - Filesystem damaged!");
 
 					blockNr = blockIter.next();
 					block = blocks.read(blockNr);
@@ -111,7 +114,6 @@ public class DirectoryInode extends DataInode {
 					}
 					offset = 0;
 				}
-
 				// fetch next entry from block
 				DirectoryEntry entry = DirectoryEntry.fromByteBuffer(block, blockNr, offset);
 				addToAccessProvider(entry);
