@@ -101,10 +101,8 @@ public class BlockAccess {
 	public void write(long nr, ByteBuffer buf) throws IoError {
 		buf.rewind();
 		try {
-			blockdev.position((nr & 0xffffffff) * blocksize);
-
 			synchronizer.writeLock(nr);
-			blockdev.write(buf);
+			blockdev.write(buf,(nr & 0xffffffff) * blocksize); 
 			synchronizer.writeUnlock(nr);
 		} catch (IOException e) {
 			synchronizer.writeUnlock(nr);
