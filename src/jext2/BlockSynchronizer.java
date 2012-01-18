@@ -38,12 +38,11 @@ public class BlockSynchronizer {
 	private void removeLock(ReentrantReadWriteLock removeMe, long nr) {
 		locksLock.lock();
 
-		if (removeMe.hasQueuedThreads())
-			return;
-
-		ReentrantReadWriteLock inMap = locks.get(nr);
-		if (removeMe.equals(inMap)) {
-			locks.remove(removeMe);
+		if (!removeMe.hasQueuedThreads()) {
+			ReentrantReadWriteLock inMap = locks.get(nr);
+			if (removeMe.equals(inMap)) {
+				locks.remove(removeMe);
+			}
 		}
 
 		locksLock.unlock();
