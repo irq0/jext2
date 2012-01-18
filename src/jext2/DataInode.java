@@ -120,7 +120,7 @@ public class DataInode extends Inode {
 		int startOff = (int)(offset%blocksize);
 
 		if (startOff > 0)
-			end++;
+			end += 1;
 
 		buf.rewind();
 
@@ -129,14 +129,18 @@ public class DataInode extends Inode {
 			int bytesLeft = buf.capacity() - buf.position();
 
 			if (bytesLeft < blocksize || startOff > 0) { /* write partial block */
-				ByteBuffer disk = blockAccess.read(blockNrs.getFirst());
-				disk.position(startOff);
+				ByteBuffer onDisk = blockAccess.read(blockNrs.getFirst());
+				onDisk.position(startOff);
+				assert onDisk.limit() == blocksize;
 
-				buf.limit(Math.min(buf.position() + bytesLeft, disk.remaining()));
-				disk.put(buf);
-				blockAccess.write(blockNrs.getFirst(), disk);
+				buf.limit(buf.position() + Math.min(bytesLeft,
+													onDisk.remaining()));
+
+				onDisk.put(buf);
+				blockAccess.writeFromBufferUnsynchronized(blockNrs.getFirst() * blocksize, onDisk);
 			} else { /* write whole block */
 				buf.limit(buf.position() + blocksize);
+
 				blockAccess.writeFromBufferUnsynchronized(
 						(blockNrs.getFirst()) * blocksize, buf);
 			}
@@ -146,6 +150,7 @@ public class DataInode extends Inode {
 			accessData().unlockHierarchyChanges();
 		}
 		int written = buf.position();
+		assert written == buf.capacity();
 
 		/* increase inode.size if we grew the file */
 		if (offset + written > getSize()) { /* file grew */
@@ -153,9 +158,7 @@ public class DataInode extends Inode {
 			setSize(offset + written);
 		}
 
-		assert buf.position() == buf.limit();
-
-		return buf.position();
+		return written;
 	}
 
 	protected DataInode(long blockNr, int offset) {
