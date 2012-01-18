@@ -51,7 +51,7 @@ public class FuseJExt2 {
 	private static Jext2Context context;
 
 	private static JextThreadPoolExecutor service;
-	private static int numberOfThreads = 3;
+	private static int numberOfThreads = -1;
 
 	private static CommandLineParser parser;
 	private static Options options;
@@ -161,7 +161,7 @@ public class FuseJExt2 {
 				.withArgName("FILENAME")
 				.create("l"));
 		options.addOption(OptionBuilder
-				.withDescription("Number of threads to execute jext2 tasks")
+				.withDescription("Number of threads to execute jext2 tasks. Default: #CPU + 1")
 				.withLongOpt("threads")
 				.hasArg()
 				.withArgName("NTHREADS")
@@ -334,6 +334,7 @@ public class FuseJExt2 {
 		impls.unlinkImpl = TaskImplementations.getImpl("fusejext2.tasks.Unlink");
 		impls.writeImpl = TaskImplementations.getImpl("fusejext2.tasks.Write");
 
+		numberOfThreads = Runtime.getRuntime().availableProcessors() + 1;
 		service = new JextThreadPoolExecutor(numberOfThreads);
 
 		sess = JLowFuse.asyncTasksNew(fuseArgs, impls,
