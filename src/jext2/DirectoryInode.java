@@ -523,19 +523,18 @@ public class DirectoryInode extends DataInode {
 			prev = current;
 		}
 
-		assert toDelete != null;
-
 		if (prev != null)
 			assert prev.isUnused() || directoryEntries.usageCounter(prev) > 0;
-		assert directoryEntries.usageCounter(toDelete) > 0;
 
 		directoryLock.readLock().unlock();
 
 		/* Another thread could have deleted the entry */
-		if (toDelete.isUnused()) {
-			directoryEntries.release(toDelete);
+		if (toDelete == null || toDelete.isUnused()) {
+			if (toDelete != null) directoryEntries.release(toDelete);
 			throw new NoSuchFileOrDirectory();
 		}
+
+		assert directoryEntries.usageCounter(toDelete) > 0;
 
 		/*
 		 * When we are at the beginning of a block there is
