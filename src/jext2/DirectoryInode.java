@@ -63,64 +63,80 @@ public class DirectoryInode extends DataInode {
 		private Iterator<Long> blockIter;
 
 		DirectoryIterator() {
+			/* Note that I don't lock the hierarchyLock here. Changes to the blocks
+			 * of a directory are usually made using the functions in DirectoryInode.
+			 * This functions use the directoryLock which implies no changes to the
+			 * blocks happen here.
+			 */
 			blockIter = accessData().iterateBlocks();
-			this.previousEntry = null;
-			this.entry = fetchNextEntry(null);
-			addToAccessProvider(entry);
 
+			this.previousEntry = null;
+			this.entry = fetchFirstEntry();
 		}
 
-		private void addToAccessProvider(DirectoryEntry entry) {
-			/* There may be parallel executions of the iterator -> entry allready present */
-			if (!directoryEntries.hasEntry(entry)) {
-				directoryEntries.add(entry);
+		private void loadNextBlock() {
+			try {
+				blockNr = blockIter.next();
+				block = blocks.read(blockNr);
+				offset = 0;
+			} catch (IoError ignored) {
+			}
+		}
+
+		private DirectoryEntry readNextEntry() {
+			assert block != null;
+			assert offset <= superblock.getBlocksize();
+			assert blockNr >= superblock.getFirstDataBlock() && blockNr <= superblock.getBlocksCount();
+			
+			try {
+				DirectoryEntry entry = DirectoryEntry.fromByteBuffer(block, blockNr, offset);
+
+				if (!directoryEntries.hasEntry(entry)) {
+					directoryEntries.add(entry);
+				}
+
+				/* There may be parallel executions of the iterator -> Entry already in directoryEntries
+				 * In that case return the stored reference. If not this returns the argument
+				 */
+				return directoryEntries.retain(entry);
+			} catch (IoError ignored) {
+				return null;
+			}
+		}
+
+		private DirectoryEntry fetchFirstEntry() {
+			assert previousEntry == null;
+
+			if (!blockIter.hasNext())
+				throw new RuntimeException("DirectoryInode whithout data blocks - Filesystem damaged!");
+
+			loadNextBlock();
+			return readNextEntry();
+		}
+
+		private DirectoryEntry fetchNextEntry(DirectoryEntry last) {
+			assert last != null;
+
+			if (last.getRecLen() != 0) {
+				offset += last.getRecLen();
 			} 
-			directoryEntries.retain(entry);
+
+			// entry was last in this block, load next block
+			if (offset >= superblock.getBlocksize()) {
+				if (blockIter.hasNext()) {
+					loadNextBlock();
+				} else {
+					return null;
+				}
+			}
+
+			// fetch next entry from block
+			return readNextEntry();
 		}
 
 		@Override
 		public boolean hasNext() {
 			return (entry != null);
-		}
-
-		private DirectoryEntry fetchNextEntry(DirectoryEntry last) {
-			try {
-				if (last == null && block == null) {
-					if (!blockIter.hasNext())
-						throw new RuntimeException("DirectoryInode whithout data blocks - Filesystem damaged!");
-
-					blockNr = blockIter.next();
-					block = blocks.read(blockNr);
-
-					DirectoryEntry entry = DirectoryEntry.fromByteBuffer(block, blockNr, 0);
-					addToAccessProvider(entry);
-					return entry;
-				}
-
-				assert last != null;
-				if (last.getRecLen() != 0) {
-					offset += last.getRecLen();
-				} /*else {
-				    offset = superblock.getBlocksize();
-				}
-				 */
-				// entry was last in this block
-				if (offset >= superblock.getBlocksize()) {
-					if (blockIter.hasNext()) {
-						blockNr = blockIter.next();
-						block = blocks.read(blockNr);
-					} else {
-						return null;
-					}
-					offset = 0;
-				}
-				// fetch next entry from block
-				DirectoryEntry entry = DirectoryEntry.fromByteBuffer(block, blockNr, offset);
-				addToAccessProvider(entry);
-				return entry;
-			} catch (IoError e) {
-				return null;
-			}
 		}
 
 		@Override
@@ -129,7 +145,6 @@ public class DirectoryInode extends DataInode {
 
 			this.previousEntry = this.entry;
 			this.entry = fetchNextEntry(previousEntry);
-
 
 			if (releaseMe != null) {
 				assert !releaseMe.equals(this.previousEntry);
