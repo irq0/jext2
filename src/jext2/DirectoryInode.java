@@ -98,6 +98,9 @@ public class DirectoryInode extends DataInode {
 				/* There may be parallel executions of the iterator -> Entry already in directoryEntries
 				 * In that case return the stored reference. If not this returns the argument
 				 */
+
+				assert directoryEntries.hasEntry(entry);
+
 				return directoryEntries.retain(entry);
 			} catch (IoError ignored) {
 				return null;
