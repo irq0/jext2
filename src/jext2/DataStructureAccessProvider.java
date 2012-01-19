@@ -109,7 +109,6 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 	protected VAL open(KEY key) throws JExt2Exception {
 		lock.lock();
 		ValueAndUsage ds = table.get(key);
-		lock.unlock();
 
 		if (ds == null) {
 			add(key, createInstance(key));
@@ -118,6 +117,8 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 
 		assert ds != null;
 		ds.usage += 1;
+
+		lock.unlock();
 
 		log("open",":" + key);
 		return ds.value;
@@ -136,11 +137,12 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 			log("retain","nosuccess:" + key);
 			return null;
 		} else {
+			ds.usage += 1;
 			lock.unlock();
 
-			assert ds.usage >= 0;
+			assert ds.usage > 0;
 			assert ds.value != null;
-			ds.usage += 1;
+			
 			log("retain","success:" + key);
 			return ds.value;
 		}
