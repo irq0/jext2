@@ -37,6 +37,8 @@ public class JextThreadFactory implements ThreadFactory {
 					.append("\n")
 					.append(ExceptionUtils.getFullStackTrace(e))
 					.toString());
+				logger.severe("Shutting down due to unexpected exception..");
+				System.exit(23);
 			}
 		});
 
