@@ -13,7 +13,6 @@ import jext2.exceptions.IoError;
  * Access to the filesystem blocks
  */
 public class BlockAccess {
-	BlockSynchronizer synchronizer = BlockSynchronizer.getInstance();
 	private int blocksize = Constants.EXT2_MIN_BLOCK_SIZE;
 	private FileChannel blockdev;
 	private static BlockAccess instance;
@@ -34,12 +33,8 @@ public class BlockAccess {
 		ByteBuffer buf = ByteBuffer.allocate(blocksize);
 		try {
 			buf.order(ByteOrder.BIG_ENDIAN);
-
-			synchronizer.readLock(nr);
 			blockdev.read(buf,((nr & 0xffffffff) * blocksize));
-			synchronizer.readUnlock(nr);
 		} catch (IOException e) {
-			synchronizer.readUnlock(nr);
 			throw new IoError(e.getMessage());
 		}
 
@@ -49,12 +44,8 @@ public class BlockAccess {
 	public void readToBuffer(long nr, long offsetInBlock, ByteBuffer buf) throws IoError {
 		try {
 			buf.order(ByteOrder.BIG_ENDIAN);
-
-			synchronizer.readLock(nr);
 			blockdev.read(buf, ((nr & 0xffffffff) * blocksize) + offsetInBlock);
-			synchronizer.readUnlock(nr);
 		} catch (IOException e) {
-			synchronizer.readUnlock(nr);
 			throw new IoError(e.getMessage());
 		}
 	}
@@ -101,11 +92,8 @@ public class BlockAccess {
 	public void write(long nr, ByteBuffer buf) throws IoError {
 		buf.rewind();
 		try {
-			synchronizer.writeLock(nr);
 			blockdev.write(buf,(nr & 0xffffffff) * blocksize); 
-			synchronizer.writeUnlock(nr);
 		} catch (IOException e) {
-			synchronizer.writeUnlock(nr);
 			throw new IoError(e.getMessage());
 		}
 	}
@@ -146,12 +134,9 @@ public class BlockAccess {
 
 		try {
 			buf.rewind();
-			synchronizer.writeLock(nr);
 			blockdev.write(buf, (((nr & 0xffffffff) * blocksize) + offset));
-			synchronizer.writeUnlock(nr);
 
 		} catch (IOException e) {
-			synchronizer.writeUnlock(nr);
 			throw new IoError(e.getMessage());
 		}
 	}
@@ -174,14 +159,11 @@ public class BlockAccess {
 		long[] result = new long[numEntries];
 		ByteBuffer buffer = ByteBuffer.allocate(numEntries*4);
 
-		synchronizer.readLock(dataBlock);
 		try {
 			readToBufferUnsynchronized(dataBlock*blocksize + start*4, buffer);
 		} catch (IoError e) {
-			synchronizer.readUnlock(dataBlock);
 			throw e;
 		}
-		synchronizer.readUnlock(dataBlock);
 
 		for (int i=0; i<numEntries; i++) {
 			result[i] = Ext2fsDataTypes.getLE32U(buffer, i*4);
@@ -205,14 +187,11 @@ public class BlockAccess {
 		LinkedList<Long> result = new LinkedList<Long>();
 		ByteBuffer buffer = ByteBuffer.allocate(numEntries*4);
 
-		synchronizer.readLock(dataBlock);
 		try {
 			readToBufferUnsynchronized(dataBlock*blocksize + start*4, buffer);
 		} catch (IoError e) {
-			synchronizer.readUnlock(dataBlock);
 			throw e;
 		}
-		synchronizer.readUnlock(dataBlock);
 
 		for (int i=0; i<numEntries; i++) {
 			long tmp = Ext2fsDataTypes.getLE32U(buffer, i*4);
