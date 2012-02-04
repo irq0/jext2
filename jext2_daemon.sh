@@ -35,5 +35,6 @@ if ps -p "${pid}" 2>&1 > /dev/null; then
 else
     $SCRIPTPATH/jext2.sh -h
     echo "Starting jext2 in daemon mode failed!"
+    echo "NOTE: $0 doesn't report errors back to the console. Please use jext.sh to get an error message!"
 fi
 
