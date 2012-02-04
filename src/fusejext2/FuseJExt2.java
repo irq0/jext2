@@ -284,7 +284,8 @@ public class FuseJExt2 {
 			RandomAccessFile blockDevFile = new RandomAccessFile(filename, "rw");
 			blockDev = blockDevFile.getChannel();
 		} catch (FileNotFoundException e) {
-			System.out.println("Can't open block device / file");
+			System.out.println("Can't open block device or file " + filename);
+			System.out.println(e.getMessage());
 			System.exit(1);
 		}
 
