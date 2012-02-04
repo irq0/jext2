@@ -74,15 +74,15 @@ public class DataInode extends Inode {
 			int count;
 
 			/**
-			 * Sparse file support:
+			 * Note on the sparse file support:
 			 * getBlocks will return null if there is no data block for this
 			 * logical address. So just move the position count blocks forward.
 			 */
 
 			if (b == null) { /* hole */
 				count = 1;
-				result.limit(result.position() + count * blocksize);
-				result.position(result.position() + count * blocksize);
+				result.limit(result.position() + blocksize);
+				result.position(result.position() + blocksize);
 			} else { /* blocks */
 				count = b.size();
 				result.limit(result.position() + count * blocksize);
@@ -95,6 +95,11 @@ public class DataInode extends Inode {
 		}
 
 		result.position(firstInBuffer);
+
+
+		assert result.limit() - result.position() == size :
+			"Result size does not match requested size";
+
 		return result;
 	}
 
