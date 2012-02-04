@@ -59,19 +59,23 @@ public class DataInode extends Inode {
 	 * @throws FileTooLarge
 	 * @throws IoError
 	 */
-	public ByteBuffer readData(int size, long offset) throws JExt2Exception, FileTooLarge {
-		ByteBuffer result = ByteBuffer.allocateDirect(size);
+	public ByteBuffer readData(int size, long fileOffset) throws JExt2Exception, FileTooLarge {
+		ByteBuffer buf = ByteBuffer.allocateDirect(size);
 
 		int blocksize = superblock.getBlocksize();
-		long start = offset / blocksize;
-		long max = (size/blocksize) + start;
 
-		offset = offset % blocksize;
-		int firstInBuffer = (int) offset;
+		long i = 0;
+		long firstBlock = fileOffset / blocksize;
+		long approxBlocks = (size / blocksize) + 1;
 
-		while (start < max) {
-			LinkedList<Long> b = accessData().getBlocks(start, max-start);
-			int count;
+		long offset = fileOffset % blocksize;
+
+		while (i < approxBlocks) {
+			long start = firstBlock + i;
+			long stop = firstBlock + approxBlocks;
+
+			LinkedList<Long> b = accessData().getBlocks(start, stop);
+			int blocksRead;
 
 			/**
 			 * Note on the sparse file support:
@@ -80,27 +84,47 @@ public class DataInode extends Inode {
 			 */
 
 			if (b == null) { /* hole */
-				count = 1;
-				result.limit(result.position() + blocksize);
-				result.position(result.position() + blocksize);
+				blocksRead = 1;
+
+				int unboundedLimit = buf.position() + blocksize;
+				int limit = Math.min(unboundedLimit, buf.capacity());
+
+				assert limit <= buf.capacity() :
+					"New position, limit " + limit + " is beyond buffer's capacity, " + buf;
+
+				buf.limit(limit);
+				buf.position(limit);
+
+				assert buf.limit() == buf.position();
+
 			} else { /* blocks */
-				count = b.size();
-				result.limit(result.position() + count * blocksize);
-				blockAccess.readToBufferUnsynchronized(b.getFirst() * blocksize + offset, result);
+				blocksRead = b.size();
+
+				long pos = b.getFirst() * blocksize + offset;
+				int unboundedLimit = buf.position() + blocksRead * blocksize;
+				int limit = Math.min(unboundedLimit, buf.capacity());
+
+				assert limit <= buf.capacity() :
+					"New limit " + limit + " is beyond buffer's capacity, " + buf;
+
+				buf.limit(limit);
+				blockAccess.readToBufferUnsynchronized(pos, buf);
 			}
 
-			start += count;
+			i += blocksRead;
 			offset = 0;
+
 			accessData().unlockHierarchyChanges();
+
+			if (buf.capacity() == buf.limit())
+				break;
 		}
 
-		result.position(firstInBuffer);
+		assert buf.position() == buf.limit() : "Buffer wasn't filled completely";
+		assert buf.limit() == size : "Read buffer size does not match request size";
 
-
-		assert result.limit() - result.position() == size :
-			"Result size does not match requested size";
-
-		return result;
+		buf.rewind();
+		return buf;
 	}
 
 	/**
