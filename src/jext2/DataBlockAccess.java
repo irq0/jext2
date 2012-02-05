@@ -452,21 +452,19 @@ public class DataBlockAccess {
 					break;
 				}
 			}
-			/* NOTICE: The lock is not returned here. This must be done by the caller */
+			assert hierarchyLock.getReadHoldCount() == 1 : "Returning without holding lock";
 			return result;
 		}
 
-		assert hierarchyLock.getReadHoldCount() == 0 ||
-				hierarchyLock.getReadHoldCount() == 1;
+		assert hierarchyLock.getReadHoldCount() == 1 : "Should have a read lock around";
 
 		/* Next simple case - plain lookup mode */
 		if (!create) {
-			assert hierarchyLock.getReadHoldCount() == 1;
+			assert hierarchyLock.getReadHoldCount() == 1 : "Returning without holding lock";
 			return null;
 		}
 
-		if (hierarchyLock.getReadHoldCount() > 0)
-			hierarchyLock.readLock().unlock();
+		hierarchyLock.readLock().unlock();
 
 		/* Okay, we need to do block allocation. */
 		hierarchyLock.writeLock().lock();
@@ -481,6 +479,7 @@ public class DataBlockAccess {
 		hierarchyLock.writeLock().unlock();
 
 		/* Again return with an open read lock */
+		assert hierarchyLock.getReadHoldCount() == 1 : "Returning without holding lock";
 		return result;
 	}
 
