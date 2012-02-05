@@ -34,6 +34,8 @@ public class JextThreadFactory implements ThreadFactory {
 					.append(name)
 					.append("\n")
 					.append(ExceptionUtils.getMessage(e))
+					.append(", ")
+					.append(ExceptionUtils.getRootCauseMessage(e))
 					.append("\n")
 					.append(ExceptionUtils.getFullStackTrace(e))
 					.toString());
