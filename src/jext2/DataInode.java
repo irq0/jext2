@@ -119,12 +119,12 @@ public class DataInode extends Inode {
 			 * occasionally for unknown reasons.
 			 */
 			try {
-				accessData().unlockHierarchyChanges();
+				accessData().getHierarchyLock().readLock().unlock();
 			} catch (IllegalMonitorStateException e) {
 				Logger log = Filesystem.getLogger();
-				log.warning("IllegalMonitorStateException encountered in readData");
-				log.warning(String.format("context for exception: blocks=%s i=%d approxBlocks=%d buf=%s readlock=%s lock.readlock.holds=%s",
-													b, i, approxBlocks, buf, accessData().getHierarchyLock(), accessData().getHierarchyLock().getReadHoldCount()));
+				log.warning("IllegalMonitorStateException encountered in readData, inode=" + this);
+				log.warning(String.format("context for exception: blocks=%s i=%d approxBlocks=%d off=%d buf=%s readlock=%s lock.readlock.holds=%s",
+													b, i, approxBlocks, fileOffset, buf, accessData().getHierarchyLock(), accessData().getHierarchyLock().getReadHoldCount()));
 			}
 
 			if (buf.capacity() == buf.limit())
