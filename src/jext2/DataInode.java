@@ -3,6 +3,7 @@ package jext2;
 import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.logging.Logger;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
@@ -114,7 +115,17 @@ public class DataInode extends Inode {
 			i += blocksRead;
 			offset = 0;
 
-			accessData().unlockHierarchyChanges();
+			/* This should be removed soon. IllegalMonitorStateException happen
+			 * occasionally for unknown reasons.
+			 */
+			try {
+				accessData().unlockHierarchyChanges();
+			} catch (IllegalMonitorStateException e) {
+				Logger log = Filesystem.getLogger();
+				log.warning("IllegalMonitorStateException encountered in readData");
+				log.warning(String.format("context for exception: blocks=%s i=%d approxBlocks=%d buf=%s readlock=%s lock.readlock.holds=%s",
+													b, i, approxBlocks, buf, accessData().getHierarchyLock(), accessData().getHierarchyLock().getReadHoldCount()));
+			}
 
 			if (buf.capacity() == buf.limit())
 				break;

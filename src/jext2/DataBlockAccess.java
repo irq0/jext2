@@ -31,6 +31,10 @@ public class DataBlockAccess {
 	 */
 	private ReentrantReadWriteLock hierarchyLock = new ReentrantReadWriteLock(false);
 
+	ReentrantReadWriteLock getHierarchyLock() {
+		return hierarchyLock;
+	}
+
 	// used by findGoal
 	private long lastAllocLogicalBlock = 0;
 	private long lastAllocPhysicalBlock = 0;
