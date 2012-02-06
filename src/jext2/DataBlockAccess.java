@@ -29,7 +29,7 @@ public class DataBlockAccess {
 	 * inode's block hierarchy. The linux implementation has something simillar
 	 * called the truncate_lock
 	 */
-	private ReentrantReadWriteLock hierarchyLock = new ReentrantReadWriteLock(true);
+	private ReentrantReadWriteLock hierarchyLock = new ReentrantReadWriteLock(false);
 
 	// used by findGoal
 	private long lastAllocLogicalBlock = 0;
