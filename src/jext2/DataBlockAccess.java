@@ -863,6 +863,7 @@ public class DataBlockAccess {
 		return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)
 		.append("lastAllocLogicalBlock", lastAllocLogicalBlock)
 		.append("lastAllocPhysicalBlock", lastAllocPhysicalBlock)
+		.append("hierarchyLock", hierarchyLock)
 		.append("hierarchy", dumpHierachy()).toString();
 	}
 
