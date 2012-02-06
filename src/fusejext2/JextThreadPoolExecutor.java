@@ -2,7 +2,6 @@ package fusejext2;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -13,6 +12,44 @@ import jext2.Filesystem;
 public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 	Logger logger = Filesystem.getLogger();
 
+
+	class ExecutorStatusDumper extends Thread {
+		int intervallInMillis;
+		public ExecutorStatusDumper(int intervalInMillis) {
+			this.intervallInMillis = intervalInMillis;
+			setDaemon(true);
+			setName("jext2executorstatus");
+		}
+
+		@Override
+		public void run() {
+			while (true) {
+				logger.info(new StringBuilder()
+				.append("Executor status")
+				.append(" active_threads=")
+				.append(getActiveCount())
+				.append(" queue_length=")
+				.append(getQueue().size())
+				.append(" cur_threads_in_pool=")
+				.append(getPoolSize())
+				.append(" largest_pool_size=")
+				.append(getLargestPoolSize())
+				.append(" approx_completed_tasks=")
+				.append(getCompletedTaskCount())
+				.toString());
+
+				try {
+					sleep(intervallInMillis);
+				} catch (InterruptedException ignored) {
+				}
+			}
+		}
+	}
+
+	public void activateStatusDump(int intervallInMillis) {
+		ExecutorStatusDumper t = new ExecutorStatusDumper(intervallInMillis);
+		t.start();
+	}
 
 	public JextThreadPoolExecutor(int numberOfThreads) {
 		this(numberOfThreads,

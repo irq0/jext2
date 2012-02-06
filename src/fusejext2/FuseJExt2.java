@@ -45,6 +45,8 @@ public class FuseJExt2 {
 	private static String filename;
 
 	private static boolean daemon = false;
+	private static boolean logExecutorStatus = false;
+	private static int logExecutorStatusIntervallInMillis = 1000;
 	private static String fuseCommandline = "-o foo,subtype=jext2";
 
 	private static TaskImplementations<Jext2Context> impls;
@@ -167,6 +169,12 @@ public class FuseJExt2 {
 				.withArgName("NTHREADS")
 				.create("n"));
 		options.addOption(OptionBuilder
+				.withDescription("Periodically log executor status (Loglevel INFO)")
+				.withLongOpt("log-executor")
+				.hasArg()
+				.withArgName("TIME_IN_MILLIS")
+				.create("E"));
+		options.addOption(OptionBuilder
 				.withDescription("Debug output, possible values:\n" +
 						"SEVERE (highest value)\n" +
 						"WARNING\n" +
@@ -223,6 +231,11 @@ public class FuseJExt2 {
 				daemon = true;
 			}
 
+			if (cmd.hasOption("E")) {
+				logExecutorStatus = true;
+				logExecutorStatusIntervallInMillis = Integer.parseInt(cmd.getOptionValue("E","5000"));
+			}
+
 			String[] leftover = cmd.getArgs();
 			if (leftover.length != 2) {
 				throw new ParseException("No <block device> and/or <mountpoint> given!");
@@ -257,7 +270,7 @@ public class FuseJExt2 {
 					e.getMessage());
 			System.exit(1);
 		}
-		
+
 	}
 
 
@@ -295,7 +308,7 @@ public class FuseJExt2 {
 			System.out.println("Can't mount on " + mountpoint);
 			System.exit(1);
 		}
-		
+
 		if (daemon) {
 			daemonize();
 		} else {
@@ -337,6 +350,9 @@ public class FuseJExt2 {
 
 		numberOfThreads = Runtime.getRuntime().availableProcessors() + 1;
 		service = new JextThreadPoolExecutor(numberOfThreads);
+
+		if (logExecutorStatus)
+			service.activateStatusDump(logExecutorStatusIntervallInMillis);
 
 		sess = JLowFuse.asyncTasksNew(fuseArgs, impls,
 				service, context);
