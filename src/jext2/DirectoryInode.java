@@ -87,7 +87,7 @@ public class DirectoryInode extends DataInode {
 			assert block != null;
 			assert offset <= superblock.getBlocksize();
 			assert blockNr >= superblock.getFirstDataBlock() && blockNr <= superblock.getBlocksCount();
-			
+
 			try {
 				DirectoryEntry entry = DirectoryEntry.fromByteBuffer(block, blockNr, offset);
 				return directoryEntries.retainAdd(entry);
@@ -111,7 +111,7 @@ public class DirectoryInode extends DataInode {
 
 			if (last.getRecLen() != 0) {
 				offset += last.getRecLen();
-			} 
+			}
 
 			// entry was last in this block, load next block
 			if (offset >= superblock.getBlocksize()) {
@@ -539,7 +539,8 @@ public class DirectoryInode extends DataInode {
 			toDelete.setFileType(DirectoryEntry.FILETYPE_UNKNOWN);
 			toDelete.write();
 
-			directoryEntries.release(toDelete);
+			directoryEntries.remove(toDelete);
+
 			/*
 			 * set the record length of the predecessor to skip
 			 * the toDelete entry
@@ -549,8 +550,8 @@ public class DirectoryInode extends DataInode {
 			prev.setRecLen(prev.getRecLen() + toDelete.getRecLen());
 			prev.write(); // ok here: is meta data
 
-			directoryEntries.release(toDelete);
-			directoryEntries.release(prev);
+			directoryEntries.remove(toDelete);
+			directoryEntries.remove(prev);
 		}
 
 		directoryLock.writeLock().unlock();

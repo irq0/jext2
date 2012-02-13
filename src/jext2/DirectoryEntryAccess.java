@@ -21,6 +21,12 @@ public class DirectoryEntryAccess extends DataStructureAccessProvider<String, Di
 		add(entry.getName(), entry);
 	}
 
+	public void remove(DirectoryEntry entry) {
+		assert entry != null;
+
+		remove(entry.getName());
+	}
+
 	public void release(DirectoryEntry entry) {
 		assert entry != null;
 
@@ -41,32 +47,32 @@ public class DirectoryEntryAccess extends DataStructureAccessProvider<String, Di
 		if (entry.isUnused()) return 0;
 		return usageCounter(entry.getName());
 	}
-	
+
 	public DirectoryEntry retainAdd(DirectoryEntry entry) {
 		assert entry != null;
 		if (entry.isUnused()) return entry;
-		
+
 		DirectoryEntry result;
-		
+
 		lock.lock();
 		if (table.containsKey(entry.getName())) {
 			ValueAndUsage d = table.get(entry.getName());
 			d.usage += 1;
-			
+
 			result = d.value;
 		} else {
 			ValueAndUsage d = new ValueAndUsage();
 			d.usage = 1;
 			d.value = entry;
-			
+
 			table.put(entry.getName(), d);
-			
+
 			result = entry;
 		}
 		lock.unlock();
-		
+
 		return result;
-		
+
 	}
 
 	public boolean hasEntry(DirectoryEntry entry) {
