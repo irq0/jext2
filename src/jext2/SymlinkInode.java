@@ -17,7 +17,7 @@ public class SymlinkInode extends DataInode {
 
 	public int FAST_SYMLINK_MAX=Constants.EXT2_N_BLOCKS * 4;
 
-	private ReentrantReadWriteLock symlinkLock = new ReentrantReadWriteLock(true);
+	private ReentrantReadWriteLock symlinkLock = new JextReentrantReadWriteLock(true);
 
 	@NotThreadSafe(useLock=true)
 	private String readSlowSymlink() throws JExt2Exception, FileTooLarge {

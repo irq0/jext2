@@ -26,7 +26,7 @@ public class DirectoryInode extends DataInode {
 	public DirectoryEntryAccess directoryEntries = DirectoryEntryAccess.createForDirectoy(this);
 
 	private ReentrantReadWriteLock directoryLock =
-			new ReentrantReadWriteLock(true);
+			new JextReentrantReadWriteLock(true);
 
 	/**
 	 * Lock to use when iterating a directory with {@link #iterateDirectory()}
