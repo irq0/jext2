@@ -170,24 +170,29 @@ public class DataInode extends Inode {
 
 			if (bytesLeft < blocksize || startOff > 0) { /* write partial block */
 				ByteBuffer onDisk = blockAccess.read(blockNrs.getFirst());
+
 				onDisk.position(startOff);
+
 				assert onDisk.limit() == blocksize;
 
 				buf.limit(buf.position() + Math.min(bytesLeft,
 													onDisk.remaining()));
 
 				onDisk.put(buf);
-				blockAccess.writeFromBufferUnsynchronized(blockNrs.getFirst() * blocksize, onDisk);
+
+				onDisk.position(startOff);
+				blockAccess.writeFromBufferUnsynchronized((blockNrs.getFirst() & 0xffffffff) * blocksize, onDisk);
 			} else { /* write whole block */
 				buf.limit(buf.position() + blocksize);
 
 				blockAccess.writeFromBufferUnsynchronized(
-						(blockNrs.getFirst()) * blocksize, buf);
+						(blockNrs.getFirst() & 0xffffffff) * blocksize, buf);
 			}
 
 			start += 1;
 			startOff = 0;
 			accessData().unlockHierarchyChanges();
+
 		}
 		int written = buf.position();
 		assert written == buf.capacity();
