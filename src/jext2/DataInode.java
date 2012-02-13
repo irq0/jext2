@@ -23,7 +23,6 @@ public class DataInode extends Inode {
 	private long[] block;
 	private long blocks = 0;
 
-
 	public final long getBlocks() {
 		return this.blocks;
 	}
@@ -136,7 +135,11 @@ public class DataInode extends Inode {
 		}
 
 		assert buf.position() == buf.limit() : "Buffer wasn't filled completely";
-		assert buf.limit() == size : "Read buffer size does not match request size";
+//		assert buf.limit() == size : "Read buffer size does not match request size";
+
+		if (buf.limit() > getSize())
+			buf.limit((int)getSize());
+
 
 		buf.rewind();
 		return buf;
