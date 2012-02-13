@@ -71,6 +71,10 @@ public class DataInode extends Inode {
 
 		long offset = fileOffset % blocksize;
 
+		long maxBlocks = this.getBlocks()/(superblock.getBlocksize()/512);
+		if (approxBlocks > maxBlocks)
+			approxBlocks = maxBlocks;
+
 		while (i < approxBlocks) {
 			long start = firstBlock + i;
 			long stop = firstBlock + approxBlocks;
