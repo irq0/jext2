@@ -60,16 +60,32 @@ public class DataInode extends Inode {
 	 * @throws IoError
 	 */
 	public ByteBuffer readData(int size, long fileOffset) throws JExt2Exception, FileTooLarge {
+		/* Returning null may break things somewhere..
+		 * Zero length buffer breaks something in jlowfuse's c code */
+		if (getSize() == 0)
+			return ByteBuffer.allocateDirect(1);
+
+		/*
+		 * size may be larger than the inode.size, it doesn't make sense to return
+		 * 4k of zeros
+		 */
+		if (size > getSize())
+			size = (int)getSize();
+
+
 		ByteBuffer buf = ByteBuffer.allocateDirect(size);
 
 		int blocksize = superblock.getBlocksize();
 
 		long i = 0;
 		long firstBlock = fileOffset / blocksize;
-		long approxBlocks = (size / blocksize) + 1;
-
 		long offset = fileOffset % blocksize;
 
+		/*
+		 * just as size may be larger than the inode's data, the number of blocks
+		 * may also be.
+		 */
+		long approxBlocks = (size / blocksize) + 1;
 		long maxBlocks = this.getBlocks()/(superblock.getBlocksize()/512);
 		if (approxBlocks > maxBlocks)
 			approxBlocks = maxBlocks;
@@ -81,7 +97,7 @@ public class DataInode extends Inode {
 			LinkedList<Long> b = accessData().getBlocks(start, stop);
 			int blocksRead;
 
-			/**
+			/*
 			 * Note on the sparse file support:
 			 * getBlocks will return null if there is no data block for this
 			 * logical address. So just move the position count blocks forward.
@@ -135,7 +151,7 @@ public class DataInode extends Inode {
 		}
 
 		assert buf.position() == buf.limit() : "Buffer wasn't filled completely";
-//		assert buf.limit() == size : "Read buffer size does not match request size";
+		assert buf.limit() == size : "Read buffer size does not match request size";
 
 		if (buf.limit() > getSize())
 			buf.limit((int)getSize());
