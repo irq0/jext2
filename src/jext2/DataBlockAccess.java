@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.Iterator;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.logging.Logger;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
@@ -651,11 +652,12 @@ public class DataBlockAccess {
 			groupFreed = 0;
 			for (int i=0; i<count; i++) {
 				if (!(bitmap.isSet(groupIndex + i))) {
-					throw new RuntimeException("Bit allready cleared for block" +
-							" nr=" + (blockNr+i) +
-							" groupIndex=" + (groupIndex+i) +
-							" bitmap=" + bitmap.getBitStringContaining(groupIndex + i));
-				} else if (groupIndex + i > superblock.getBlocksPerGroup()) {
+					Logger log = Filesystem.getLogger();
+					log.severe(String.format("Bit allready cleared! block=%d groupIndex=%d bitmap=%s inode=%d",
+							(blockNr+i), (groupIndex+i),  bitmap.getBitStringContaining(groupIndex + i), inode.getIno()));
+				}
+
+				if (groupIndex + i > superblock.getBlocksPerGroup()) {
 					groupFreed++;
 				} else {
 					groupFreed++;
