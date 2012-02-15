@@ -15,6 +15,7 @@ public class InodeAccess extends DataStructureAccessProvider<Long, Inode>{
 	private static BlockGroupAccess blockGroups = BlockGroupAccess.getInstance();
 
 	private InodeAccess() {
+		super(1000);
 	}
 
 	public static Inode readFromByteBuffer(ByteBuffer buf) throws IoError {

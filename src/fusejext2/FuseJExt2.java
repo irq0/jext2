@@ -53,7 +53,7 @@ public class FuseJExt2 {
 	private static Jext2Context context;
 
 	private static JextThreadPoolExecutor service;
-	private static int numberOfThreads = -1;
+	public static int numberOfThreads = -1; /* XXX datastructureaccessprovider accesses this, mach es besser! */
 
 	private static CommandLineParser parser;
 	private static Options options;

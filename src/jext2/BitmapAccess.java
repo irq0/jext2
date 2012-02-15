@@ -15,6 +15,7 @@ public class BitmapAccess extends DataStructureAccessProvider<Long, Bitmap>{
 	private static BlockAccess blocks = BlockAccess.getInstance();
 
 	private BitmapAccess() {
+		super(100);
 	}
 
 	public Bitmap openInodeBitmap(BlockGroupDescriptor group) throws JExt2Exception{

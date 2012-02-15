@@ -7,6 +7,7 @@ public class DirectoryEntryAccess extends DataStructureAccessProvider<String, Di
 
 
 	private DirectoryEntryAccess(DirectoryInode inode) {
+		super(100);
 		this.inode = inode;
 	}
 
@@ -53,20 +54,23 @@ public class DirectoryEntryAccess extends DataStructureAccessProvider<String, Di
 		if (entry.isUnused()) return entry;
 
 		DirectoryEntry result;
-
-		if (table.containsKey(entry.getName())) {
-			Data d = table.get(entry.getName());
+		
+		Data d = table.get(entry.getName());
+		if (d != null) {
+			d.lock();
 			d.usage += 1;
-
 			result = d.value;
+			d.unlock();
+
 		} else {
-			Data d = new Data();
+			d = new Data();
+			d.lock();
 			d.usage = 1;
 			d.value = entry;
+			result = entry;
 
 			table.put(entry.getName(), d);
-
-			result = entry;
+			d.unlock();
 		}
 
 		return result;

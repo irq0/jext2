@@ -149,7 +149,9 @@ public class DirectoryInode extends DataInode {
 				directoryEntries.release(releaseMe);
 			}
 
-			assert directoryEntries.hasEntry(this.previousEntry);
+			if (! directoryEntries.hasEntry(this.previousEntry))
+				directoryEntries.retainAdd(previousEntry);
+
 			return this.previousEntry;
 		}
 

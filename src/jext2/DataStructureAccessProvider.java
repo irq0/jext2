@@ -11,6 +11,8 @@ import java.util.logging.Logger;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.text.StrBuilder;
 
+import fusejext2.FuseJExt2;
+
 import jext2.exceptions.JExt2Exception;
 
 public abstract class DataStructureAccessProvider<KEY,VAL> {
@@ -76,8 +78,8 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 
 	}
 
-	protected DataStructureAccessProvider() {
-		table = new ConcurrentHashMap<KEY, Data>();
+	protected DataStructureAccessProvider(int initialCapacity) {
+		table = new ConcurrentHashMap<KEY, Data>(initialCapacity, 0.75f, (int)(Math.ceil(FuseJExt2.numberOfThreads * 1.5f)));
 	}
 
 
@@ -85,14 +87,24 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 
 
 	protected long usageCounter(KEY key) {
-		Data ds = getValueAndUsage(key);
-
-		if (ds == null || ds.usage < 0) {
+		Data ds = getDataStructure(key);
+		long usage;
+		
+		if (ds == null) {
 			log("usageCounter","key:" + key + " counter:-1");
 			return -1;
 		} else {
+			ds.lock();
+
 			log("usageCounter","key:" + key + " counter:" + ds.usage);
-			return ds.usage;
+			
+			if (ds.usage < 0)
+				usage = -1;
+			else 
+				usage = ds.usage;
+			
+			ds.unlock();
+			return usage;
 		}
 	}
 
@@ -103,10 +115,12 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 		assert value != null;
 
 		Data ds = new Data();
+		ds.lock();
 		ds.value = value;
 
 		table.put(key, ds);
 		log("add","key:" + key);
+		ds.unlock();
 	}
 
 
@@ -114,21 +128,33 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 	 * Open the entry. Increases usage counter and creates an instance if necessary
 	 */
 	protected VAL open(KEY key) throws JExt2Exception {
-		Data ds = table.get(key);
-
-		if (ds == null) {
-			add(key, createInstance(key));
-			ds = getValueAndUsage(key);
+		Data ds = getDataStructure(key);
+		VAL result;
+		
+		if (ds != null) {
+			ds.lock();
+			ds.usage += 1;
+			result = ds.value;
+			ds.unlock();
+						
+		} else {
+			VAL val = createInstance(key);
+			assert val != null;
+		
+			ds = new Data();
+			ds.lock();
+			ds.usage = 1;
+			ds.value = val;
+			result = val;
+			
+			add(key, val);
+			ds.unlock();
 		}
 
-		assert ds != null;
-
-		ds.lock();
-		ds.usage += 1;
-		ds.unlock();
+		assert result != null;
 
 		log("open",":" + key);
-		return ds.value;
+		return result;
 	}
 
 
@@ -136,7 +162,7 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 	 * Retrieve entry already in table. Increase usage counter
 	 */
 	protected VAL retain(KEY key) {
-		Data ds = table.get(key);
+		Data ds = getDataStructure(key);
 
 		if (ds == null) {
 			log("retain","nosuccess:" + key);
@@ -154,7 +180,7 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 		}
 	}
 
-	private Data getValueAndUsage(KEY key) {
+	private Data getDataStructure(KEY key) {
 		Data ds = table.get(key);
 		return ds;
 	}
@@ -164,16 +190,20 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 	 * the usage counter
 	 */
 	protected VAL get(KEY key) {
-		Data ds = getValueAndUsage(key);
+		Data ds = getDataStructure(key);
+		VAL result;
 
-		if (ds == null || ds.usage <= 0) {
+		if (ds == null) {
 			log("get","nosuccess:" + key);
-			return null;
+			result = null;
 		} else {
+			ds.lock();
 			assert ds.value != null;
 			log("get","success:" + key);
-			return ds.value;
+			result = ds.value;
+			ds.unlock();
 		}
+		return result;
 	}
 
 	/**
@@ -187,8 +217,9 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 		log("release","key:" + key + " times=" + times);
 
 		Data ds = table.get(key);
-		ds.lock();
 		if (ds != null) {
+			ds.lock();
+
 			ds.usage -= times;
 
 			if (ds.usage <= 0) {
@@ -196,9 +227,8 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 				log("release","removed:" + key);
 
 			}
+			ds.unlock();
 		}
-
-		ds.unlock();
 	}
 
 	protected void remove(KEY key) {
