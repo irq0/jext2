@@ -348,7 +348,8 @@ public class FuseJExt2 {
 		impls.unlinkImpl = TaskImplementations.getImpl("fusejext2.tasks.Unlink");
 		impls.writeImpl = TaskImplementations.getImpl("fusejext2.tasks.Write");
 
-		numberOfThreads = Runtime.getRuntime().availableProcessors() + 1;
+		if (numberOfThreads < 0)
+			numberOfThreads = Runtime.getRuntime().availableProcessors() + 1;
 		service = new JextThreadPoolExecutor(numberOfThreads);
 
 		if (logExecutorStatus)
