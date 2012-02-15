@@ -3,6 +3,7 @@ package jext2;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -13,14 +14,22 @@ import org.apache.commons.lang.text.StrBuilder;
 import jext2.exceptions.JExt2Exception;
 
 public abstract class DataStructureAccessProvider<KEY,VAL> {
-	protected Map<KEY, ValueAndUsage> table;
-	protected ReentrantLock lock = new ReentrantLock(true);
+	protected Map<KEY, Data> table;
 
 	Logger logger = Filesystem.getLogger();
 
-	protected class ValueAndUsage {
+	protected class Data {
 		VAL value;
 		long usage = 0;
+		private ReentrantLock lock = new ReentrantLock(true);
+
+		public void lock() {
+			lock.lock();
+		}
+
+		public void unlock() {
+			lock.unlock();
+		}
 
 		public String toString() {
 			if (value instanceof Inode) {
@@ -68,7 +77,7 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 	}
 
 	protected DataStructureAccessProvider() {
-		table = new HashMap<KEY, ValueAndUsage>();
+		table = new ConcurrentHashMap<KEY, Data>();
 	}
 
 
@@ -76,7 +85,7 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 
 
 	protected long usageCounter(KEY key) {
-		ValueAndUsage ds = getValueAndUsage(key);
+		Data ds = getValueAndUsage(key);
 
 		if (ds == null || ds.usage < 0) {
 			log("usageCounter","key:" + key + " counter:-1");
@@ -93,12 +102,10 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 	protected void add(KEY key, VAL value) {
 		assert value != null;
 
-		ValueAndUsage ds = new ValueAndUsage();
+		Data ds = new Data();
 		ds.value = value;
 
-		lock.lock();
 		table.put(key, ds);
-		lock.unlock();
 		log("add","key:" + key);
 	}
 
@@ -107,8 +114,7 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 	 * Open the entry. Increases usage counter and creates an instance if necessary
 	 */
 	protected VAL open(KEY key) throws JExt2Exception {
-		lock.lock();
-		ValueAndUsage ds = table.get(key);
+		Data ds = table.get(key);
 
 		if (ds == null) {
 			add(key, createInstance(key));
@@ -116,9 +122,10 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 		}
 
 		assert ds != null;
-		ds.usage += 1;
 
-		lock.unlock();
+		ds.lock();
+		ds.usage += 1;
+		ds.unlock();
 
 		log("open",":" + key);
 		return ds.value;
@@ -129,30 +136,26 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 	 * Retrieve entry already in table. Increase usage counter
 	 */
 	protected VAL retain(KEY key) {
-		lock.lock();
-		ValueAndUsage ds = table.get(key);
+		Data ds = table.get(key);
 
 		if (ds == null) {
-			lock.unlock();
 			log("retain","nosuccess:" + key);
 			return null;
 		} else {
+			ds.lock();
 			ds.usage += 1;
-			lock.unlock();
+			ds.unlock();
 
 			assert ds.usage > 0;
 			assert ds.value != null;
-			
+
 			log("retain","success:" + key);
 			return ds.value;
 		}
 	}
 
-	private ValueAndUsage getValueAndUsage(KEY key) {
-		lock.lock();
-		ValueAndUsage ds = table.get(key);
-		lock.unlock();
-
+	private Data getValueAndUsage(KEY key) {
+		Data ds = table.get(key);
 		return ds;
 	}
 
@@ -161,7 +164,7 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 	 * the usage counter
 	 */
 	protected VAL get(KEY key) {
-		ValueAndUsage ds = getValueAndUsage(key);
+		Data ds = getValueAndUsage(key);
 
 		if (ds == null || ds.usage <= 0) {
 			log("get","nosuccess:" + key);
@@ -182,9 +185,9 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 
 	protected void release(KEY key, long times) {
 		log("release","key:" + key + " times=" + times);
-		lock.lock();
 
-		ValueAndUsage ds = table.get(key);
+		Data ds = table.get(key);
+		ds.lock();
 		if (ds != null) {
 			ds.usage -= times;
 
@@ -195,24 +198,20 @@ public abstract class DataStructureAccessProvider<KEY,VAL> {
 			}
 		}
 
-		lock.unlock();
+		ds.unlock();
 	}
 
 	protected void remove(KEY key) {
 		log("remove", "key:" + key);
-		lock.lock();
 		table.remove(key);
-		lock.unlock();
 	}
 
 	public String toString() {
-		lock.lock();
 		String s = new StringBuilder()
 			.append(this.getClass().getCanonicalName())
 			.append(": ")
 			.append(table)
 			.toString();
-		lock.unlock();
 		return s;
 
 	}

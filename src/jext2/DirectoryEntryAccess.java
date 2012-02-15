@@ -54,14 +54,13 @@ public class DirectoryEntryAccess extends DataStructureAccessProvider<String, Di
 
 		DirectoryEntry result;
 
-		lock.lock();
 		if (table.containsKey(entry.getName())) {
-			ValueAndUsage d = table.get(entry.getName());
+			Data d = table.get(entry.getName());
 			d.usage += 1;
 
 			result = d.value;
 		} else {
-			ValueAndUsage d = new ValueAndUsage();
+			Data d = new Data();
 			d.usage = 1;
 			d.value = entry;
 
@@ -69,7 +68,6 @@ public class DirectoryEntryAccess extends DataStructureAccessProvider<String, Di
 
 			result = entry;
 		}
-		lock.unlock();
 
 		return result;
 
@@ -81,9 +79,7 @@ public class DirectoryEntryAccess extends DataStructureAccessProvider<String, Di
 		if (entry.isUnused()) return true;
 		boolean result;
 
-		lock.lock();
 		result = table.containsKey(entry.getName());
-		lock.unlock();
 
 		return result;
 	}
