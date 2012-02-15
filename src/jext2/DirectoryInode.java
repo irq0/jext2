@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.logging.Logger;
 
 import jext2.annotations.NotThreadSafe;
 import jext2.exceptions.DirectoryNotEmpty;
@@ -99,8 +100,11 @@ public class DirectoryInode extends DataInode {
 		private DirectoryEntry fetchFirstEntry() {
 			assert previousEntry == null;
 
-			if (!blockIter.hasNext())
-				throw new RuntimeException("DirectoryInode whithout data blocks - Filesystem damaged!");
+			if (!blockIter.hasNext()) {
+				Logger log = Filesystem.getLogger();
+				log.severe("DirectoryInode whithout data blocks - Filesystem probably damaged!");
+				return null;
+			}
 
 			loadNextBlock();
 			return readNextEntry();
