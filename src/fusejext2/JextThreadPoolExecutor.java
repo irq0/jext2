@@ -55,7 +55,7 @@ public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 	public JextThreadPoolExecutor(int numberOfThreads) {
 		this(numberOfThreads,
 				10000,
-				1,
+				5,
 				TimeUnit.SECONDS,
 				new SynchronousQueue<Runnable>());
 
