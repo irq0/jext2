@@ -66,6 +66,21 @@ public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 		super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
 	}
 
+	private void throttle() {
+		try {
+			logger.warning("Throtteling execution");
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void execute(Runnable command) {
+		if (getQueue().size() > 30)
+			throttle();
+		super.execute(command);
+	}
 
 	@Override
 	protected void beforeExecute(Thread t, Runnable r) {
