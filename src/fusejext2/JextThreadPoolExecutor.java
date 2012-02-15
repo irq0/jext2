@@ -69,7 +69,7 @@ public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 	private void throttle() {
 		try {
 			logger.warning("Throtteling execution");
-			Thread.sleep(1000);
+			Thread.sleep(100);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
