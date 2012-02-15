@@ -68,7 +68,7 @@ public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 
 	private void throttle() {
 		try {
-			logger.warning("Throtteling execution");
+			logger.warning("Throtteling execution, queue length=" + getQueue().size());
 			Thread.sleep(100);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
@@ -77,7 +77,7 @@ public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 
 	@Override
 	public void execute(Runnable command) {
-		if (getQueue().size() > 30)
+		if (getQueue().size() > 50)
 			throttle();
 		super.execute(command);
 	}
