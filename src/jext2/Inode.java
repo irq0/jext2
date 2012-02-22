@@ -326,9 +326,12 @@ public class Inode extends PartialBlock {
 
 		setDeletionTime(new Date());
 		setSize(0);
+
 		if (hasDataBlocks()) {
+			DataInode d = (DataInode)this;
 			try {
-				((DataInode)this).accessData().truncate(0);
+				d.accessData().truncate(0);
+				assert d.getBlocks() == 0;
 			} catch (FileTooLarge e) {
 				throw new RuntimeException("should not happen");
 			}
