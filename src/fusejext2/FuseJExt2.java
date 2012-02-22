@@ -9,7 +9,6 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.Arrays;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Handler;
 import java.util.logging.Logger;
@@ -17,7 +16,6 @@ import java.util.logging.Logger;
 import jext2.Filesystem;
 import jlowfuse.JLowFuse;
 import jlowfuse.JLowFuseArgs;
-import jlowfuse.async.AsyncLowlevelOps;
 import jlowfuse.async.DefaultTaskImplementations;
 import jlowfuse.async.TaskImplementations;
 import jlowfuse.async.tasks.JLowFuseTask;
@@ -48,6 +46,7 @@ public class FuseJExt2 {
 	private static boolean logExecutorStatus = false;
 	private static int logExecutorStatusIntervallInMillis = 1000;
 	private static String fuseCommandline = "-o foo,subtype=jext2";
+	private static JLowFuseArgs fuseArgs;
 
 	private static TaskImplementations<Jext2Context> impls;
 	private static Jext2Context context;
@@ -147,30 +146,35 @@ public class FuseJExt2 {
 		options.addOption(OptionBuilder
 				.withDescription("Options forwarded to FUSE")
 				.withLongOpt("fuse-options")
+				.withType(new String(""))
 				.hasArg()
 				.withArgName("FUSE_OPTIONS")
 				.create("o"));
 		options.addOption(OptionBuilder
 				.withDescription("Charset for file system string conversion")
 				.withLongOpt("charset")
+				.withType(new String(""))
 				.hasArg()
 				.withArgName("CHARSET")
 				.create("c"));
 		options.addOption(OptionBuilder
 				.withDescription("Log to file, ")
 				.withLongOpt("log")
+				.withType(new String(""))
 				.hasArg()
 				.withArgName("FILENAME")
 				.create("l"));
 		options.addOption(OptionBuilder
 				.withDescription("Number of threads to execute jext2 tasks. Default: #CPU + 1")
 				.withLongOpt("threads")
+				.withType(new Integer(0))
 				.hasArg()
 				.withArgName("NTHREADS")
 				.create("n"));
 		options.addOption(OptionBuilder
 				.withDescription("Periodically log executor status (Loglevel INFO)")
 				.withLongOpt("log-executor")
+				.withType(new Integer(0))
 				.hasArg()
 				.withArgName("TIME_IN_MILLIS")
 				.create("E"));
@@ -285,40 +289,7 @@ public class FuseJExt2 {
 		System.err.close();
 	}
 
-	public static void main(String[] args) {
-		Filesystem.initializeLogging();
-
-		initializeCommandLineParser();
-		parseCommandline(args);
-
-		JLowFuseArgs fuseArgs = JLowFuseArgs.parseCommandline(new String[] {fuseCommandline});
-
-		try {
-			RandomAccessFile blockDevFile = new RandomAccessFile(filename, "rw");
-			blockDev = blockDevFile.getChannel();
-		} catch (FileNotFoundException e) {
-			System.out.println("Can't open block device or file " + filename);
-			System.out.println(e.getMessage());
-			System.exit(1);
-		}
-
-
-		chan = Fuse.mount(mountpoint, fuseArgs);
-		if (chan == null) {
-			System.out.println("Can't mount on " + mountpoint);
-			System.exit(1);
-		}
-
-		if (daemon) {
-			daemonize();
-		} else {
-			Filesystem.initializeLoggingToConsole();
-		}
-
-		FuseShutdownHook hook = new FuseShutdownHook();
-		Runtime.getRuntime().addShutdownHook(hook);
-
-		context = new Jext2Context(blockDev);
+	private static void setupTaskImplementations() {
 		impls =	new DefaultTaskImplementations<Jext2Context>();
 
 		// for i in *.java; do n=${i%.*}; c=${n,*}; echo impls.${c}Impl = TaskImplementations.getImpl\(\"fusejext2.tasks.$n\"\)\;>
@@ -347,7 +318,42 @@ public class FuseJExt2 {
 		impls.symlinkImpl = TaskImplementations.getImpl("fusejext2.tasks.Symlink");
 		impls.unlinkImpl = TaskImplementations.getImpl("fusejext2.tasks.Unlink");
 		impls.writeImpl = TaskImplementations.getImpl("fusejext2.tasks.Write");
+	}
 
+	private static void setupBlockDevice() {
+		try {
+			RandomAccessFile blockDevFile = new RandomAccessFile(filename, "rw");
+			blockDev = blockDevFile.getChannel();
+		} catch (FileNotFoundException e) {
+			System.out.println("Can't open block device or file " + filename);
+			System.out.println(e.getMessage());
+			System.exit(1);
+		}
+	}
+
+	private static void mount() {
+		chan = Fuse.mount(mountpoint, fuseArgs);
+		if (chan == null) {
+			System.out.println("Can't mount on " + mountpoint);
+			System.exit(1);
+		}
+	}
+
+	private static void setupShutdownHook() {
+		FuseShutdownHook hook = new FuseShutdownHook();
+		Runtime.getRuntime().addShutdownHook(hook);
+	}
+
+	private static void setupFuseSession() {
+		Filesystem.getLogger().info("Arguments passed to FUSE: " + fuseCommandline);
+
+		sess = JLowFuse.asyncTasksNew(fuseArgs, impls,
+				service, context);
+
+		Session.addChan(sess, chan);
+	}
+
+	private static void setupExecutor() {
 		if (numberOfThreads < 0)
 			numberOfThreads = Runtime.getRuntime().availableProcessors() + 1;
 		service = new JextThreadPoolExecutor(numberOfThreads);
@@ -355,10 +361,33 @@ public class FuseJExt2 {
 		if (logExecutorStatus)
 			service.activateStatusDump(logExecutorStatusIntervallInMillis);
 
-		sess = JLowFuse.asyncTasksNew(fuseArgs, impls,
-				service, context);
+	private static void setupTaskContext() {
+		context = new Jext2Context(blockDev);
+	}
 
-		Session.addChan(sess, chan);
+	public static void main(String[] args) {
+		Filesystem.initializeLogging();
+
+		initializeCommandLineParser();
+		parseCommandline(args);
+		fuseArgs = JLowFuseArgs.parseCommandline(new String[] {fuseCommandline});
+
+		setupBlockDevice();
+		mount();
+
+		if (daemon) {
+			daemonize();
+		} else {
+			Filesystem.initializeLoggingToConsole();
+		}
+
+		setupShutdownHook();
+
+		setupTaskContext();
+		setupTaskImplementations();
+		setupExecutor();
+
+		setupFuseSession();
 		Session.loopSingle(sess);
 	}
 }
