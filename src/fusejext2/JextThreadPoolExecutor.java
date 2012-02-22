@@ -97,16 +97,16 @@ public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 	@Override
 	protected void beforeExecute(Thread t, Runnable r) {
 	    super.beforeExecute(t, r);
-	    if (logger.isLoggable(Level.FINE))
-	    	logger.fine(String.format(">>> START thread=[%s] task=[%s]", t.getName(), r));
+	    if (logger.isLoggable(Level.FINER))
+	    	logger.finer(String.format(">>> START thread=[%s] task=[%s]", t.getName(), r));
 	}
 
 
 	@Override
 	protected void afterExecute(Runnable r, Throwable t) {
 	    super.afterExecute(r, t);
-	    if (logger.isLoggable(Level.FINE))
-	    	logger.fine(String.format("<<< END task=[%s]", r));
+	    if (logger.isLoggable(Level.FINER))
+	    	logger.finer(String.format("<<< END task=[%s]", r));
 	}
 
 }
