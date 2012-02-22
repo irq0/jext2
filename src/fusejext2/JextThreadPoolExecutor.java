@@ -55,7 +55,7 @@ public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 		t.start();
 	}
 
-	public void activateThrotteling(int queueLength, int haltTime) {
+	public void activateThrottling(int queueLength, int haltTime) {
 		throttelingHaltTime = haltTime;
 		throttelingQueueLength = queueLength;
 	}
