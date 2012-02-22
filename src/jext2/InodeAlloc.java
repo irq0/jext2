@@ -176,6 +176,20 @@ public class InodeAlloc {
 			groupDescr.setUsedDirsCount(groupDescr.getUsedDirsCount() - 1);
 			superblock.setDirsCount(superblock.getDirsCount() - 1);
 		}
+
+		if (logger.isLoggable(Level.FINE)) {
+			String s = new StringBuilder()
+				.append("Freed Inode #")
+				.append(ino)
+				.append(" in block group ")
+				.append(groupDescr.getBlockGroup())
+				.append(" stored in block ")
+				.append(inode.getBlockNr())
+				.append("-")
+				.append(inode.getOffset())
+				.toString();
+			logger.fine(s);
+		}
 	}
 
 	/** Register Inode on disk. Find suitable position an reserve this position
@@ -267,9 +281,6 @@ public class InodeAlloc {
 				.toString();
 			logger.fine(s);
 		}
-
-
 	}
-
 }
 
