@@ -10,8 +10,25 @@ import java.util.logging.Logger;
 import jext2.Filesystem;
 
 public class JextThreadPoolExecutor extends ThreadPoolExecutor {
-	Logger logger = Filesystem.getLogger();
+	private Logger logger = Filesystem.getLogger();
+	private int throttelingHaltTime = 100;
+	private int throttelingQueueLength = 50;
 
+	void logExecutorStatus() {
+		logger.info(new StringBuilder()
+			.append("Executor status")
+			.append(" active_threads=")
+			.append(getActiveCount())
+			.append(" queue_length=")
+			.append(getQueue().size())
+			.append(" cur_threads_in_pool=")
+			.append(getPoolSize())
+			.append(" largest_pool_size=")
+			.append(getLargestPoolSize())
+			.append(" approx_completed_tasks=")
+			.append(getCompletedTaskCount())
+			.toString());
+	}
 
 	class ExecutorStatusDumper extends Thread {
 		int intervallInMillis;
@@ -24,20 +41,7 @@ public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 		@Override
 		public void run() {
 			while (true) {
-				logger.info(new StringBuilder()
-				.append("Executor status")
-				.append(" active_threads=")
-				.append(getActiveCount())
-				.append(" queue_length=")
-				.append(getQueue().size())
-				.append(" cur_threads_in_pool=")
-				.append(getPoolSize())
-				.append(" largest_pool_size=")
-				.append(getLargestPoolSize())
-				.append(" approx_completed_tasks=")
-				.append(getCompletedTaskCount())
-				.toString());
-
+				logExecutorStatus();
 				try {
 					sleep(intervallInMillis);
 				} catch (InterruptedException ignored) {
@@ -49,6 +53,11 @@ public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 	public void activateStatusDump(int intervallInMillis) {
 		ExecutorStatusDumper t = new ExecutorStatusDumper(intervallInMillis);
 		t.start();
+	}
+
+	public void activateThrotteling(int queueLength, int haltTime) {
+		throttelingHaltTime = haltTime;
+		throttelingQueueLength = queueLength;
 	}
 
 	public JextThreadPoolExecutor(int numberOfThreads) {
@@ -66,10 +75,13 @@ public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 		super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
 	}
 
+
+
 	private void throttle() {
 		try {
-			logger.warning("Throtteling execution, queue length=" + getQueue().size());
-			Thread.sleep(100);
+			logger.warning("Throtteling execution");
+			logExecutorStatus();
+			Thread.sleep(throttelingHaltTime);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -77,7 +89,7 @@ public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 
 	@Override
 	public void execute(Runnable command) {
-		if (getQueue().size() > 50)
+		if (getQueue().size() > throttelingQueueLength)
 			throttle();
 		super.execute(command);
 	}

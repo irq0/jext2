@@ -45,6 +45,8 @@ public class FuseJExt2 {
 	private static boolean daemon = false;
 	private static boolean logExecutorStatus = false;
 	private static int logExecutorStatusIntervallInMillis = 1000;
+	private static int throttelingHaltTime = 100;
+	private static int throttelingQueueLength = 50;
 	private static String fuseCommandline = "-o foo,subtype=jext2";
 	private static JLowFuseArgs fuseArgs;
 
@@ -172,6 +174,20 @@ public class FuseJExt2 {
 				.withArgName("NTHREADS")
 				.create("n"));
 		options.addOption(OptionBuilder
+				.withDescription("Throttle task submission if queue exceeds QUEUE_LENGTH. Default: " + throttelingQueueLength)
+				.withType(new Integer(0))
+				.withLongOpt("throttle-queue-length")
+				.hasArg()
+				.withArgName("QUEUE_LENGTH")
+				.create("Q"));
+		options.addOption(OptionBuilder
+				.withDescription("Halt execution for TIME_IN_MILLIS if throtteling. Default: " + throttelingHaltTime)
+				.withLongOpt("throttle-time")
+				.withType(new Integer(0))
+				.hasArg()
+				.withArgName("TIME_IN_MILLIS")
+				.create("T"));
+		options.addOption(OptionBuilder
 				.withDescription("Periodically log executor status (Loglevel INFO)")
 				.withLongOpt("log-executor")
 				.withType(new Integer(0))
@@ -221,6 +237,14 @@ public class FuseJExt2 {
 				} catch (IOException e) {
 					throw new ParseException("Can't open file for logging");
 				}
+			}
+
+			if (cmd.hasOption("Q")) {
+				throttelingQueueLength = Integer.parseInt(cmd.getOptionValue("Q"));
+			}
+
+			if (cmd.hasOption("T")) {
+				throttelingHaltTime = Integer.parseInt(cmd.getOptionValue("T"));
 			}
 
 			if (cmd.hasOption("v")) {
@@ -360,9 +384,16 @@ public class FuseJExt2 {
 
 		if (logExecutorStatus)
 			service.activateStatusDump(logExecutorStatusIntervallInMillis);
+		if (doThrotteling())
+			service.activateThrotteling(throttelingQueueLength, throttelingHaltTime);
+	}
 
 	private static void setupTaskContext() {
 		context = new Jext2Context(blockDev);
+	}
+	
+	private static boolean doThrotteling() {
+		return (throttelingHaltTime > 0 && throttelingQueueLength > 0);
 	}
 
 	public static void main(String[] args) {
@@ -386,7 +417,7 @@ public class FuseJExt2 {
 		setupTaskContext();
 		setupTaskImplementations();
 		setupExecutor();
-
+		
 		setupFuseSession();
 		Session.loopSingle(sess);
 	}
