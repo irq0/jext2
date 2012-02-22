@@ -190,6 +190,8 @@ public class InodeAlloc {
 				.toString();
 			logger.fine(s);
 		}
+
+		InodeAccess.getInstance().removeInode(ino);
 	}
 
 	/** Register Inode on disk. Find suitable position an reserve this position
