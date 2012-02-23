@@ -51,6 +51,16 @@ public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 		}
 	}
 
+	class JextCallerRunsPolicy extends CallerRunsPolicy {
+		@Override
+		public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+			logger.warning("Throttling execution: running task in FUSE thread");
+			logExecutorStatus();
+
+			super.rejectedExecution(r, e);
+		}
+	}
+
 	public void activateStatusDump(int intervallInMillis) {
 		ExecutorStatusDumper t = new ExecutorStatusDumper(intervallInMillis);
 		t.start();
@@ -70,31 +80,12 @@ public class JextThreadPoolExecutor extends ThreadPoolExecutor {
 				);
 
 		setThreadFactory(new JextThreadFactory());
-		setRejectedExecutionHandler(new CallerRunsPolicy());
+		setRejectedExecutionHandler(new JextCallerRunsPolicy());
 		logger.info("Starting Thread Pool Executor with " + numberOfThreads + " Threads");
 	}
 
 	private JextThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue) {
 		super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
-	}
-
-
-
-	private void throttle() {
-		try {
-			logger.warning("Throtteling execution");
-			logExecutorStatus();
-			Thread.sleep(throttelingHaltTime);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
-
-	@Override
-	public void execute(Runnable command) {
-		if (getQueue().size() > throttelingQueueLength)
-			throttle();
-		super.execute(command);
 	}
 
 	@Override
