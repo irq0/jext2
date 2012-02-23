@@ -45,8 +45,7 @@ public class FuseJExt2 {
 	private static boolean daemon = false;
 	private static boolean logExecutorStatus = false;
 	private static int logExecutorStatusIntervallInMillis = 1000;
-	private static int throttlingHaltTime = 100;
-	private static int throttlingQueueLength = 50;
+	private static int queueLength = 50;
 	private static String fuseCommandline = "-o foo,subtype=jext2";
 	private static JLowFuseArgs fuseArgs;
 
@@ -174,19 +173,12 @@ public class FuseJExt2 {
 				.withArgName("NTHREADS")
 				.create("n"));
 		options.addOption(OptionBuilder
-				.withDescription("Throttle task submission if queue exceeds QUEUE_LENGTH. Default: " + throttlingQueueLength)
+				.withDescription("Length of the queue the executer uses to schedule tasks from. Default: " + queueLength)
 				.withType(new Integer(0))
-				.withLongOpt("throttle-queue-length")
+				.withLongOpt("queue-length")
 				.hasArg()
 				.withArgName("QUEUE_LENGTH")
 				.create("Q"));
-		options.addOption(OptionBuilder
-				.withDescription("Halt execution for TIME_IN_MILLIS if throttling. Default: " + throttlingHaltTime)
-				.withLongOpt("throttle-time")
-				.withType(new Integer(0))
-				.hasArg()
-				.withArgName("TIME_IN_MILLIS")
-				.create("T"));
 		options.addOption(OptionBuilder
 				.withDescription("Periodically log executor status (Loglevel INFO)")
 				.withLongOpt("log-executor")
@@ -240,11 +232,7 @@ public class FuseJExt2 {
 			}
 
 			if (cmd.hasOption("Q")) {
-				throttlingQueueLength = Integer.parseInt(cmd.getOptionValue("Q"));
-			}
-
-			if (cmd.hasOption("T")) {
-				throttlingHaltTime = Integer.parseInt(cmd.getOptionValue("T"));
+				queueLength = Integer.parseInt(cmd.getOptionValue("Q"));
 			}
 
 			if (cmd.hasOption("v")) {
@@ -380,20 +368,14 @@ public class FuseJExt2 {
 	private static void setupExecutor() {
 		if (numberOfThreads < 0)
 			numberOfThreads = Runtime.getRuntime().availableProcessors() + 1;
-		service = new JextThreadPoolExecutor(numberOfThreads);
+		service = new JextThreadPoolExecutor(numberOfThreads, queueLength);
 
 		if (logExecutorStatus)
 			service.activateStatusDump(logExecutorStatusIntervallInMillis);
-		if (doThrottling())
-			service.activateThrottling(throttlingQueueLength, throttlingHaltTime);
 	}
 
 	private static void setupTaskContext() {
 		context = new Jext2Context(blockDev);
-	}
-	
-	private static boolean doThrottling() {
-		return (throttlingHaltTime > 0 && throttlingQueueLength > 0);
 	}
 
 	public static void main(String[] args) {
