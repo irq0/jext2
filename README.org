@@ -1,0 +1,28 @@
+* jext2
+The second extended filesystem (ext2) in java. Multithreaded. Read/Write support. Object Oriented.
+
+
+** Motivation
+I wrote jext2 as part of my Bachelor's Thesis about java filesystem performance evaluation. It was never meant for anything other than research. It solves a couple of interesting problems that you encounter with a filesystem in java. For example the lack of unsigned data types, efficient buffer handling and large bitsets.
+
+If you are interested in some data of an older, single threaded, version of jext2 see:
+[[http://files.irq0.org/bathesis/presentation.pdf]]
+
+** Why should I care?
+Jext2 is a nice toy. It's a working ext2 filesystem written in java, while other implementations (I am aware of) are written in
+C. It's object oriented and uses the java asynchronous tasks style to handle multithreading.
+
+** Project state
+Jext2 is far from complete and will probably never reach any mature state. I'm not really interested in supporting the project any longer, but if you have a question feel free to contact me.
+
+** License
+GPLv3
+
+** Requirements
+- jlowfuse
+- Java >= 1.6
+- sh (for the startup scripts)
+
+** Warning
+As filesystems are delicate business, consider yourself warned: Jext2 will probably destroy your data. Don't mount your home or anything else important with it. Jext2 doesn't have a distinction between read-only and read-write mode. There is really no safe way to mount data you want to keep with it. It's a toy, nothing more, nothing less.
+
