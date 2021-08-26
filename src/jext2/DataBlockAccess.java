@@ -317,7 +317,7 @@ public class DataBlockAccess {
 						result.addLast(nr);
 
 						ByteBuffer buf = ByteBuffer.allocate(superblock.getBlocksize());
-						Ext2fsDataTypes.putLE32U(buf, nr, offsets[n]*4);
+						Ext2fsDataTypes.putLE32U(buf, nr, offsets[blockNrs.length + n]*4);
 						buf.rewind();
 						blocks.write(parent, buf);
 					} else {
